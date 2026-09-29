@@ -32,6 +32,14 @@ SPRITES = {
     "gaji-default": 420, "gaji-surprised": 420, "gaji-sad": 420, "gaji-cheer": 420,
     "char-anyongbok": 460, "fog": 520, "boat-top": 256, "item-gull": 300, "item-lion": 300,
 }
+# 선생님이 올리면 들어가는 인물 그림 (없으면 대사 창에 동그라미 글자가 나온다)
+OPTIONAL_SPRITES = {
+    "char-isabu": 460, "char-isabu-bust": 420, "char-fisher": 420, "char-tottori": 420, "char-lee": 420,
+    "char-shimane": 420, "char-shim": 420, "char-minister": 420, "char-guard": 420, "char-keeper": 420,
+    "char-officer": 420, "char-resident": 420, "char-tourist": 420, "char-kid": 420, "char-student": 420,
+}
+# 전신 그림을 대사 창용으로 자를 곳 (머리~허리)
+BUST_CROPS = {"char-anyongbok": (300, 0, 954, 654)}
 # icons-facilities.png 속 동그란 아이콘 6개 (등대, 경비대 숙소, 주민숙소, 접안시설, 헬기장, 공항)
 FACILITY_CELLS = [(36, 17, 503, 473), (534, 17, 1000, 473), (1031, 17, 1496, 473),
                   (36, 496, 503, 956), (534, 496, 1000, 956), (1031, 496, 1496, 956)]
@@ -53,11 +61,20 @@ def build_images():
         im = Image.open(IMAGES / f"{name}.png").convert("RGB").resize((1280, 720), Image.LANCZOS)
         raw = webp(im, 58)
         out[name], sizes[name] = data_uri(raw), len(raw)
-    for name, px in SPRITES.items():
+    optional = {k: v for k, v in OPTIONAL_SPRITES.items() if (IMAGES / f"{k}.png").exists()}
+    for name, px in {**SPRITES, **optional}.items():
         im = Image.open(IMAGES / f"{name}.png").convert("RGBA")
+        if name in BUST_CROPS:
+            bust = im.crop(BUST_CROPS[name])
+            bust.thumbnail((420, 420), Image.LANCZOS)
+            raw = webp(bust, 80)
+            out[name + "-bust"], sizes[name + "-bust"] = data_uri(raw), len(raw)
         im.thumbnail((px, px), Image.LANCZOS)
         raw = webp(im, 80)
         out[name], sizes[name] = data_uri(raw), len(raw)
+    missing = [k for k in OPTIONAL_SPRITES if k not in optional]
+    if missing:
+        print("  아직 없는 인물 그림:", ", ".join(missing))
     sheet = Image.open(IMAGES / "icons-facilities.png").convert("RGBA")
     for i, (l, t, r, b) in enumerate(FACILITY_CELLS):
         side = min(r - l, b - t)

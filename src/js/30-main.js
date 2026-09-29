@@ -2,7 +2,7 @@
 
 const STAGE0 = [
   async () => {
-    HUD.show(true); setBg('bg-library'); fogFx(0); Sound.play('mystery');
+    HUD.show(true); setBg('bg-library'); fogFx(0); Sound.play('mystery'); setEra('오늘 · 기산중학교 도서관');
     await talk([
       ['narr', '오늘은 기산중학교 독도 사랑 실천대회가 열리는 날. 이른 아침, 당신은 독도 자료를 찾으러 학교 도서관에 들어섰다.'],
       ['narr', '안내 데스크 위 액자 속 독도가 아침 햇살에 반짝인다. 그런데 그때…'],
@@ -135,7 +135,7 @@ function startMessage() {
     const box = el('div', { class: 'panel', style: 'width:960px;padding:36px 46px;text-align:center' });
     box.append(el('div', { style: 'font:24px var(--ui);color:#ffd9a8', text: SCHOOL }),
       el('div', { class: 'msg', style: 'font-size:26px;margin:18px 0 24px;line-height:1.8', text:
-        '기산중학교 독도 사랑 실천대회에 온 것을 환영해요!\n오늘은 이 게임으로 독도의 역사와 이야기를 직접 탐험해요.\n다음 시간에는 여러분이 플레이하며 알게 된 내용을 바탕으로 문제를 풀게 돼요.\n이야기와 사료를 꼼꼼히 읽고, 모은 증거를 잘 기억해 두세요.\n모은 증거는 언제든 \'증거 도감\'에서 다시 볼 수 있어요. 그럼, 출발!' }));
+        '기산중학교 독도 사랑 실천대회에 온 것을 환영해요!\n오늘은 이 게임으로 독도의 역사와 이야기를 직접 탐험해요.\n4교시에는 여러분이 플레이하며 알게 된 내용을 바탕으로\n문제를 풀게 돼요.\n이야기와 사료를 꼼꼼히 읽고, 모은 증거를 잘 기억해 두세요.\n모은 증거는 언제든 \'증거 도감\'에서 다시 볼 수 있어요.\n그럼, 출발!' }));
     const m = modal(box, { closable: false });
     box.append(onTap(el('button', { class: 'btn', text: '출발!', style: 'font-size:30px;min-height:66px;padding:0 50px' }), () => { Sound.sfx('tap'); m.close(); resolve(); }));
     DEV.solve = () => { m.close(); resolve(); };

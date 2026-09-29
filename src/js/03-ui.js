@@ -28,7 +28,7 @@ function fogFx(level = 0) {
 }
 document.head.append(el('style', { text: '@keyframes fogdrift{from{transform:translateX(-120px)}to{transform:translateX(160px)}}' }));
 
-function clearScene() { L.scene.innerHTML = ''; DEV.solve = null; }
+function clearScene() { L.scene.innerHTML = ''; DEV.solve = null; clearHint(); HINT.pos = 'left'; HINT.host = null; }
 
 /* HUD */
 const HUD = {
@@ -36,6 +36,7 @@ const HUD = {
     L.hud.innerHTML = '';
     const bar = el('div', { class: 'hud-bar' });
     this.stageEl = el('div', { class: 'hud-stage' });
+    this.eraEl = el('div', { class: 'hud-era' });
     this.dokdo = el('div', { class: 'hud-dokdo', html: dokdoSvg() });
     this.barFill = el('i');
     this.pct = el('div', { class: 'pct' });
@@ -46,7 +47,7 @@ const HUD = {
     this.mute = onTap(el('button', { class: 'hud-btn' }), () => { Sound.setMuted(!PREF.muted); this.update(); });
     const fs = onTap(el('button', { class: 'hud-btn', text: '⛶', title: '전체 화면' }), toggleFullscreen);
     const menu = onTap(el('button', { class: 'hud-btn', text: '☰' }), () => { Sound.sfx('tap'); openMenu(); });
-    bar.append(this.stageEl, meter, el('div', { class: 'hud-sp' }), this.combo, this.score, book, this.mute, fs, menu);
+    bar.append(this.stageEl, this.eraEl, meter, el('div', { class: 'hud-sp' }), this.combo, this.score, book, this.mute, fs, menu);
     L.hud.append(bar);
     this.tTag = el('div', { class: 'teacher-tag hide', text: '교사 모드 · 기록 저장 안 함' });
     L.hud.append(this.tTag);
@@ -56,6 +57,7 @@ const HUD = {
   update() {
     if (!this.score || !S) return;
     this.stageEl.textContent = S.stage >= 1 && S.stage <= 8 ? `${S.stage}. ${STAGE_NAMES[S.stage]}` : STAGE_NAMES[S.stage] || '';
+    this.eraEl.textContent = S.era ? '⏳ ' + S.era : '';
     this.score.textContent = fmtNum(S.score) + '점';
     this.combo.textContent = S.combo >= 2 ? `콤보 ×${S.combo}` : '';
     const n = Object.keys(S.cards).length, p = n / CARDS.length;
@@ -90,28 +92,30 @@ const SPK = {
   'gaji:sad': { name: '가지', img: 'gaji-sad' },
   'gaji:wow': { name: '가지', img: 'gaji-surprised' },
   'gaji:yay': { name: '가지', img: 'gaji-cheer' },
-  ahn: { name: '안용복', img: 'char-anyongbok' },
+  ahn: { name: '안용복', img: ['char-anyongbok-bust', 'char-anyongbok'] },
   fog: { name: '망각의 안개', img: 'fog', color: 'purple' },
-  isabu: { name: '이사부', ini: '이', color: 'blue' },
-  jp: { name: '돗토리번 관리', ini: '관', color: 'gray' },
-  fisher: { name: '일본 어부', ini: '어', color: 'gray' },
-  lee: { name: '이규원', ini: '이', color: 'blue' },
-  shim: { name: '심흥택', ini: '심', color: 'blue' },
-  guard: { name: '독도경비대원', ini: '경', color: 'blue' },
-  keeper: { name: '등대관리원', ini: '등', color: 'green' },
-  officer: { name: '독도관리사무소 직원', ini: '관', color: 'green' },
-  resident: { name: '독도 주민', ini: '주', color: 'green' },
-  tourist: { name: '관람객', ini: '관', color: 'gray' },
-  kid: { name: '어린이 관람객', ini: '어', color: 'gray' },
-  student: { name: '학생 관람객', ini: '학', color: 'gray' },
+  isabu: { name: '이사부', img: ['char-isabu-bust', 'char-isabu'], ini: '이', color: 'blue' },
+  jp: { name: '돗토리번 관리', img: 'char-tottori', ini: '관', color: 'gray' },
+  fisher: { name: '일본 어부', img: 'char-fisher', ini: '어', color: 'gray' },
+  suto: { name: '수토관', ini: '수', color: 'blue' },
+  lee: { name: '이규원', img: 'char-lee', ini: '이', color: 'blue' },
+  shim: { name: '심흥택', img: 'char-shim', ini: '심', color: 'blue' },
+  guard: { name: '독도경비대원', img: 'char-guard', ini: '경', color: 'blue' },
+  keeper: { name: '등대관리원', img: 'char-keeper', ini: '등', color: 'green' },
+  officer: { name: '독도관리사무소 직원', img: 'char-officer', ini: '관', color: 'green' },
+  resident: { name: '독도 주민', img: 'char-resident', ini: '주', color: 'green' },
+  tourist: { name: '관람객', img: 'char-tourist', ini: '관', color: 'gray' },
+  kid: { name: '어린이 관람객', img: 'char-kid', ini: '어', color: 'gray' },
+  student: { name: '학생 관람객', img: 'char-student', ini: '학', color: 'gray' },
   editor: { name: '편집장', ini: '편', color: 'red' },
   me: { name: '나', ini: '나', color: 'red' },
 };
 let dlgBusy = false;
 function dialogBox(who, text) {
   const sp = typeof who === 'string' ? (SPK[who] || { name: who }) : who;
-  const box = el('div', { class: 'dlg' + (sp.narr ? ' narr noportrait' : '') + (!sp.img && !sp.ini && !sp.narr ? ' noportrait' : '') });
-  if (sp.img) box.append(el('div', { class: 'pt' }, el('img', { src: img(sp.img), alt: '' })));
+  const pic = [].concat(sp.img || []).find(k => IMG[k]);
+  const box = el('div', { class: 'dlg' + (sp.narr ? ' narr noportrait' : '') + (!pic && !sp.ini && !sp.narr ? ' noportrait' : '') });
+  if (pic) box.append(el('div', { class: 'pt' }, el('img', { src: img(pic), alt: '' })));
   else if (sp.ini) box.append(el('div', { class: 'pt' }, el('div', { class: 'ini', text: sp.ini, style: sp.color ? `background:${{ blue: '#2b7bd6', gray: '#6d7b8c', red: '#b5463a', green: '#2e9e6a', purple: '#6a4fb3' }[sp.color]}` : '' })));
   if (sp.name) box.append(el('div', { class: 'who' + (sp.color ? ' c-' + sp.color : ''), text: sp.name }));
   const txt = el('div', { class: 'txt' });
@@ -121,13 +125,16 @@ function dialogBox(who, text) {
 function typeText(node, text) {
   let i = 0, done = false, timer;
   const full = String(text);
-  const finish = () => { if (done) return; done = true; clearInterval(timer); node.textContent = full; };
-  timer = setInterval(() => { i += 1; node.textContent = full.slice(0, i); if (i >= full.length) finish(); }, 26);
+  const shown = el('span'), rest = el('span', { style: 'visibility:hidden' });
+  node.textContent = ''; node.append(shown, rest);
+  rest.textContent = full;
+  const finish = () => { if (done) return; done = true; clearInterval(timer); shown.textContent = full; rest.textContent = ''; };
+  timer = setInterval(() => { i += 1; shown.textContent = full.slice(0, i); rest.textContent = full.slice(i); if (i >= full.length) finish(); }, 26);
   return { finish, get done() { return done; } };
 }
 function say(who, text) {
   return new Promise(resolve => {
-    L.dialog.innerHTML = '';
+    L.dialog.innerHTML = ''; clearHint();
     const catcher = el('div', { class: 'catcher' });
     const { box, txt } = dialogBox(who, text);
     const more = el('div', { class: 'more', text: '▼' });
@@ -152,7 +159,7 @@ async function talk(lines) { for (const [w, t] of lines) await say(w, t); }
 /* 선택지 대사: 고른 번호를 돌려준다. */
 function choose(who, text, options, { shuffleOpts = true } = {}) {
   return new Promise(resolve => {
-    L.dialog.innerHTML = '';
+    L.dialog.innerHTML = ''; clearHint();
     const { box, txt } = dialogBox(who, text);
     const catcher = el('div', { class: 'catcher' });
     const wrap = el('div', { class: 'choices' });
@@ -178,17 +185,32 @@ function choose(who, text, options, { shuffleOpts = true } = {}) {
   });
 }
 
-/* 힌트 말풍선 (화면을 막지 않음) */
+/* 힌트 말풍선 (화면을 막지 않음)
+   HINT.host: 퍼즐 창 안의 힌트 자리. 있으면 창 안에 띄운다.
+   HINT.pos: 창이 없을 때 띄울 곳 (left, right, top, center) */
+const HINT = { host: null, pos: 'left' };
 let hintTimer;
-function hint(text, mood = 'gaji', ms = 6500) {
-  const old = L.toast.querySelector('.hint'); if (old) old.remove();
-  clearTimeout(hintTimer);
+function hint(text, mood = 'gaji', ms = 7000) {
+  clearHint();
   const face = { gaji: 'gaji-default', sad: 'gaji-sad', wow: 'gaji-surprised', yay: 'gaji-cheer' }[mood] || 'gaji-default';
-  const h = el('div', { class: 'hint' }, el('img', { src: img(face) }), el('div', { class: 'b', text }));
-  L.toast.append(h);
+  const inline = HINT.host && HINT.host.isConnected;
+  const h = el('div', { class: inline ? 'hint-inline' : 'hint pos-' + HINT.pos }, el('img', { src: img(face) }), el('div', { class: 'b', text }));
+  (inline ? HINT.host : L.toast).append(h);
   hintTimer = setTimeout(() => h.remove(), ms);
 }
-function clearHint() { const h = L.toast.querySelector('.hint'); if (h) h.remove(); }
+function clearHint() { clearTimeout(hintTimer); document.querySelectorAll('.hint, .hint-inline').forEach(h => h.remove()); }
+function hintHost(node) { HINT.host = node; return node; }
+/* 퍼즐을 다 풀면 바로 닫지 않고, 완성된 모습을 보여 준 뒤 "계속"을 눌러 넘어간다. */
+function doneBar(container, { msg, btn = '계속 ▶' } = {}) {
+  return new Promise(res => {
+    const bar = el('div', { class: 'donebar' });
+    if (msg) bar.append(el('div', { class: 'dmsg', text: msg }));
+    const go = () => { if (!bar.isConnected) return; Sound.sfx('tap'); bar.remove(); DEV.solve = null; res(); };
+    bar.append(onTap(el('button', { class: 'btn green', text: btn }), go));
+    container.append(bar);
+    DEV.solve = go;
+  });
+}
 function toast(text, ms = 2600) {
   let box = L.toast.querySelector('.toasts');
   if (!box) { box = el('div', { class: 'toasts' }); L.toast.append(box); }
@@ -204,65 +226,79 @@ function wrongFeedback(tries, hintText, soft = '음… 다시 한번 살펴볼�
 }
 
 /* 창 */
-function modal(content, { closable = true, dim = true, onClose } = {}) {
+function modal(content, { closable = true, dim = true, onClose, outside = false, xOut = false } = {}) {
   const wrap = el('div', { class: 'modal' });
   if (dim) wrap.append(el('div', { class: 'dim' }));
   const box = el('div', { class: 'box' }, content);
   wrap.append(box);
   let resolveFn;
   const done = new Promise(r => resolveFn = r);
-  const close = v => { wrap.remove(); if (onClose) onClose(v); resolveFn(v); };
-  if (closable) box.append(onTap(el('button', { class: 'xbtn', text: '✕' }), () => { Sound.sfx('tap'); close(); }));
+  const close = v => { if (!wrap.isConnected) return; wrap.remove(); if (onClose) onClose(v); resolveFn(v); };
+  if (closable) box.append(onTap(el('button', { class: 'xbtn' + (xOut ? ' out' : ''), text: '✕' }), () => { Sound.sfx('tap'); close('x'); }));
+  if (outside) wrap.addEventListener('click', e => { if (!box.contains(e.target)) { Sound.sfx('tap'); close('outside'); } });
   L.overlay.append(wrap);
   return { wrap, box, close, done };
 }
 
-/* 옛 문서 보기. pick이 있으면 중요한 문장을 눌러 찾아야 한다. rub가 있으면 문질러서 글자를 되살린다. */
+/* 옛 문서 보기. pick이 있으면 중요한 문장을 눌러 찾아야 한다. rub가 있으면 문질러서 글자를 되살린다.
+   한 줄(line) 안의 \n은 같은 문장 안의 줄바꿈이고, 줄과 줄 사이는 문단 간격이 된다. */
 function showDoc({ title, era, lines, ask, pick, rub, btn = '다 읽었어', key }) {
   return new Promise(resolve => {
     const doc = el('div', { class: 'doc paper' });
     doc.append(el('div', { class: 'dt', text: title }));
     if (era) doc.append(el('div', { class: 'de', text: era }));
+    const scroll = el('div', { class: 'dscroll' });
     const body = el('div', { class: rub ? 'rubwrap' : '' });
-    const lineEls = lines.map((ln, i) => {
+    const lineEls = lines.map(ln => {
       const o = typeof ln === 'string' ? { t: ln } : ln;
       const e = el('div', { class: 'dl' + (o.note ? ' note' : '') + (o.head ? ' head' : '') + (pick && !o.note && !o.head ? ' pick' : ''), text: o.t });
       body.append(e); return e;
     });
-    doc.append(body);
-    if (ask) doc.append(el('div', { class: 'ask', text: ask }));
+    scroll.append(body);
+    doc.append(scroll);
     const foot = el('div', { class: 'dfoot' });
+    if (ask) foot.append(el('div', { class: 'ask', text: ask }));
+    const hintSlot = el('div', { class: 'hintslot' });
+    const btnRow = el('div', { class: 'dbtns' });
+    foot.append(hintSlot, btnRow);
     doc.append(foot);
     const m = modal(doc, { closable: false });
-    const finish = v => { m.close(); resolve(v); };
+    const prevHost = HINT.host; hintHost(hintSlot);
+    const finish = v => { HINT.host = prevHost; clearHint(); m.close(); resolve(v); };
     const showBtn = () => {
-      if (foot.children.length) return;
-      foot.append(onTap(el('button', { class: 'btn blue', text: btn }), () => { Sound.sfx('tap'); finish(true); }));
+      if (btnRow.children.length) return;
+      btnRow.append(onTap(el('button', { class: 'btn blue', text: btn }), () => { Sound.sfx('tap'); finish(true); }));
+      DEV.solve = () => finish(true);
     };
     if (pick) {
       let tries = 0; const found = new Set();
       const need = pick.correct.length;
-      const complete = () => { DEV.solve = null; award(key || pick.key, tries + 1 > 1 ? tries + 1 : 1); setTimeout(showBtn, 300); };
+      const complete = revealed => {
+        DEV.solve = null; award(key || pick.key, tries + 1);
+        if (revealed) hint(pick.reveal || '같이 찾아보자. 바로 이 문장이야!', 'gaji', 60000);
+        setTimeout(showBtn, 300);
+      };
+      const shake = e => { e.classList.remove('bad'); void e.offsetWidth; e.classList.add('bad'); setTimeout(() => e.classList.remove('bad'), 650); };
       lineEls.forEach((e, i) => {
-        if (lines[i].note || lines[i].head) return;
+        const o = lines[i];
+        if (o.note || o.head) return;
         onTap(e, () => {
           if (found.size >= need) return;
           if (pick.correct.includes(i)) {
             if (found.has(i)) return;
             found.add(i); e.classList.add('good'); Sound.sfx('good');
-            if (found.size >= need) complete();
+            if (found.size >= need) complete(false);
           } else {
-            tries++; e.classList.remove('bad'); void e.offsetWidth; e.classList.add('bad');
-            const giveUp = wrongFeedback(tries, pick.hint);
-            if (giveUp) {
+            tries++; shake(e);
+            const own = pick.wrong && pick.wrong[i];
+            if (wrongFeedback(tries, own || pick.hint, own || undefined)) {
               pick.correct.forEach(j => { found.add(j); lineEls[j].classList.add('good'); });
-              hint(pick.reveal || '같이 찾아보자. 바로 이 문장이야!', 'gaji');
-              complete();
+              complete(true);
             }
           }
         });
       });
-      DEV.solve = () => { pick.correct.forEach(j => { found.add(j); lineEls[j].classList.add('good'); }); complete(); };
+      DEV.solve = () => { pick.correct.forEach(j => { found.add(j); lineEls[j].classList.add('good'); }); complete(false); };
     } else if (rub) {
       requestAnimationFrame(() => setupRub(body, () => { showBtn(); }));
       DEV.solve = () => { const c = body.querySelector('canvas'); if (c) c.remove(); showBtn(); };
@@ -306,6 +342,19 @@ function setupRub(wrap, onDone) {
 }
 
 /* 증거 카드 */
+function cardName(c, mini) {
+  const nm = c.nm || c.name;
+  if (!mini) return nm;
+  return c.id === 'yeoji' ? '『신증\n동국여지승람』' : nm;
+}
+function cardText(c) {
+  const t = el('div', { class: 'ctext' });
+  if (c.why && c.text.includes(c.why)) {
+    const [a, b] = c.text.split(c.why);
+    t.append(a, el('mark', { class: 'hl', text: c.why }), b);
+  } else t.textContent = c.text;
+  return t;
+}
 function cardEl(c, { mini = false, borrowed = false, locked = false } = {}) {
   const e = el('div', { class: `card ${c.rar}${mini ? ' mini' : ''}${borrowed ? ' borrowed' : ''}${locked ? ' locked' : ''}` });
   if (locked) {
@@ -313,9 +362,14 @@ function cardEl(c, { mini = false, borrowed = false, locked = false } = {}) {
     return e;
   }
   e.append(el('div', { class: 'ctop ' + c.cat }, c.ico, el('span', { class: 'cyear', text: c.year }), el('span', { class: 'crar', text: RARITY[c.rar].name })));
-  e.append(el('div', { class: 'cname', text: c.name }));
+  const name = cardName(c, mini);
+  const longest = Math.max(...name.split('\n').map(x => x.length));
+  const nameEl = el('div', { class: 'cname', text: name });
+  if (mini) nameEl.style.fontSize = (longest <= 7 ? 18 : longest <= 8 ? 16 : longest <= 9 ? 14.5 : 13) + 'px';
+  else if (longest > 10) nameEl.style.fontSize = '24px';
+  e.append(nameEl);
   e.append(el('div', { class: 'ccat ' + c.cat, text: CAT[c.cat].name }));
-  e.append(el('div', { class: 'ctext', text: c.text }));
+  e.append(cardText(c));
   return e;
 }
 function hasCard(id) { return !!(S && S.cards[id]); }
@@ -323,13 +377,13 @@ function getCard(id) {
   return new Promise(resolve => {
     const c = CARD[id];
     if (!c || S.cards[id]) return resolve();
+    clearHint();
     S.cards[id] = true; S.cardOrder.push(id);
     Sound.sfx('card');
     setTimeout(() => Sound.sfx('stamp'), 500);
     const big = cardEl(c);
-    big.append(el('div', { class: 'csrc', text: '출처: ' + c.src }));
-    const wrap = el('div', { class: 'getcard' }, el('div', { class: 'label', text: c.rar === 'l' ? '✨ 전설 증거 발견! ✨' : '증거 발견!' }), big,
-      el('div', { class: 'stampfx', html: '증거<br>확보' }));
+    big.append(el('div', { class: 'csrc', text: '출처: ' + c.src }), el('div', { class: 'stampfx', html: '증거<br>확보' }));
+    const wrap = el('div', { class: 'getcard' }, el('div', { class: 'label', text: c.rar === 'l' ? '✨ 전설 증거 발견! ✨' : '증거 발견!' }), big);
     const m = modal(wrap, { closable: false });
     const btn = onTap(el('button', { class: 'btn green', text: '증거 도감에 넣기' }), () => { Sound.sfx('tap'); m.close(); resolve(); });
     wrap.append(btn);
@@ -340,10 +394,9 @@ function getCard(id) {
 }
 function openCard(c, borrowed) {
   const big = cardEl(c, { borrowed });
-  big.style.width = '380px'; big.style.height = '520px';
-  big.querySelector('.ctext').style.fontSize = '19px';
-  big.append(el('div', { class: 'csrc', text: '출처: ' + c.src, style: 'font:15px var(--body);color:#8a7a68;padding:8px 14px;margin-top:auto' }));
-  modal(big);
+  big.classList.add('bigview');
+  big.append(el('div', { class: 'csrc', text: '출처: ' + c.src }));
+  modal(big, { xOut: true, outside: true });
 }
 
 /* 노래 단서 풀기 */
@@ -391,39 +444,46 @@ function placeSeal(stage) {
   L.hidden.append(s);
 }
 
-/* 증거 보드: 단계에서 새로 모은 카드를 세 가지 근거로 나눈다. */
+/* 증거 보드: 단계에서 새로 모은 카드를 세 가지 근거로 나눈다.
+   앞 단계에서 넣은 카드도 칸에 계속 보이고(연하게), 새로 넣은 카드는 맨 위에 쌓인다. */
 function evidenceBoard(stage) {
   return new Promise(resolve => {
     const ids = CARDS.filter(c => c.st === stage && S.cards[c.id] && !S.boarded[c.id]).map(c => c.id);
     if (!ids.length) return resolve();
-    const root = el('div', { class: 'panel', style: 'width:1180px;height:600px;padding:18px 24px;position:relative' });
+    const root = el('div', { class: 'panel', style: 'width:1200px;height:660px;padding:16px 22px;position:relative;display:flex;flex-direction:column' });
     root.append(el('div', { style: 'font:30px var(--ui);text-align:center', text: '증거 보드: 새로 찾은 증거를 분류해 봐!' }),
-      el('div', { style: 'font:19px var(--body);text-align:center;color:#bcd3ea;margin:4px 0 12px', text: '카드를 누른 다음, 알맞은 근거 칸을 눌러 줘.' }));
-    const tray = el('div', { style: 'display:flex;gap:12px;justify-content:center;min-height:200px;flex-wrap:wrap' });
-    const bins = el('div', { style: 'display:flex;gap:16px;margin-top:14px' });
-    root.append(tray, bins);
+      el('div', { style: 'font:19px var(--body);text-align:center;color:#bcd3ea;margin:6px 0 10px', text: '카드를 누른 다음, 알맞은 근거 칸을 눌러 줘.' }));
+    const tray = el('div', { style: 'display:flex;gap:12px;justify-content:center;min-height:196px;flex-wrap:wrap' });
+    const slot = el('div', { class: 'hintslot', style: 'min-height:0' });
+    const bins = el('div', { style: 'display:flex;gap:16px;margin-top:10px;flex:1;min-height:0' });
+    root.append(tray, slot, bins);
     const m = modal(root, { closable: false });
+    hintHost(slot);
     let sel = null, left = ids.length;
     const tries = {};
-    const binEls = {};
+    const chip = (c, fresh) => el('div', { class: 'binchip' + (fresh ? ' fresh' : ''), text: c.name });
     for (const k of ['hist', 'geo', 'law']) {
-      const b = el('div', { class: 'slot', style: `flex:1;height:230px;flex-direction:column;justify-content:flex-start;padding-top:10px;border-color:var(--${k})` },
-        el('div', { style: `font:25px var(--ui);color:#fff;background:var(--${k});padding:4px 16px;border-radius:12px`, text: CAT[k].name }),
-        el('div', { style: 'font:17px var(--body);color:#dfe9f5;margin:6px 0', text: CAT[k].desc }),
-        el('div', { class: 'bincards', style: 'display:flex;flex-wrap:wrap;gap:6px;justify-content:center' }));
-      binEls[k] = b; bins.append(b);
+      const list = el('div', { class: 'binlist' });
+      for (const oid of S.cardOrder.slice().reverse()) if (S.boarded[oid] === k) list.append(chip(CARD[oid], false));
+      const count = el('span', { class: 'bincount' });
+      const b = el('div', { class: 'slot bin', style: `border-color:var(--${k})` },
+        el('div', { class: 'binhead', style: `background:var(--${k})` }, CAT[k].name, count),
+        el('div', { style: 'font:16px var(--body);color:#dfe9f5;margin:6px 0 8px', text: CAT[k].desc }), list);
+      const setCount = () => { count.textContent = ` · ${list.children.length}장`; };
+      setCount();
+      bins.append(b);
       onTap(b, () => {
         if (!sel) { hint('먼저 위에서 카드를 하나 골라 줘!'); return; }
         const c = CARD[sel.dataset.id];
         const ok = k === c.cat || (c.alt || []).includes(k);
         if (ok) {
-          Sound.sfx('good');
+          Sound.sfx('good'); clearHint();
           addScore(tries[c.id] ? BOARD_PTS / 2 : BOARD_PTS, 640, 300);
           S.boarded[c.id] = k;
           sel.remove();
-          b.querySelector('.bincards').append(el('div', { style: 'font:16px var(--ui);background:#fff;color:#333;padding:3px 10px;border-radius:8px', text: c.name }));
+          list.prepend(chip(c, true)); list.scrollTop = 0; setCount();
           sel = null; left--;
-          if (!left) setTimeout(() => { m.close(); save(); resolve(); }, 700);
+          if (!left) { DEV.solve = null; HINT.host = null; doneBar(root, { msg: '모든 증거를 분류했어! 칸마다 모인 증거를 살펴봐.' }).then(() => { m.close(); save(); resolve(); }); }
         } else {
           tries[c.id] = (tries[c.id] || 0) + 1; S.boardMiss++;
           Sound.sfx('bad'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
@@ -436,21 +496,36 @@ function evidenceBoard(stage) {
       onTap(c, () => { Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = c; c.classList.add('sel'); });
       tray.append(c);
     }
-    DEV.solve = () => { for (const id of ids) S.boarded[id] = CARD[id].cat; m.close(); resolve(); };
+    DEV.solve = () => { for (const id of ids) S.boarded[id] = CARD[id].cat; HINT.host = null; m.close(); resolve(); };
   });
 }
 
-/* 단계 시작: 미션 한 줄 */
+/* 단계 시작: 미션 한 줄과 시대 */
 function missionCard(stage) {
   return new Promise(resolve => {
     Sound.sfx('ping');
-    const box = el('div', { class: 'panel popin', style: 'width:760px;padding:30px 36px;text-align:center' },
+    const box = el('div', { class: 'panel popin', style: 'width:800px;padding:32px 36px;text-align:center' },
       el('div', { style: 'font:24px var(--ui);color:#bcd3ea', text: `${stage}단계` }),
-      el('div', { style: 'font:44px var(--ui);margin:4px 0 16px', text: `「${STAGE_NAMES[stage]}」` }),
+      el('div', { style: 'font:44px var(--ui);margin:8px 0 14px', text: `「${STAGE_NAMES[stage]}」` }),
+      el('div', { style: 'font:22px var(--ui);color:#cfe6ff;margin-bottom:18px', text: `⏳ ${ERAS[stage]}` }),
       el('div', { style: 'font:30px var(--ui);color:#ffd166', text: `🎯 미션: ${MISSIONS[stage]}` }));
     const m = modal(box, { closable: false });
-    box.append(el('div', { style: 'margin-top:22px' }, onTap(el('button', { class: 'btn', text: '시작!' }), () => { Sound.sfx('tap'); m.close(); resolve(); })));
+    box.append(el('div', { style: 'margin-top:26px' }, onTap(el('button', { class: 'btn', text: '시작!' }), () => { Sound.sfx('tap'); m.close(); resolve(); })));
     DEV.solve = () => { m.close(); resolve(); };
+  });
+}
+function setEra(when) { S.era = when; HUD.update(); save(); }
+/* 장면의 시대가 바뀔 때: "⏳ 시간 이동" 알림. 위쪽 막대에도 지금 시대를 적는다. */
+function timeJump(when, where) {
+  S.era = when; HUD.update(); save();
+  return new Promise(resolve => {
+    Sound.sfx('whoosh');
+    const b = el('div', { class: 'timejump' }, el('div', { class: 'tj1', text: '⏳ 시간 이동' }), el('div', { class: 'tj2', text: when }), where ? el('div', { class: 'tj3', text: where }) : null);
+    L.toast.append(b);
+    let done = false;
+    const end = () => { if (done) return; done = true; b.classList.add('out'); setTimeout(() => { b.remove(); resolve(); }, 320); };
+    b.addEventListener('click', end);
+    setTimeout(end, 2000);
   });
 }
 

@@ -62,7 +62,7 @@ function newState(player, attempt = 1) {
   return {
     v: 1, player, attempt, runId: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
     stage: 0, step: 0, playMs: 0, score: 0, combo: 0, maxCombo: 0,
-    cards: {}, cardOrder: [], boarded: {}, clues: {}, seals: {}, badges: {}, mistakes: {}, stars: {}, stageMiss: {},
+    cards: {}, cardOrder: [], boarded: {}, clues: {}, seals: {}, badges: {}, mistakes: {}, stars: {}, stageMiss: {}, era: '',
     names: {}, skipped: false, teacher: false, finished: false, submitted: false, expl: [null, null, null], boardMiss: 0,
     bonus: 0,
   };
@@ -94,6 +94,7 @@ function addScore(n, x, y) {
 }
 /* 도전 과제 성공: 몇 번 만에 풀었는지에 따라 점수를 준다. */
 function award(key, tries = 1, base, x, y) {
+  clearHint();
   if (base == null) base = CH[key] || 100;
   const rate = tries <= 1 ? 1 : tries === 2 ? 0.6 : tries === 3 ? 0.3 : 0.1;
   let pts = Math.round(base * rate);

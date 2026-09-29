@@ -5,6 +5,8 @@ function facilityGame() {
   return new Promise(resolve => {
     const root = el('div', { style: 'position:absolute;inset:64px 0 0 0;background:radial-gradient(circle at 42% 50%,#2f8cc9,#0f4d7d)' });
     L.scene.append(root);
+    HINT.pos = 'top';
+    const endBox = el('div', { style: 'position:absolute;right:24px;top:170px;width:340px;padding:6px 18px 18px;border-radius:18px;background:rgba(8,26,48,.88);display:flex;justify-content:center;z-index:3' });
     root.append(el('div', { class: 'mg-title', style: 'top:10px', text: '🏗️ 시설 아이콘을 쓰임에 맞는 자리로 옮겨 줘!' }));
     const cv = el('canvas', { width: 900, height: 560, style: 'position:absolute;left:0;top:70px' });
     root.append(cv);
@@ -48,7 +50,7 @@ function facilityGame() {
         target.append(el('img', { src: img('fac-' + want), style: 'width:64px;height:64px' }), el('div', { style: 'font:16px var(--ui)', text: names[want] }));
         if (want === 5) target.firstChild.style.filter = 'grayscale(1)';
         ic.remove(); Sound.sfx('good'); award('s7_place', 1, 40); left--;
-        if (!left) { DEV.solve = null; setTimeout(() => { root.remove(); resolve(tries); }, 800); }
+        if (!left) { DEV.solve = null; root.append(endBox); doneBar(endBox, { msg: '시설을 모두 제자리에 놓았어!' }).then(() => { HINT.pos = 'left'; root.remove(); resolve(tries); }); }
       } else {
         tries++; target.classList.remove('shake'); void target.offsetWidth; target.classList.add('shake');
         if (want === 5) { miss(); hint(hints[5], 'wow'); }
@@ -72,7 +74,7 @@ function facilityGame() {
 
 /* 관람 안내판 (화면 위쪽에 계속 보이게 둔다) */
 function signBoard() {
-  const b = el('div', { class: 'paper', style: 'position:absolute;left:190px;top:76px;width:900px;padding:14px 26px;font:19px/1.6 var(--old);z-index:2' });
+  const b = el('div', { class: 'paper', style: 'position:absolute;left:190px;top:72px;width:900px;padding:10px 26px;font:18px/1.5 var(--old);z-index:2' });
   b.append(el('div', { style: 'font:700 24px var(--old);text-align:center', text: '독도 관람 안내' }));
   for (const t of ['① 일반 관람객은 동도 선착장 일대에서만 관람할 수 있습니다.',
     '② 독도는 "독도 천연보호구역"입니다. 1982년 바닷새 번식지로 천연기념물에 지정되었습니다.',
@@ -86,6 +88,7 @@ function signBoard() {
 const STAGE7 = [
   async () => {
     setBg('bg-stage7'); fogFx(0); Sound.play('sail'); placeSeal(7);
+    await timeJump('오늘날 · 대한민국', '독도');
     await talk([
       ['narr', '오늘날의 독도. 파란 바다 위로 여객선이 다가오고, 동도 꼭대기에는 하얀 등대가 서 있다.'],
       ['gaji:yay', '여기가 지금의 독도야! 독도 관리소에서 일손이 필요하대. 우리가 도와주자!'],
@@ -139,7 +142,7 @@ const STAGE7 = [
         { t: '작은 돌 하나쯤은 괜찮아요.', re: '안내판 ②, ③번을 다시 읽어 볼까?' },
         { t: '갈매기 알은 가져가도 돼요.', re: '안내판 ②, ③번을 다시 읽어 볼까?' }] },
       { who: 'student', q: '독도의 자연을 지키기 위한 법도 있어요?', opts: [
-        { t: '「독도의 지속가능한 이용에 관한 법률」이 있어요. 독도와 주변 바다를 잘 보전하고 이용하려고 만든 법이에요.', ok: true },
+        { t: '네, 「독도의 지속가능한 이용에 관한 법률」로 보호하고 있어요.', ok: true },
         { t: '아니요, 아무 법도 없어요.', re: '안내판 ④번에 적혀 있었어!' },
         { t: '다른 나라의 법으로 관리해요.', re: '안내판 ④번을 다시 읽어 볼까?' }] },
     ];

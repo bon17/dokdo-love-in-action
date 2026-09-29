@@ -54,7 +54,9 @@ function cardBattle() {
     const bar = el('div', { style: 'position:absolute;left:0;right:0;bottom:12px;display:flex;gap:16px;justify-content:center;align-items:center' });
     const readBtn = el('button', { class: 'btn blue', text: '🔍 카드 읽기', disabled: true });
     const hitBtn = el('button', { class: 'btn', text: '⚔️ 이 증거로 반박!', disabled: true, style: 'font-size:30px;min-height:66px' });
-    const tip = el('div', { style: 'font:19px var(--body);color:#dfe9f5;max-width:420px', text: '카드를 골라 "카드 읽기"로 내용을 확인한 뒤 반박해!' });
+    const tipSlot = el('div', { class: 'hintslot' });
+    const tip = el('div', { class: 'battletip', style: 'font:19px/1.5 var(--body);color:#dfe9f5;width:430px' }, tipSlot, el('div', { class: 'tt', text: '카드를 골라 "카드 읽기"로 내용을 확인한 뒤 반박해!' }));
+    hintHost(tipSlot);
     bar.append(tip, readBtn, hitBtn);
     root.append(bossWrap, tbar, hearts, combo, hand, bar);
     let life = 3, ci = 0, sel = null, tries = 0, t0 = 0, raf, busy = false, perfect = true, combo2 = 0;
@@ -162,6 +164,7 @@ function cardBattle() {
 const STAGE8 = [
   async () => {
     setBg('bg-stage8'); fogFx(0.6); Sound.play('boss'); placeSeal(8);
+    await timeJump('오늘날', '국제 토론장');
     await talk([
       ['narr', '마지막으로 도착한 곳은 세계 여러 나라 사람들이 모이는 국제 토론장. 무대 위로 망각의 안개가 모여든다.'],
       ['fog', '크크크… 기록을 되찾았다고? 하지만 사람들은 내 말을 더 오래 기억할걸!'],

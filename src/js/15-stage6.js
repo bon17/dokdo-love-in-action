@@ -30,6 +30,7 @@ function timelineRush() {
   return new Promise(async resolve => {
     const root = el('div', { style: 'position:absolute;inset:64px 0 0 0;background:rgba(6,20,37,.82)' });
     L.scene.append(root);
+    HINT.pos = 'center';
     const title = el('div', { class: 'mg-title', style: 'top:10px' });
     const timer = el('div', { style: 'position:absolute;right:20px;top:14px;font:22px var(--ui);background:rgba(8,26,48,.9);padding:6px 14px;border-radius:10px' });
     const tip = el('div', { style: 'position:absolute;left:0;right:0;top:62px;text-align:center;font:18px var(--body);color:#bcd3ea' });
@@ -103,6 +104,7 @@ function timelineRush() {
     title.textContent = '🎉 연표 완성! 독도를 둘러싼 1,400여 년의 흐름';
     tip.textContent = '빨간 점은 일본 측 기록, 파란 점은 우리와 연합국 측 기록이야. 천천히 한 바퀴 읽어 봐.';
     tray.innerHTML = '';
+    HINT.pos = 'left'; clearHint();
     tray.append(onTap(el('button', { class: 'btn', text: '다 읽었어!' }), () => { root.remove(); resolve(total); }));
     DEV.solve = () => { root.remove(); resolve(total); };
   });
@@ -111,6 +113,7 @@ function timelineRush() {
 const STAGE6 = [
   async () => {
     setBg('bg-stage6'); fogFx(0.2); Sound.play('rush'); placeSeal(6);
+    await timeJump('1945년 · 광복', '광복 이후의 동해');
     await talk([
       ['narr', '1945년 8월, 광복. 우산호는 거센 시간의 물살을 타고 광복 이후의 동해로 달려간다.'],
       ['gaji', '광복 뒤 독도에는 어떤 일들이 있었을까? 시간의 물살에 떠밀려 오는 기록들을 붙잡자!'],

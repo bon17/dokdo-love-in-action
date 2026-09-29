@@ -75,6 +75,7 @@ function telescopeGame() {
   return new Promise(resolve => {
     const root = el('div', { style: 'position:absolute;inset:0;background:#07121f' });
     L.scene.append(root);
+    HINT.pos = 'top';
     root.append(el('div', { class: 'mg-title', text: '🔭 울릉도 전망대: 바다 저편의 섬을 찾아봐!' }));
     const VW = 1000, VH = 470, PPD = 16;
     const cv = el('canvas', { width: VW, height: VH, style: `position:absolute;left:140px;top:130px;border-radius:235px/200px;border:10px solid #2a3b50;box-shadow:0 0 0 2000px rgba(4,10,18,.75);touch-action:none;cursor:grab` });
@@ -167,7 +168,7 @@ function telescopeGame() {
       found = true; DEV.solve = null; Sound.sfx('good');
       award('s1_scope', helping ? 3 : level >= 3 || tries > 5 ? 2 : 1);
       view = DOKDO; guide.textContent = '🎉 찾았다! 울릉도에서 보이는 바위섬!';
-      setTimeout(() => { cancelAnimationFrame(raf); root.remove(); resolve(); }, 1200);
+      setTimeout(() => { cancelAnimationFrame(raf); HINT.pos = 'left'; root.remove(); resolve(); }, 1200);
     };
     DEV.solve = win;
   });
@@ -202,6 +203,7 @@ function sailGame() {
   return new Promise(resolve => {
     const root = el('div', { style: 'position:absolute;inset:0;background:#0f4d7d' });
     L.scene.append(root);
+    HINT.pos = 'right';
     const cv = el('canvas', { width: W, height: H, style: 'position:absolute;inset:0;touch-action:none' });
     root.append(cv);
     const g = cv.getContext('2d');
@@ -235,7 +237,7 @@ function sailGame() {
     const W2S = (x, y) => ({ x: (x - cam.x) * cam.z + W / 2, y: (y - cam.y) * cam.z + (H + 64) / 2 });
     const S2W = (x, y) => ({ x: (x - W / 2) / cam.z + cam.x, y: (y - (H + 64) / 2) / cam.z + cam.y });
     const poly = pts => { g.beginPath(); pts.forEach((p, i) => { const s = W2S(gx(p[0]), gy(p[1])); i ? g.lineTo(s.x, s.y) : g.moveTo(s.x, s.y); }); g.closePath(); };
-    const label = (t, x, y, size = 22, col = '#fff') => { const s = W2S(x, y); g.font = `${size}px RIDIBatang, serif`; g.textAlign = 'center'; g.lineWidth = 4; g.strokeStyle = 'rgba(0,0,0,.5)'; g.strokeText(t, s.x, s.y); g.fillStyle = col; g.fillText(t, s.x, s.y); };
+    const label = (t, x, y, size = 22, col = '#fff', dx = 0, dy = 0) => { const s = W2S(x, y); g.font = `${size}px RIDIBatang, serif`; g.textAlign = 'center'; g.lineWidth = 5; g.strokeStyle = 'rgba(0,0,0,.6)'; g.strokeText(t, s.x + dx, s.y + dy); g.fillStyle = col; g.fillText(t, s.x + dx, s.y + dy); };
     const drawDokdo = (x, y, sc = 1) => { const s = W2S(x, y); g.fillStyle = '#6aa37a'; g.strokeStyle = '#2c5c44'; g.lineWidth = 2;
       g.beginPath(); g.moveTo(s.x - 22 * sc, s.y + 6 * sc); g.lineTo(s.x - 14 * sc, s.y - 12 * sc); g.lineTo(s.x - 6 * sc, s.y + 6 * sc); g.closePath(); g.fill(); g.stroke();
       g.beginPath(); g.moveTo(s.x - 2 * sc, s.y + 6 * sc); g.lineTo(s.x + 8 * sc, s.y - 8 * sc); g.lineTo(s.x + 18 * sc, s.y + 6 * sc); g.closePath(); g.fill(); g.stroke(); };
@@ -282,11 +284,14 @@ function sailGame() {
       g.fillStyle = '#6aa37a';
       for (const k of ['ulleung', 'oki', 'oki2', 'oki3']) { poly(ISLES[k].shape); g.fill(); g.stroke(); }
       drawDokdo(D.x, D.y, 1.3);
-      label('한반도', gx(129.05), gy(36.9), 28); label('울릉도', U.x, U.y + 55); label('동해', gx(130.3), gy(36.6), 34, 'rgba(255,255,255,.7)');
-      label('오키섬 (일본)', OKI.x, OKI.y - 70); label('혼슈 (일본)', gx(133.0), gy(35.5) - 18);
-      if (arrived) label('독도', D.x, D.y - 30, 26, '#ffe08a');
+      label('한반도', gx(129.05), gy(36.9), 28);
+      if (arrived) label('울릉도', U.x, U.y, 24, '#fff', -8, -26); else label('울릉도', U.x, U.y + 55);
+      label('동해', gx(130.3), gy(36.6), 34, 'rgba(255,255,255,.7)');
+      if (arrived) label('오키섬 (일본)', OKI.x, OKI.y, 24, '#fff', 0, -34); else label('오키섬 (일본)', OKI.x, OKI.y - 70);
+      label('혼슈 (일본)', gx(133.0), gy(35.5) - 18);
+      if (arrived) label('독도', D.x, D.y, 26, '#ffe08a', 0, -30);
       for (const b of buoys) { if (b.got) continue; const s = W2S(b.x, b.y); g.fillStyle = 'rgba(255,200,80,.35)'; g.beginPath(); g.arc(s.x, s.y, 26 + Math.sin(now / 200) * 5, 0, 7); g.fill(); g.font = '30px sans-serif'; g.textAlign = 'center'; g.fillText(b.ico, s.x, s.y + 10); }
-      for (const w of whirls) { const s = W2S(w.x, w.y); g.strokeStyle = 'rgba(235,240,248,.7)'; g.lineWidth = 5; for (let k = 0; k < 3; k++) { g.beginPath(); g.arc(s.x, s.y, (w.r - k * 12) * cam.z, now / 300 + k, now / 300 + k + 4); g.stroke(); } }
+      if (!arrived) for (const w of whirls) { const s = W2S(w.x, w.y); g.strokeStyle = 'rgba(235,240,248,.7)'; g.lineWidth = 5; for (let k = 0; k < 3; k++) { g.beginPath(); g.arc(s.x, s.y, (w.r - k * 12) * cam.z, now / 300 + k, now / 300 + k + 4); g.stroke(); } }
       g.save(); g.imageSmoothingEnabled = true;
       const o = W2S(0, 0); g.drawImage(fogCv, o.x, o.y, WORLD.w * cam.z, WORLD.h * cam.z); g.restore();
       for (const b of buoys) { if (b.got) continue; const s = W2S(b.x, b.y); g.fillStyle = `rgba(255,190,60,${0.5 + 0.3 * Math.sin(now / 250)})`; g.beginPath(); g.arc(s.x, s.y, 9, 0, 7); g.fill(); }
@@ -295,14 +300,15 @@ function sailGame() {
         g.setLineDash([12, 8]); g.lineWidth = 4;
         g.strokeStyle = '#ffe08a'; g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke();
         g.strokeStyle = '#ff9a9a'; g.beginPath(); g.moveTo(b.x, b.y); g.lineTo(c.x, c.y); g.stroke(); g.setLineDash([]);
-        label('약 87.4km', (U.x + D.x) / 2, (U.y + D.y) / 2 - 16, 26, '#ffe08a');
-        label('약 157.5km', (D.x + OKI.x) / 2 + 60, (D.y + OKI.y) / 2, 26, '#ffb3b3');
+        label('약 87.4km', (U.x + D.x) / 2, (U.y + D.y) / 2, 26, '#ffe08a', 0, 40);
+        label('약 157.5km', (D.x + OKI.x) / 2, (D.y + OKI.y) / 2, 26, '#ffb3b3', 90, 0);
       }
       const bs = W2S(boat.x, boat.y);
       g.save(); g.translate(bs.x, bs.y); g.rotate(boat.h * Math.PI / 180);
       const bw = 64 * Math.max(cam.z, 0.6); if (boatImg.complete) g.drawImage(boatImg, -bw / 2, -bw / 2, bw, bw); g.restore();
       if (target && !arrived) { const t = W2S(target.x, target.y); g.strokeStyle = '#fff'; g.lineWidth = 3; g.beginPath(); g.arc(t.x, t.y, 14, 0, 7); g.stroke(); }
-      // 미니맵
+      // 미니맵 (도착하면 숨김)
+      if (arrived) { meterUpdate(); return; }
       g.fillStyle = 'rgba(8,26,48,.85)'; g.fillRect(MM.x - 6, MM.y - 6, MM.w + 12, MM.h + 12);
       const mk = MM.w / WORLD.w;
       g.fillStyle = '#1b6aa3'; g.fillRect(MM.x, MM.y, MM.w, MM.h);
@@ -312,6 +318,9 @@ function sailGame() {
       g.drawImage(fogCv, MM.x, MM.y, MM.w, MM.h);
       g.fillStyle = '#ff5a4a'; g.beginPath(); g.arc(MM.x + boat.x * mk, MM.y + boat.y * mk, 4, 0, 7); g.fill();
       if (arrived) { g.fillStyle = '#ffe08a'; g.beginPath(); g.arc(MM.x + D.x * mk, MM.y + D.y * mk, 4, 0, 7); g.fill(); }
+      meterUpdate();
+    };
+    const meterUpdate = () => {
       const dist = Math.max(0, Math.hypot(boat.x - U.x, boat.y - U.y) / GEO.Z - 5);
       meter.innerHTML = `울릉도에서 <b style="color:#ffe08a">${arrived ? '87.4' : dist.toFixed(1)}km</b>`;
       needle.style.transform = `rotate(${boat.h}deg)`;
@@ -323,14 +332,14 @@ function sailGame() {
     const arrive = async () => {
       DEV.solve = null; target = null; busy = true;
       const secs = (performance.now() - t0 - pausedMs) / 1000;
-      Sound.sfx('good'); Sound.sfx('gull');
-      reveal(D.x, D.y, 260);
+      Sound.sfx('good'); Sound.sfx('gull'); clearHint();
+      fg.clearRect(0, 0, fogCv.width, fogCv.height);
       award('s1_nav', 1);
       if (secs <= 40) giveBadge('speed');
       title.textContent = '🏝️ 독도에 도착했다!';
       const z0 = cam.z, zt = 0.34, cx0 = cam.x, cy0 = cam.y, tx = (U.x + OKI.x) / 2 + 20, ty = (U.y + OKI.y) / 2 - 20, st = performance.now();
       await new Promise(r => { const an = () => { const p = Math.min(1, (performance.now() - st) / 1500); cam.z = z0 + (zt - z0) * p; cam.x = cx0 + (tx - cx0) * p; cam.y = cy0 + (ty - cy0) * p; if (p < 1) requestAnimationFrame(an); else r(); }; an(); });
-      frameStop = true;
+      frameStop = true; HINT.pos = 'left';
       resolve({ secs, buoys: buoys.filter(b => b.got).length });
     };
     let frameStop = false;
@@ -401,7 +410,7 @@ function droneGame() {
       rocks.forEach(k => k.seen = true); big.w = big.e = true; seen = 89; drawAll();
       info.innerHTML = `큰 섬: 서도 ✓ · 동도 ✓<br>작은 바위섬(부속도서): <b style="color:#ffd166">89</b>개<br><span style="font-size:18px;color:#bcd3ea">드론 측정 넓이: 모두 합쳐 187,554㎡</span>`;
       Sound.sfx('good'); award('s1_drone', 1);
-      await sleep(1600);
+      await doneBar(info);
       resolve();
     };
     let down = false;
@@ -416,7 +425,7 @@ function droneGame() {
 
 const STAGE1 = [
   async () => {
-    setBg('bg-stage1'); fogFx(0.6); Sound.play('sail'); placeSeal(1);
+    setBg('bg-stage1'); fogFx(0.6); Sound.play('sail'); placeSeal(1); setEra('오늘날 · 동해');
     await talk([
       ['narr', '타임 패트롤의 배, 우산호가 안개 낀 동해로 나아간다.'],
       ['gaji', '첫 임무는 독도를 찾는 거야. 그런데 안개가 지도에서 독도를 지워 버렸어!'],
