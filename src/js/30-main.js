@@ -36,6 +36,7 @@ async function runGame() {
     HUD.update();
     while (S.step < steps.length) {
       clearScene(); L.dialog.innerHTML = ''; clearHint();
+      if (S.step === 0 && MISSIONS[S.stage]) await missionCard(S.stage);
       await steps[S.step]();
       S.step++; save();
     }

@@ -75,13 +75,21 @@ function telescopeGame() {
   return new Promise(resolve => {
     const root = el('div', { style: 'position:absolute;inset:0;background:#07121f' });
     L.scene.append(root);
-    root.append(el('div', { class: 'mg-title', text: '🔭 울릉도 전망대: 망원경을 돌려 바다를 살펴봐!' }));
+    root.append(el('div', { class: 'mg-title', text: '🔭 울릉도 전망대: 바다 저편의 섬을 찾아봐!' }));
     const VW = 1000, VH = 470, PPD = 16;
     const cv = el('canvas', { width: VW, height: VH, style: `position:absolute;left:140px;top:130px;border-radius:235px/200px;border:10px solid #2a3b50;box-shadow:0 0 0 2000px rgba(4,10,18,.75);touch-action:none;cursor:grab` });
-    const read = el('div', { style: 'position:absolute;left:0;right:0;top:612px;text-align:center;font:26px var(--ui);color:#dfe9f5' });
-    root.append(cv, read);
+    const read = el('div', { style: 'position:absolute;left:0;right:0;top:626px;text-align:center;font:25px var(--ui);color:#dfe9f5' });
+    const guide = el('div', { style: 'position:absolute;left:0;right:0;top:672px;text-align:center;font:20px var(--ui);color:#ffd9a8', text: '👆 화면을 좌우로 끌거나 ◀ ▶ 버튼을 눌러 망원경을 돌려 봐. 맑을 때 섬이 보이면 그 섬을 눌러!' });
+    let turn = 0;
+    const turnBtn = (dir, x) => {
+      const b = el('button', { class: 'btn blue', text: dir < 0 ? '◀' : '▶', style: `position:absolute;left:${x}px;top:330px;width:84px;height:84px;font-size:36px;padding:0;touch-action:none` });
+      b.addEventListener('pointerdown', e => { e.preventDefault(); turn = dir; moved = true; });
+      for (const ev of ['pointerup', 'pointerleave', 'pointercancel']) b.addEventListener(ev, () => { turn = 0; });
+      return b;
+    };
+    root.append(cv, read, guide, turnBtn(-1, 28), turnBtn(1, 1168));
     const g = cv.getContext('2d');
-    let view = 0, t0 = performance.now(), raf, found = false, tries = 0, lastHint = t0;
+    let view = 0, t0 = performance.now(), raf, found = false, tries = 0, lastT = t0, moved = false, level = 0, sawIt = false, helping = false;
     const DOKDO = 110, clouds = Array.from({ length: 14 }, () => ({ b: Math.random() * 360, y: 30 + Math.random() * 120, w: 80 + Math.random() * 160, s: 0.2 + Math.random() * 0.5 }));
     const haze = t => { const ph = (t / 1000) % 7; return ph < 2.6 ? 0.08 : ph < 3.3 ? 0.08 + (ph - 2.6) / 0.7 * 0.8 : ph > 6.3 ? 0.88 - (ph - 6.3) / 0.7 * 0.8 : 0.88; };
     const sx = b => { let d = ((b - view + 540) % 360) - 180; return VW / 2 + d * PPD; };
@@ -99,7 +107,7 @@ function telescopeGame() {
       // 독도
       const dx = sx(DOKDO);
       if (dx > -100 && dx < VW + 100) {
-        g.fillStyle = `rgba(60,80,95,${Math.max(0, 1 - hz * 1.15)})`;
+        g.fillStyle = `rgba(60,80,95,${Math.max(0.2, 1 - hz * 1.15)})`;
         g.beginPath(); g.moveTo(dx - 44, 262); g.lineTo(dx - 30, 246); g.lineTo(dx - 22, 232); g.lineTo(dx - 12, 248); g.lineTo(dx - 6, 262); g.fill();
         g.beginPath(); g.moveTo(dx + 2, 262); g.lineTo(dx + 12, 250); g.lineTo(dx + 22, 240); g.lineTo(dx + 34, 252); g.lineTo(dx + 42, 262); g.fill();
       }
@@ -116,20 +124,38 @@ function telescopeGame() {
         if (LAB[b] != null) g.fillText(LAB[b], x, 40);
       }
       g.strokeStyle = '#ff8a3d'; g.lineWidth = 3; g.beginPath(); g.moveTo(VW / 2, 50); g.lineTo(VW / 2, VH); g.stroke();
+      if (helping || found) {
+        g.strokeStyle = `rgba(255,209,102,${0.6 + 0.4 * Math.sin(now / 180)})`; g.lineWidth = 5;
+        g.beginPath(); g.arc(dx, 250, 62, 0, 7); g.stroke();
+      }
       read.textContent = `보는 방향: ${quadName(view)} (${Math.round((view + 360) % 360)}°) · ${hz < 0.4 ? '☀ 지금은 맑아요!' : '🌫 뿌옇게 흐려요… 잠깐 기다려 볼까?'}`;
-      if (!found && now - lastHint > 22000) { lastHint = now; hint('망원경을 천천히 한 바퀴 돌려 봐. 날씨가 맑아지는 순간을 놓치지 말고!'); }
+      const dt = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+      if (turn && !found) view = (view + turn * 40 * dt + 360) % 360;
+      if (!found) {
+        const el2 = (now - t0) / 1000;
+        const onScreen = Math.abs(((DOKDO - view + 540) % 360) - 180) < 28;
+        if (!moved && el2 > 8 && level < 1) { level = 1; hint('화면을 손가락으로 좌우로 끌면 망원경이 돌아가! ◀ ▶ 버튼을 눌러도 돼.', 'gaji', 6000); }
+        if (onScreen && !sawIt) { sawIt = true; hint(hz < 0.45 ? '어? 저기 바위섬 같은 게 보여! 눌러 봐!' : '어? 저쪽에 뭔가 희미하게 보여… 맑아질 때까지 기다려 봐!', 'wow', 5000); }
+        if (el2 > 20 && level < 2) { level = 2; hint('「독도는 우리 땅」 노래를 떠올려 봐! 울릉도에서 어느 쪽 뱃길을 따라가라고 했지?\n(📖 도감의 노래 단서 수첩에도 적혀 있어.)', 'gaji', 8000); }
+        if (el2 > 40 && level < 3) { level = 3; hint('나침반 띠에서 "동"과 "남동" 사이를 천천히 살펴봐!', 'gaji', 7000); }
+        if (el2 > 60 && level < 4) {
+          level = 4; helping = true; miss();
+          hint('같이 찾아보자! 반짝이는 동그라미 안에 섬이 있어. 맑아지면 눌러 봐!', 'gaji', 8000);
+        }
+        if (helping) view += (((DOKDO - view + 540) % 360) - 180) * Math.min(1, dt * 3);
+      }
       raf = requestAnimationFrame(draw);
     };
     raf = requestAnimationFrame(draw);
     let drag = null;
     cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, v: view, moved: false }; cv.setPointerCapture(e.pointerId); });
-    cv.addEventListener('pointermove', e => { if (!drag) return; const d = (e.clientX - drag.x) / SCALE; if (Math.abs(d) > 6) drag.moved = true; view = (drag.v - d / PPD + 360) % 360; });
+    cv.addEventListener('pointermove', e => { if (!drag || helping) return; const d = (e.clientX - drag.x) / SCALE; if (Math.abs(d) > 6) { drag.moved = true; moved = true; } view = (drag.v - d / PPD + 360) % 360; });
     cv.addEventListener('pointerup', e => {
       const d = drag; drag = null;
       if (!d || d.moved || found) return;
       const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / SCALE;
       const b = (view + (x - VW / 2) / PPD + 360) % 360;
-      const near = Math.abs(((b - DOKDO + 540) % 360) - 180) < 3.5;
+      const near = Math.abs(((b - DOKDO + 540) % 360) - 180) < 4.5;
       const hz = haze(performance.now() - t0);
       if (near && hz < 0.45) return win();
       if (near) { hint('저기 뭔가 있는 것 같은데… 흐려서 잘 안 보여. 맑아질 때 다시 눌러 봐!', 'wow'); return; }
@@ -139,8 +165,8 @@ function telescopeGame() {
     });
     const win = () => {
       found = true; DEV.solve = null; Sound.sfx('good');
-      award('s1_scope', tries > 5 ? 2 : 1);
-      view = DOKDO;
+      award('s1_scope', helping ? 3 : level >= 3 || tries > 5 ? 2 : 1);
+      view = DOKDO; guide.textContent = '🎉 찾았다! 울릉도에서 보이는 바위섬!';
       setTimeout(() => { cancelAnimationFrame(raf); root.remove(); resolve(); }, 1200);
     };
     DEV.solve = win;
@@ -393,7 +419,7 @@ const STAGE1 = [
     setBg('bg-stage1'); fogFx(0.6); Sound.play('sail'); placeSeal(1);
     await talk([
       ['narr', '타임 패트롤의 배, 우산호가 안개 낀 동해로 나아간다.'],
-      ['gaji', '첫 목적지는 독도가 있는 바다야. 그런데 안개가 지도에서 독도를 지워 버렸어!'],
+      ['gaji', '첫 임무는 독도를 찾는 거야. 그런데 안개가 지도에서 독도를 지워 버렸어!'],
       ['gaji:wow', '어? 라디오에서 노래가 흘러나와. 선생님이 틀어 준 그 노래 기억나?'],
       ['gaji', '노래 속에 독도를 찾는 단서가 숨어 있을지도 몰라. 주파수를 맞춰 보자!'],
     ]);
@@ -404,7 +430,7 @@ const STAGE1 = [
     setBg('bg-stage1'); fogFx(0.3); Sound.play('sail'); placeSeal(1);
     await talk([
       ['narr', '우산호는 먼저 울릉도에 닿았다. 높은 전망대에는 커다란 망원경이 있다.'],
-      ['gaji', '안개가 가끔 걷힐 때가 있대. 그때 망원경으로 바다 저편을 살펴보자. 어느 쪽에 섬이 있을까?'],
+      ['gaji', '이 망원경으로 독도를 찾아보자! 안개가 걷혀 맑아지는 순간, 바다 저편에 섬이 보일 거야.'],
     ]);
     clearScene();
     await telescopeGame();

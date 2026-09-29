@@ -440,6 +440,20 @@ function evidenceBoard(stage) {
   });
 }
 
+/* 단계 시작: 미션 한 줄 */
+function missionCard(stage) {
+  return new Promise(resolve => {
+    Sound.sfx('ping');
+    const box = el('div', { class: 'panel popin', style: 'width:760px;padding:30px 36px;text-align:center' },
+      el('div', { style: 'font:24px var(--ui);color:#bcd3ea', text: `${stage}단계` }),
+      el('div', { style: 'font:44px var(--ui);margin:4px 0 16px', text: `「${STAGE_NAMES[stage]}」` }),
+      el('div', { style: 'font:30px var(--ui);color:#ffd166', text: `🎯 미션: ${MISSIONS[stage]}` }));
+    const m = modal(box, { closable: false });
+    box.append(el('div', { style: 'margin-top:22px' }, onTap(el('button', { class: 'btn', text: '시작!' }), () => { Sound.sfx('tap'); m.close(); resolve(); })));
+    DEV.solve = () => { m.close(); resolve(); };
+  });
+}
+
 /* 단계 마무리 */
 async function stageClear(stage) {
   const mis = S.mistakes[stage] || 0;
