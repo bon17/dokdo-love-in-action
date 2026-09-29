@@ -3,7 +3,7 @@
 window.DOKDO_CONFIG = {
   // 랭킹용 구글 앱스 스크립트 웹 앱 주소 (https://script.google.com/macros/s/…/exec)
   // 비워 두면 랭킹 없이 게임만 돼요.
-  rankingUrl: "",
+  rankingUrl: "https://script.google.com/macros/s/AKfycbxNu6eR1QFnY5wt_fcA6hvAu7g4VFQhz8qC_dfXJwAH2WR2ikk4GLTAxwgRXQMGMAwAtg/exec",
 
   // 교사 모드 비밀번호 (시작 화면 오른쪽 아래 "선생님" 버튼)
   teacherCode: "3810",
