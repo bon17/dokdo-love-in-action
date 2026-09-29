@@ -59,7 +59,7 @@ function facilityGame() {
     };
     const icons = shuffle([0, 1, 2, 3, 4, 5]).map(i => {
       const ic = el('div', { class: 'tile', style: 'width:140px;height:140px;flex-direction:column;padding:6px;font:17px var(--ui)' },
-        el('img', { src: img('fac-' + i), style: 'width:88px;height:88px;pointer-events:none' }), el('div', { text: names[i] }));
+        el('img', { src: img('fac-' + i), style: 'width:88px;height:88px;pointer-events:none' }), el('div', {}, gtext(names[i])));
       ic.dataset.id = i;
       dragItem(ic, {
         onTap: () => { Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = ic; ic.classList.add('sel'); },
@@ -80,7 +80,7 @@ function signBoard() {
     '② 독도는 "독도 천연보호구역"입니다. 1982년 바닷새 번식지로 천연기념물에 지정되었습니다.',
     '③ 동식물과 돌, 흙을 가져가거나 해치지 마세요.',
     '④ 독도와 주변 바다는 「독도의 지속가능한 이용에 관한 법률」 등에 따라 보호·관리됩니다.',
-    '⑤ 파도가 높으면 배를 대지 못하고 섬 둘레만 돌아볼 수 있습니다.']) b.append(el('div', { text: t }));
+    '⑤ 파도가 높으면 배를 대지 못하고 섬 둘레만 돌아볼 수 있습니다.']) b.append(bulletLine(t.slice(0, 1), t.slice(2)));
   L.scene.append(b);
   return b;
 }
@@ -95,14 +95,18 @@ const STAGE7 = [
       ['gaji', '먼저 섬의 시설들을 제자리에 놓아 줘. 시설마다 알맞은 자리가 있어. 무엇에 쓰는 시설인지 생각해 봐!'],
     ]);
     await facilityGame();
-    await say('gaji', '완벽해! 가파른 화산섬이라 공항은 없지만, 섬을 지키고 사람이 살아가는 데 필요한 시설들이 있어.');
+    await talk([
+      ['gaji', '완벽해! 가파른 화산섬이라 공항은 없지만, 섬을 지키고 사람이 살아가는 데 필요한 시설들이 있어.'],
+      ['gaji', '이 시설들은 대한민국이 세우고 운영하고 있어. 나라가 지금 독도를 실제로 다스리고 있다는 모습이지.'],
+      ['gaji:wow', '국제법에서는 어떤 나라가 그 땅을 실제로 다스리고 있는지를 아주 중요하게 봐. 그래서 이 증거는 "국제법적 근거"가 돼. 시설이 섬의 어디에 있는지 보여 주니 "지리적 근거"로 볼 수도 있고!'],
+    ]);
     await getCard('facilities');
   },
   async () => {
     setBg('bg-stage7'); fogFx(0); Sound.play('sail'); placeSeal(7);
     await say('gaji', '독도에는 누가 살고 일하고 있을까? 사람들을 만나 이야기를 들어 보자.');
     await explore({
-      title: '👋 독도의 사람들을 만나 봐!',
+      title: '👋 독도의 사람들을 만나 봐!', review: true,
       spots: [
         { x: 980, y: 300, ico: '👮', label: '독도경비대원', run: () => talk([['guard', '우리는 독도경비대야. 경찰이 섬에 머물며 24시간 독도를 지키고 있어.'], ['guard', '1950년대에 독도의용수비대에게서 경비 임무를 넘겨받은 뒤로 경찰이 계속 지켜 왔지.']]) },
         { x: 1100, y: 190, ico: '💡', label: '등대관리원', run: () => talk([['keeper', '독도 등대는 밤바다를 지나는 배들에게 길을 알려 줘.'], ['keeper', '1954년에 처음 불을 밝혔고, 지금은 사람이 머물며 관리하는 유인등대야.']]) },
@@ -114,7 +118,7 @@ const STAGE7 = [
     await solveClue('people');
     await say('gaji', '대한민국이 지금 독도를 어떻게 지키고 다스리고 있는지, 섬 둘레를 살펴볼까?');
     await explore({
-      title: '🛡️ 오늘의 독도를 지키는 네 가지 모습을 찾아봐!',
+      title: '🛡️ 오늘의 독도를 지키는 네 가지 모습을 찾아봐!', review: true,
       spots: [
         { x: 1030, y: 380, ico: '🚓', label: '섬', run: () => say('gaji', '섬에서는 경찰(독도경비대)이 경비를 서.') },
         { x: 560, y: 520, ico: '⚓', label: '바다', run: () => say('gaji', '주변 바다는 해군과 해양경찰의 배가 지켜.') },
@@ -167,7 +171,7 @@ const STAGE7 = [
       ['gaji', '좋은 질문이야! 섬 둘레에서 독도의 보물 네 가지를 찾아서 설명해 주자.'],
     ]);
     await explore({
-      title: '💎 독도의 보물 네 가지를 찾아봐!',
+      title: '💎 독도의 보물 네 가지를 찾아봐!', review: true,
       spots: [
         { x: 520, y: 540, ico: '🐟', label: '바닷속', run: async () => { await say('gaji', '차가운 바닷물과 따뜻한 바닷물이 만나는 곳이라 오징어, 꼴뚜기, 대구, 홍합, 따개비 같은 바다 생물이 많아. 아주 좋은 어장이야!'); await solveClue('sea'); } },
         { x: 250, y: 560, ico: '🔥', label: '바다 밑', run: () => say('gaji', '바다 밑에는 "불타는 얼음"이라 불리는 메탄하이드레이트 같은 자원이 있을 것으로 기대돼.') },

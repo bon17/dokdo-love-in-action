@@ -1,7 +1,8 @@
 /* ===== 여러 단계에서 함께 쓰는 미니게임 ===== */
 
 /* 끌어다 놓기 + 눌러서 고르기를 함께 지원한다.
-   onMove(under, pt)로 끄는 동안 놓을 곳을 빛낼 수 있고, onDrop(under, pt, node)으로 놓는다. */
+   onMove(under, pt)로 끄는 동안 놓을 곳을 빛낼 수 있고, onDrop(under, pt, node)으로 놓는다.
+   조각 안의 밑줄 낱말을 누르면 조각을 고르면서 낱말 풀이도 함께 보여 준다. */
 function dragItem(node, { onTap: tapFn, onDrop, onMove }) {
   let st = null;
   node.style.touchAction = 'none';
@@ -11,7 +12,7 @@ function dragItem(node, { onTap: tapFn, onDrop, onMove }) {
   node.style.webkitUserDrag = 'none';
   node.style.webkitTouchCallout = 'none';
   node.addEventListener('pointerdown', e => {
-    st = { x: e.clientX, y: e.clientY, drag: false, id: e.pointerId };
+    st = { x: e.clientX, y: e.clientY, drag: false, id: e.pointerId, gl: e.target.closest && e.target.closest('.gl') };
     try { node.setPointerCapture(e.pointerId); } catch (er) { }
   });
   node.addEventListener('pointermove', e => {
@@ -34,27 +35,32 @@ function dragItem(node, { onTap: tapFn, onDrop, onMove }) {
       node.style.transition = 'transform .2s'; node.style.transform = ''; node.style.zIndex = '';
       if (onMove) onMove([], null, node);
       onDrop && onDrop(under, pt, node, rect);
-    } else tapFn && tapFn();
+    } else {
+      tapFn && tapFn();
+      if (s.gl && s.gl.dataset.k && s.gl.isConnected) glossShow(s.gl.dataset.k, s.gl);
+    }
   };
   node.addEventListener('pointerup', end);
   node.addEventListener('pointercancel', () => { if (st) { st = null; node.style.transform = ''; node.style.pointerEvents = ''; if (onMove) onMove([], null, node); } });
 }
 
 /* 화면 위 조사 지점: 모든 필수 지점을 살펴보면 끝난다.
-   run()이 'cancel'을 돌려주면 그 지점은 아직 끝나지 않은 것으로 두고 다시 누를 수 있다. */
-function explore({ title, spots }) {
+   run()이 'cancel'을 돌려주면 그 지점은 아직 끝나지 않은 것으로 두고 다시 누를 수 있다.
+   review가 켜져 있으면 본 지점도 다시 눌러 읽을 수 있고, 다 본 뒤 "계속" 단추를 눌러야 넘어간다. */
+function explore({ title, spots, review = false }) {
   return new Promise(resolve => {
     const root = el('div', { style: 'position:absolute;inset:0' });
     if (title) root.append(el('div', { class: 'mg-title', text: title }));
     L.scene.append(root);
-    let busy = false;
+    let busy = false, finished = false;
     const done = new Set(), req = spots.filter(s => s.req !== false), marks = [];
     const armDev = () => { DEV.solve = () => { const i = spots.findIndex(s => !done.has(s) && s.req !== false); if (i >= 0) marks[i].click(); }; };
+    const endBox = el('div', { class: 'explore-end' });
     spots.forEach(s => {
       const m = el('div', { class: 'marker', style: { left: s.x + 'px', top: s.y + 'px' } }, s.ico || '🔍', s.label ? el('div', { class: 'ml', text: s.label }) : null);
       marks.push(m);
       onTap(m, async () => {
-        if (busy || (s.once !== false && done.has(s))) return;
+        if (busy || finished || (!review && s.once !== false && done.has(s))) return;
         busy = true; Sound.sfx('tap'); clearHint();
         root.style.visibility = 'hidden';
         const r = await s.run();
@@ -62,7 +68,12 @@ function explore({ title, spots }) {
         busy = false;
         if (r === 'cancel') { armDev(); return; }
         m.classList.add('done'); done.add(s);
-        if (req.every(x => done.has(x))) { root.remove(); resolve(); } else armDev();
+        if (!req.every(x => done.has(x))) { armDev(); return; }
+        if (!review) { finished = true; root.remove(); resolve(); return; }
+        if (!endBox.isConnected) {
+          root.append(endBox);
+          doneBar(endBox, { msg: '다 살펴봤어!\n다시 보고 싶은 곳은 또 눌러 봐.', btn: '계속 ▶' }).then(() => { finished = true; root.remove(); resolve(); });
+        } else DEV.solve = () => { const b = endBox.querySelector('button'); if (b) b.click(); };
       });
       root.append(m);
     });
@@ -122,14 +133,14 @@ function placeTiles({ title, prompt, slots, tiles, hintText, reveal, key, base, 
   return new Promise(resolve => {
     const root = el('div', { class: 'panel', style: 'width:1180px;max-height:690px;overflow:auto;padding:22px 26px;text-align:center' });
     root.append(el('div', { style: 'font:30px var(--ui)', text: title }));
-    if (prompt) root.append(el('div', { class: 'msg', style: 'font-size:20px;color:#bcd3ea;margin:8px 0 12px;line-height:1.7', text: prompt }));
+    if (prompt) root.append(el('div', { class: 'msg', style: 'font-size:20px;color:#bcd3ea;margin:8px 0 12px;line-height:1.7' }, gtext(prompt)));
     const slotRow = el('div', { style: `display:flex;${vertical ? 'flex-direction:column;align-items:center;' : 'justify-content:center;flex-wrap:wrap;'}gap:10px;margin:8px 0 16px` });
     const tileRow = el('div', { style: 'display:flex;gap:12px;justify-content:center;flex-wrap:wrap;min-height:70px' });
     const slot = el('div', { class: 'hintslot' });
     root.append(slotRow, tileRow, slot);
     const slotEls = slots.map((s, i) => {
       const e = el('div', { class: 'slot', style: `width:${vertical ? 900 : slotW}px;flex-direction:column;padding:10px 14px;${paper ? 'background:rgba(246,236,212,.15);' : ''}` },
-        s.label ? el('div', { style: 'font:17px/1.4 var(--ui);color:#ffd9a8;white-space:pre-line', text: s.label }) : null,
+        s.label ? el('div', { style: 'font:17px/1.4 var(--ui);color:#ffd9a8;white-space:pre-line' }, gtext(s.label)) : null,
         el('div', { class: 'sv', style: 'font:22px/1.5 var(--body);white-space:pre-line', text: s.ph || '?' }));
       e.dataset.i = i; slotRow.append(e); return e;
     });
@@ -138,7 +149,7 @@ function placeTiles({ title, prompt, slots, tiles, hintText, reveal, key, base, 
     let sel = null, tries = 0, left = tiles.length, auto = false;
     const fill = (tile, ti, flash) => {
       const t = tiles[ti], s = slotEls[t.slot];
-      s.classList.add('filled'); s.querySelector('.sv').textContent = t.t;
+      s.classList.add('filled'); const sv = s.querySelector('.sv'); sv.textContent = ''; sv.append(gtext(t.t));
       if (flash) { s.classList.remove('popin'); void s.offsetWidth; s.classList.add('popin'); s.style.boxShadow = '0 0 0 4px #ffd166'; setTimeout(() => s.style.boxShadow = '', 900); }
       tile.classList.add('done'); tile.classList.remove('sel'); if (sel === tile) sel = null;
       Sound.sfx('good'); left--;
@@ -168,7 +179,7 @@ function placeTiles({ title, prompt, slots, tiles, hintText, reveal, key, base, 
     const order = shuffle(tiles.map((t, i) => i));
     const tileEls = [];
     order.forEach(i => {
-      const t = el('div', { class: 'tile', text: tiles[i].t, style: paper ? 'background:#fbf3df;font-family:var(--old);font-size:20px;max-width:520px' : 'max-width:440px' });
+      const t = el('div', { class: 'tile', style: paper ? 'background:#fbf3df;font-family:var(--old);font-size:20px;max-width:520px' : 'max-width:440px' }, el('span', {}, gtext(tiles[i].t)));
       t.dataset.i = i; tileEls[i] = t;
       dragItem(t, {
         onTap: () => { if (auto) return; Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = t; t.classList.add('sel'); },
@@ -181,14 +192,47 @@ function placeTiles({ title, prompt, slots, tiles, hintText, reveal, key, base, 
   });
 }
 
+/* 창 안에서 푸는 문제: 질문과 답 단추를 창 안에 둬서 대사 창·선택지와 겹치지 않게 한다.
+   틀린 답은 흐리게 바꾸고 그 자리에서 생각할 거리를 준다. 고른 횟수를 돌려준다. */
+function panelQuiz({ host, text, options, key, base, cols = 3 }) {
+  return new Promise(resolve => {
+    const q = el('div', { class: 'msg', style: 'font-size:23px;line-height:1.6;margin:16px 0 12px' }, gtext(text));
+    const row = el('div', { class: 'pq-row' + (cols === 1 ? ' col' : '') });
+    const slot = el('div', { class: 'hintslot' });
+    host.append(q, row, slot);
+    const prev = HINT.host; hintHost(slot);
+    let tries = 0, over = false;
+    const btns = [];
+    const pick = (o, b) => {
+      if (over || b.classList.contains('bad')) return;
+      Sound.sfx('tap');
+      if (o.ok) {
+        over = true; DEV.solve = null; Sound.sfx('good'); b.classList.add('good');
+        btns.forEach(x => { if (x !== b) x.classList.add('bad'); });
+        award(key, tries + 1, base); HINT.host = prev;
+        resolve(tries);
+      } else {
+        tries++; miss(); b.classList.add('bad'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+        hint(o.re, 'gaji', 60000);
+      }
+    };
+    shuffle(options.map((o, i) => i)).forEach(i => {
+      const o = options[i], b = el('button', { class: 'choice pq', text: o.t });
+      onTap(b, () => pick(o, b));
+      btns.push(b); row.append(b);
+      if (o.ok) DEV.solve = () => pick(o, b);
+    });
+  });
+}
+
 /* 여러 개 중 알맞은 것을 골라 쓰기 (반박 연습 등). 항목: { id, ico, t, why } — t 안의 \n은 줄바꿈 */
 function pickItem({ claim, prompt, items, correct, hintText, reveal, key, base, doneMsg }) {
   return new Promise(resolve => {
     const root = el('div', { class: 'panel', style: 'width:1160px;padding:22px;text-align:center' });
     if (claim) root.append(el('div', { style: 'display:flex;gap:14px;align-items:center;justify-content:center;margin-bottom:12px' },
       el('img', { src: img('fog'), style: 'width:110px' }),
-      el('div', { style: 'font:28px/1.5 var(--ui);background:rgba(106,79,179,.5);padding:14px 22px;border-radius:18px;max-width:840px', text: `"${claim}"` })));
-    root.append(el('div', { class: 'msg', style: 'font-size:22px;margin-bottom:14px', text: prompt }));
+      el('div', { style: 'font:28px/1.5 var(--ui);background:rgba(106,79,179,.5);padding:14px 22px;border-radius:18px;max-width:840px' }, gtext(`"${claim}"`))));
+    root.append(el('div', { class: 'msg', style: 'font-size:22px;margin-bottom:14px' }, gtext(prompt)));
     const row = el('div', { style: 'display:flex;gap:14px;justify-content:center;flex-wrap:wrap;max-width:1000px;margin:0 auto' });
     const slot = el('div', { class: 'hintslot' });
     root.append(row, slot);
@@ -231,9 +275,9 @@ function pressStamp({ title, note, label = '確認', color = '#c0392b', doc, key
   return new Promise(resolve => {
     const root = el('div', { class: 'panel', style: 'width:960px;padding:24px;text-align:center' });
     root.append(el('div', { style: 'font:30px var(--ui)', text: title }));
-    if (note) root.append(el('div', { class: 'msg', style: 'font-size:20px;color:#bcd3ea;margin:8px 0 12px', text: note }));
+    if (note) root.append(el('div', { class: 'msg', style: 'font-size:20px;color:#bcd3ea;margin:8px 0 12px' }, gtext(note)));
     const paper = el('div', { class: 'paper', style: 'position:relative;margin:0 auto 18px;width:840px;padding:22px 30px 26px;text-align:left;font:22px/1.8 var(--old);white-space:pre-line;min-height:150px' });
-    paper.textContent = doc;
+    paper.append(gtext(doc));
     root.append(paper);
     const stamp = el('div', { style: `width:130px;height:130px;margin:0 auto;border-radius:18px;background:${color};color:#fff;display:flex;align-items:center;justify-content:center;
       font:34px/1.1 var(--old);cursor:pointer;box-shadow:0 8px 0 #7a1f16,0 12px 20px rgba(0,0,0,.4);position:relative;overflow:hidden;touch-action:none`, html: label });
@@ -264,30 +308,36 @@ function pressStamp({ title, note, label = '確認', color = '#c0392b', doc, key
 /* 짝 맞추기 (기억력 카드) */
 function memoryGame({ title, pairs, key, base = 150 }) {
   return new Promise(resolve => {
-    const root = el('div', { class: 'panel', style: 'width:1160px;padding:20px;text-align:center' });
+    const root = el('div', { class: 'panel', style: 'width:1160px;padding:18px 20px;text-align:center' });
     root.append(el('div', { style: 'font:30px var(--ui)', text: title }),
-      el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin:6px 0 12px', text: '카드를 두 장씩 뒤집어 사건과 그 내용을 짝지어 봐!' }));
+      el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin:6px 0 6px', text: '카드를 두 장씩 뒤집어 사건과 그 내용을 짝지어 봐! 맞춘 짝은 같은 색, 같은 번호로 표시돼.' }));
     const grid = el('div', { style: 'display:grid;grid-template-columns:repeat(4,260px);gap:12px;justify-content:center' });
     root.append(grid);
+    /* 짝마다 다른 색과 번호 */
+    const PAIR_COL = [['#e8f4ff', '#2b7bd6'], ['#fff0d9', '#e08a1c'], ['#e6f7ea', '#2e9e6a'], ['#f6e8ff', '#8a4fc9'], ['#ffe6e6', '#d0463a'], ['#e3f7f7', '#1a8f8f'], ['#fff9d6', '#b8961a'], ['#f0f0f0', '#5d6d82']];
     const m = modal(root, { closable: false });
     const deck = shuffle(pairs.flatMap((p, i) => [{ i, t: p[0], k: 'a' }, { i, t: p[1], k: 'b' }]));
     let open = [], found = 0, flips = 0, lock = false;
     deck.forEach(d => {
-      const c = el('div', { style: `height:118px;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:8px 12px;cursor:pointer;
+      const c = el('div', { style: `position:relative;height:118px;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:8px 12px;cursor:pointer;
         background:#2b4f78;border:3px solid #8fd3ff;font:34px var(--ui);color:#cfe6ff;transition:transform .2s;text-wrap:balance`, text: '?' });
       c.dataset.i = d.i;
       onTap(c, () => {
         if (lock || c.dataset.open || c.dataset.done) return;
         Sound.sfx('tap');
-        c.dataset.open = 1; c.textContent = d.t; c.style.background = d.k === 'a' ? '#fff3dc' : '#e3f1ff'; c.style.color = '#2b2521';
+        c.dataset.open = 1; c.textContent = ''; c.append(el('span', {}, gtext(d.t))); c.style.background = d.k === 'a' ? '#fff3dc' : '#e3f1ff'; c.style.color = '#2b2521';
         c.style.font = d.k === 'a' ? '23px/1.4 var(--ui)' : '19px/1.5 var(--body)';
         open.push(c);
         if (open.length === 2) {
           flips++; lock = true;
           const [a, b] = open;
           if (a.dataset.i === b.dataset.i) {
-            Sound.sfx('good'); a.dataset.done = b.dataset.done = 1; a.style.borderColor = b.style.borderColor = '#2e9e6a';
-            a.style.background = b.style.background = '#d8f5e4';
+            Sound.sfx('good'); a.dataset.done = b.dataset.done = 1;
+            const [bg, bd] = PAIR_COL[found % PAIR_COL.length];
+            for (const x of [a, b]) {
+              x.style.background = bg; x.style.borderColor = bd; x.style.borderWidth = '4px';
+              x.append(el('div', { class: 'mpair', style: `background:${bd}`, text: String(found + 1) }));
+            }
             open = []; lock = false; found++;
             if (found === pairs.length) done();
           } else setTimeout(() => {
@@ -302,15 +352,16 @@ function memoryGame({ title, pairs, key, base = 150 }) {
       DEV.solve = null;
       const extra = Math.max(0, flips - pairs.length);
       addScore(Math.max(40, base - extra * 12), 640, 300);
-      await doneBar(root, { msg: '짝을 모두 찾았어! 맞춘 짝을 한 번 더 읽어 봐.' });
+      await doneBar(root, { msg: '짝을 모두 찾았어! 같은 색·같은 번호끼리 짝이야. 한 번 더 읽어 봐.' });
       m.close(); resolve();
     };
     DEV.solve = () => { flips = pairs.length; done(); };
   });
 }
 
-/* 거짓 주장 풍선: 거짓은 터뜨리고 사실은 놓아준다. */
-function balloonGame({ items, secs = 25, key }) {
+/* 거짓 주장 풍선: 거짓은 터뜨리고 사실은 놓아준다.
+   문장마다 꼭 두 번씩 지나가게 해서, 처음에 헷갈린 문장도 한 번 더 볼 수 있게 한다. */
+function balloonGame({ items, key, gap = 1600 }) {
   return new Promise(resolve => {
     const root = el('div', { style: 'position:absolute;inset:0;background:linear-gradient(180deg,rgba(120,170,220,.55),rgba(20,50,90,.55))' });
     L.scene.append(root);
@@ -318,17 +369,22 @@ function balloonGame({ items, secs = 25, key }) {
     const head = el('div', { class: 'mg-title', html: '💥 <b>거짓 주장</b>은 터뜨리고, 🕊️ <b>기록된 사실</b>은 날려 보내!' });
     const info = el('div', { style: 'position:absolute;right:24px;top:80px;font:24px var(--ui);background:rgba(8,26,48,.85);padding:8px 16px;border-radius:12px;z-index:3' });
     root.append(head, info);
-    let t0 = performance.now(), last = -2000, raf, alive = [], pts = 0, good = 0, bad = 0, over = false;
-    const pool = shuffle(items);
+    let last = -2000, raf, alive = [], pts = 0, good = 0, bad = 0, over = false;
+    const first = shuffle(items);
+    let second = shuffle(items);
+    while (second[0] === first[first.length - 1]) second = shuffle(items);
+    const pool = [...first, ...second];
     let idx = 0;
     const spawn = () => {
-      const it = pool[idx++ % pool.length];
+      const it = pool[idx++];
+      const round = idx > items.length ? 2 : 1;
       const x = 90 + Math.random() * 860;
       const col = ['#ff9f7a', '#8fd3ff', '#ffd166', '#b8e986', '#d7a8ff'][Math.floor(Math.random() * 5)];
       const b = el('div', { style: `position:absolute;left:${x}px;top:720px;width:280px;height:150px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8,${col} 45%);
         box-shadow:0 8px 16px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;padding:14px 26px;text-align:center;font:19px/1.4 var(--ui);color:#1d2530;cursor:pointer;text-wrap:balance` }, it.t);
       b.append(el('div', { style: 'position:absolute;left:50%;bottom:-38px;width:2px;height:40px;background:#fff8' }));
-      const o = { b, it, y: 720, v: 85 + Math.random() * 25, dead: false };
+      if (round === 2) b.append(el('div', { style: 'position:absolute;right:26px;top:-6px;font:14px var(--ui);background:#fff;color:#2b2521;border-radius:8px;padding:0 8px;box-shadow:0 2px 4px rgba(0,0,0,.25)', text: '한 번 더!' }));
+      const o = { b, it, y: 720, v: 78 + Math.random() * 18, dead: false };
       onTap(b, () => {
         if (o.dead || over) return;
         o.dead = true;
@@ -339,9 +395,9 @@ function balloonGame({ items, secs = 25, key }) {
       root.append(b); alive.push(o);
     };
     const loop = now => {
-      const el2 = (now - t0) / 1000, rem = Math.max(0, secs - el2);
-      info.textContent = `남은 시간 ${Math.ceil(rem)}초 · ${pts}점`;
-      if (rem > 0 && now - last > 1500) { last = now; spawn(); }
+      const rem = pool.length - idx;
+      info.textContent = `남은 풍선 ${rem + alive.filter(o => !o.dead).length}개 · ${pts}점`;
+      if (rem > 0 && now - last > gap) { last = now; spawn(); }
       for (const o of alive) {
         if (o.dead) continue;
         o.y -= o.v / 60; o.b.style.top = o.y + 'px';

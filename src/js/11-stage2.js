@@ -26,7 +26,7 @@ function lionGame() {
       const l = el('img', { src: img('item-lion'), style: `position:absolute;left:${IMG['char-isabu'] ? 120 + i * 60 : 40 + i * 70}px;top:${24 + (i % 2) * 20}px;width:100px;cursor:grab;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4))` });
       stage.append(l); return l;
     });
-    stage.append(el('div', { style: `position:absolute;left:${IMG['char-isabu'] ? 150 : 40}px;top:136px;font:18px var(--ui);color:#2b2521;background:rgba(255,255,255,.75);padding:2px 10px;border-radius:8px`, text: '신라 나루터' }));
+    stage.append(el('div', { style: `position:absolute;left:${IMG['char-isabu'] ? 14 : 40}px;top:${IMG['char-isabu'] ? 12 : 136}px;font:18px var(--ui);color:#2b2521;background:rgba(255,255,255,.75);padding:2px 10px;border-radius:8px`, text: '신라 나루터' }));
     root.append(head, note, stage);
     const roar = el('button', { class: 'btn', text: '🦁 어흥! (연타!)', style: 'margin-top:14px;display:none;font-size:30px;min-height:70px' });
     root.append(roar);

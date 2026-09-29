@@ -15,13 +15,25 @@ function el(tag, attrs, ...kids) {
     if (k === 'class') e.className = v;
     else if (k === 'style' && typeof v === 'object') Object.assign(e.style, v);
     else if (k === 'style') e.style.cssText = v;
-    else if (k === 'text') e.textContent = v;
+    else if (k === 'text') e.textContent = ko(v);
     else if (k === 'html') e.innerHTML = v;
     else if (k.startsWith('on') && typeof v === 'function') e.addEventListener(k.slice(2), v);
     else e.setAttribute(k, v);
   }
   for (const k of kids.flat()) if (k != null && k !== false) e.append(k.nodeType ? k : document.createTextNode(String(k)));
   return e;
+}
+/* 줄바꿈 다듬기: 붙어 다니는 말(한 거야, 할 수, 본 적, 이 섬, 1905년 2월)은 한 덩어리로 넘기고,
+   문단 끝에 아주 짧은 말 하나만 남지 않게 한다. 띄어쓰기 자리에 줄이 바뀌지 않는 공백(NB)을 넣는다. */
+const NB = '\u00a0';
+function ko(s) {
+  if (typeof s !== 'string' || !/[가-힣]/.test(s)) return s;
+  return s
+    .replace(/([가-힣]) (?=(?:거|것|수|적|때|줄|뿐|듯|만큼|데|바|채|척|터|대로|동안|중|뒤|전|후)(?:[가-힣]{0,4})(?:[\s.,!?…"'」』)~:]|$))/g, `$1${NB}`)
+    .replace(/(^|[\s("'「『〈])(이|그|저|안|못|약|몇|첫|새|옛|온|각|두|세|네|한|이런|그런|저런|어느|무슨|모든|다른|아주|더|잘|꼭|또|곧|늘|좀|다) (?=[가-힣\d"'「『])/g, `$1$2${NB}`)
+    .replace(/(\d+년) (?=\d+월)/g, `$1${NB}`).replace(/(\d+월) (?=\d+일)/g, `$1${NB}`)
+    .replace(/([가-힣A-Za-z0-9)』」])·(?=[가-힣A-Za-z(『「])/g, '$1\u2060·\u2060')
+    .split('\n').map(l => l.replace(/ (\S{1,3})$/, `${NB}$1`)).join('\n');
 }
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const rand = (a, b) => a + Math.random() * (b - a);
@@ -75,10 +87,15 @@ let lastTick = performance.now();
 setInterval(() => {
   const now = performance.now(), d = Math.min(now - lastTick, 5000);
   lastTick = now;
-  if (S && S.running && !S.finished && !document.hidden) S.playMs += d;
+  if (S && S.running && !S.finished && !document.hidden) { S.playMs += d; if (typeof HUD !== 'undefined') HUD.tick(); }
 }, 1000);
 setInterval(save, 5000);
 document.addEventListener('visibilitychange', () => { lastTick = performance.now(); if (document.hidden) save(); });
+
+/* 스페이스·엔터로 대사나 버튼이 넘어가지 않게 막는다. (이름 칸 같은 입력 칸은 그대로) */
+for (const t of ['keydown', 'keyup', 'keypress']) document.addEventListener(t, e => {
+  if ((e.key === ' ' || e.key === 'Enter' || e.key === 'Spacebar') && !(e.target && e.target.matches && e.target.matches('input,textarea'))) { e.preventDefault(); e.stopPropagation(); }
+}, true);
 
 /* 점수 */
 function floatText(txt, x = 640, y = 330, neg = false) {

@@ -20,7 +20,7 @@ const TIMELINE = [
   { y: '1951', t: '샌프란시스코 강화조약', c: 'b', r: 3, d: '제2차 세계대전을 마무리한 조약' },
 ];
 const ROUND_INFO = {
-  1: { name: '1라운드: 17세기, 울릉도를 둘러싼 담판', tip: '"이 일 때문에 저 일이 생겼다"를 떠올리며 순서를 추리해 봐.' },
+  1: { name: '1라운드: 17세기, 울릉도를 둘러싼 담판', tip: '첫 칸(1625년 도해면허)은 채워 뒀어. "이 일 때문에 저 일이 생겼다"를 떠올리며 나머지 순서를 추리해 봐.', given: [2] },
   2: { name: '2라운드: 옛 기록에서 메이지 정부까지', tip: '삼국 시대 → 조선 전기(세종) → 조선 후기(영조) → 일본 메이지 정부의 조사 → 결론 순서야.' },
   3: { name: '3라운드: 대한제국에서 광복 이후까지', tip: '법령 → 편입 시도 → 그에 대한 대응 → 전쟁 후 연합국의 지시 → 조약 순서로 생각해 봐.' },
 };
@@ -31,11 +31,11 @@ function timelineRush() {
     const root = el('div', { style: 'position:absolute;inset:64px 0 0 0;background:rgba(6,20,37,.82)' });
     L.scene.append(root);
     HINT.pos = 'center';
-    const title = el('div', { class: 'mg-title', style: 'top:10px' });
-    const timer = el('div', { style: 'position:absolute;right:20px;top:14px;font:22px var(--ui);background:rgba(8,26,48,.9);padding:6px 14px;border-radius:10px' });
-    const tip = el('div', { style: 'position:absolute;left:0;right:0;top:62px;text-align:center;font:18px var(--body);color:#bcd3ea' });
-    const board = el('div', { style: 'position:absolute;left:0;top:90px;width:1280px;height:380px' });
-    const tray = el('div', { style: 'position:absolute;left:20px;right:20px;bottom:14px;height:170px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-content:center' });
+    const title = el('div', { class: 'mg-title', style: 'top:8px' });
+    const timer = el('div', { style: 'position:absolute;right:20px;top:12px;font:22px var(--ui);background:rgba(8,26,48,.9);padding:6px 14px;border-radius:10px' });
+    const tip = el('div', { style: 'position:absolute;left:150px;right:150px;top:68px;text-align:center;font:17px/1.4 var(--body);color:#ffe2b8;text-wrap:balance' });
+    const board = el('div', { style: 'position:absolute;left:0;top:124px;width:1280px;height:366px' });
+    const tray = el('div', { style: 'position:absolute;left:20px;right:20px;bottom:8px;height:160px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-content:center' });
     root.append(title, timer, tip, board, tray);
     // 독도를 가운데 둔 둥근 네모 길 위에 16칸을 놓는다. (왼쪽 아래에서 시작해 시계 방향)
     const cx = 640, cy = 185;
@@ -43,9 +43,22 @@ function timelineRush() {
     board.innerHTML = `<svg width="1280" height="380" style="position:absolute;left:0;top:0"><rect x="80" y="40" width="1120" height="290" rx="90" fill="none" stroke="#8fa7c0" stroke-width="4" stroke-dasharray="10 8"/><path d="M80 290 l-10 18 l20 0 z" fill="#8fa7c0"/></svg>`;
     board.append(el('div', { style: `position:absolute;left:${cx - 60}px;top:${cy - 40}px;width:120px;text-align:center`, html: dokdoSvg(120, 76) + '<div style="font:20px RIDIBatang;color:#ffe08a">독도</div>' }));
     board.append(el('div', { style: `position:absolute;left:${cx - 170}px;top:${cy + 58}px;width:340px;text-align:center;font:15px var(--ui);color:#bcd3ea`, html: '<span style="color:#ff8a8a">●</span> 일본 측 기록 &nbsp; <span style="color:#7fb0ff">●</span> 우리·연합국 측 기록' }));
+    board.append(el('div', { class: 'tl-how', text: '아래 사건 카드를 눌러 고른 뒤,\n번호 순서에 맞는 ? 칸을 눌러 봐!' }));
+    // 길을 따라 도는 방향 화살표 (칸과 칸 사이)
+    for (let i = 0; i < pos.length - 1; i++) {
+      const a = pos[i], b = pos[i + 1];
+      if (a.x !== b.x && a.y !== b.y) continue;
+      const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
+      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+      board.append(el('div', { class: 'tl-arrow', style: `left:${mx - 11}px;top:${my - 11}px;transform:rotate(${ang}deg)`, text: '➤' }));
+    }
+    board.append(el('div', { class: 'tl-end start', style: `left:${pos[0].x - 60}px;top:${pos[0].y + 34}px`, text: '▲ 시작' }),
+      el('div', { class: 'tl-end', style: `left:${pos[15].x - 70 - 126}px;top:${pos[15].y - 12}px`, text: '■ 끝' }));
     const nodes = TIMELINE.map((e, i) => {
       const n = el('div', { class: 'slot', style: `position:absolute;left:${pos[i].x - 70}px;top:${pos[i].y - 32}px;width:140px;min-height:64px;padding:4px 6px;font:14px/1.25 var(--ui)` });
-      n.dataset.i = i; board.append(n); return n;
+      n.dataset.i = i; board.append(n);
+      board.append(el('div', { class: 'tl-num', style: `left:${pos[i].x - 82}px;top:${pos[i].y - 44}px`, text: i + 1 }));
+      return n;
     });
     const showDone = i => {
       const e = TIMELINE[i], n = nodes[i];
@@ -57,8 +70,10 @@ function timelineRush() {
     let total = 0;
     for (const r of [1, 2, 3]) {
       title.textContent = `⏱️ ${ROUND_INFO[r].name}`;
-      tip.textContent = '아래 사건 카드를 눌러 고른 뒤, 시간 순서에 맞는 물음표 칸을 눌러 봐! ' + ROUND_INFO[r].tip;
-      const idxs = TIMELINE.map((e, i) => i).filter(i => TIMELINE[i].r === r);
+      tip.textContent = ko(ROUND_INFO[r].tip);
+      const given = ROUND_INFO[r].given || [];
+      given.forEach(i => { showDone(i); nodes[i].classList.add('given'); });
+      const idxs = TIMELINE.map((e, i) => i).filter(i => TIMELINE[i].r === r && !given.includes(i));
       idxs.forEach((i, k) => { nodes[i].className = 'slot'; nodes[i].style.borderColor = '#ffd166'; nodes[i].innerHTML = `<div style="font:26px RIDIBatang;color:#ffd166">?</div>`; });
       tray.innerHTML = '';
       let sel = null, left = idxs.length, tries = 0;
@@ -67,8 +82,8 @@ function timelineRush() {
       await new Promise(done => {
         const chips = shuffle(idxs).map(i => {
           const e = TIMELINE[i];
-          const c = el('div', { class: 'tile', style: 'width:290px;min-height:74px;flex-direction:column;font:19px var(--ui);padding:6px 12px' },
-            el('div', { text: e.t }), el('div', { style: 'font:14px/1.3 var(--body);color:#6a553f;margin-top:2px', text: e.d }));
+          const c = el('div', { class: 'tile', style: 'width:290px;min-height:70px;flex-direction:column;font:19px var(--ui);padding:5px 12px' },
+            el('div', {}, gtext(e.t)), el('div', { style: 'font:14px/1.3 var(--body);color:#6a553f;margin-top:2px' }, gtext(e.d)));
           c.dataset.i = i;
           const put = n => {
             const ni = +n.dataset.i;
@@ -102,7 +117,8 @@ function timelineRush() {
       await sleep(400);
     }
     title.textContent = '🎉 연표 완성! 독도를 둘러싼 1,400여 년의 흐름';
-    tip.textContent = '빨간 점은 일본 측 기록, 파란 점은 우리와 연합국 측 기록이야. 천천히 한 바퀴 읽어 봐.';
+    tip.textContent = ko('1번부터 번호를 따라 천천히 한 바퀴 읽어 봐. 빨간 칸은 일본 측 기록, 파란 칸은 우리와 연합국 측 기록이야.');
+    board.querySelector('.tl-how').remove();
     tray.innerHTML = '';
     HINT.pos = 'left'; clearHint();
     tray.append(onTap(el('button', { class: 'btn', text: '다 읽었어!' }), () => { root.remove(); resolve(total); }));
@@ -145,7 +161,8 @@ const STAGE6 = [
     ] });
     await talk([
       ['gaji:wow', '좋아! 이번엔 독도의 1,400여 년 역사를 한 바퀴 이어 볼 차례야.'],
-      ['gaji', '연도를 외울 필요는 없어. "이 일 때문에 저 일이 생겼다"를 생각하면 순서가 보여!'],
+      ['gaji', '이 연표는 꼭!! 기억해 두는 게 좋을 거야. 지금까지 모은 증거가 한 줄로 이어지거든.'],
+      ['gaji', '칸마다 번호가 있어. ①번에서 시작해서 화살표를 따라 번호 순서대로 한 바퀴 돌아. 연도를 외울 필요는 없어. "이 일 때문에 저 일이 생겼다"를 생각하면 순서가 보여!'],
     ]);
     await timelineRush();
   },
@@ -154,9 +171,10 @@ const STAGE6 = [
     await talk([
       ['fog', '크크크! 연표 따위! 내 거짓말 풍선을 받아라!'],
       ['gaji', '안개가 풍선에 거짓 주장을 실어 날려 보내고 있어! 거짓은 터뜨리고, 사실은 날려 보내!'],
+      ['gaji', '풍선마다 같은 문장이 두 번씩 지나가. 처음에 헷갈렸다면 두 번째에 바로잡아 봐!'],
     ]);
     clearScene();
-    await balloonGame({ key: 's6_balloon', secs: 26, items: [
+    await balloonGame({ key: 's6_balloon', items: [
       { t: '울릉도에서는 독도가 전혀 보이지 않는다', ok: false },
       { t: '17세기 일본 기록의 "다케시마"는 지금의 독도다', ok: false },
       { t: '도해면허는 울릉도가 일본 땅이라는 증거다', ok: false },

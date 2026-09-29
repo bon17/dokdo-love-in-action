@@ -5,7 +5,7 @@ function oneMoreIsland() {
   return new Promise(resolve => {
     const root = el('div', { class: 'panel', style: 'width:1100px;padding:22px;text-align:center' });
     root.append(el('div', { style: 'font:30px var(--ui)', text: '🗺️ 함께 붙어 있던 지도 「기죽도약도」' }),
-      el('div', { class: 'msg', style: 'font-size:21px;margin:4px 0 12px', text: '"다케시마 외 1도"에서 "외 1도(그 밖의 한 섬)"는 어느 섬일까? 지도에서 찾아 눌러 봐.' }));
+      el('div', { class: 'msg', style: 'font-size:21px;margin:4px 0 12px' }, gtext('"다케시마 외 1도"에서 "외 1도(그 밖의 한 섬)"는 어느 섬일까? 지도에서 찾아 눌러 봐.')));
     const map = el('div', { class: 'paper', style: 'position:relative;width:1000px;height:420px;margin:0 auto;background:linear-gradient(135deg,#efe0bb,#dcc590)' });
     map.innerHTML = `<svg width="1000" height="420" viewBox="0 0 1000 420" style="position:absolute;left:0;top:0">
       <g stroke="#7a5a30" stroke-width="2" fill="none" opacity=".35"><path d="M40 380 Q300 360 520 300 T960 60"/><path d="M60 60 Q400 120 940 380"/></g>
@@ -44,7 +44,7 @@ function sealSvgFlower() {
 
 const STAGE4 = [
   async () => {
-    setBg('bg-stage4'); fogFx(0.35); Sound.play('mystery'); placeSeal(4);
+    setBg('bg-meiji'); fogFx(0.35); Sound.play('mystery'); placeSeal(4);
     await timeJump('1870년 · 일본 메이지 정부', '일본 외무성');
     await talk([
       ['narr', '1868년, 일본에 메이지 새 정부가 들어섰다. 새 정부는 조선과 어떻게 외교를 할지 정하려고 했다.'],
@@ -99,7 +99,7 @@ const STAGE4 = [
     await getCard('dajokan');
   },
   async () => {
-    setBg('bg-stage4'); fogFx(0.2); Sound.play('mystery'); placeSeal(4);
+    setBg('bg-joseon-court'); fogFx(0.2); Sound.play('mystery'); placeSeal(4);
     await timeJump('1881년 · 조선 고종 때', '한양의 조정');
     await talk([
       ['narr', '1881년, 울릉도를 살피고 돌아온 수토관이 놀라운 소식을 전했다.'],
@@ -119,6 +119,7 @@ const STAGE4 = [
       ] });
     await say('narr', '조선 정부는 1883년부터 백성을 울릉도로 옮겨 살게 하며 섬을 개척했다.');
     await getCard('lee');
+    setBg('bg-stage5'); fogFx(0.1);
     await timeJump('1899년 · 대한제국', '한성의 신문사');
     await say('gaji', '그 뒤 울릉도에는 사람이 늘었어. 1897년에는 나라 이름이 대한제국으로 바뀌었지. 대한제국의 신문에도 울릉도 소식이 실렸대!');
     await showDoc({ title: '『황성신문』 「울릉도사황」', era: '1899년 9월 · 대한제국의 신문',

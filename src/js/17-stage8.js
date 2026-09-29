@@ -22,8 +22,8 @@ function briefing() {
       const s = slides[i];
       box.innerHTML = '';
       box.append(el('div', { style: 'font:32px var(--ui);color:#ffd9a8;margin-bottom:14px', text: s.t }));
-      if (s.quote) box.append(el('div', { style: 'font:23px/1.7 var(--old);background:rgba(255,255,255,.1);border-left:6px solid var(--orange);padding:14px 20px;border-radius:10px;margin-bottom:14px', text: s.quote }));
-      for (const b of s.body) box.append(el('div', { class: 'msg', style: 'font-size:23px;margin:8px 0', text: '• ' + b }));
+      if (s.quote) box.append(el('div', { style: 'font:23px/1.7 var(--old);background:rgba(255,255,255,.1);border-left:6px solid var(--orange);padding:14px 20px;border-radius:10px;margin-bottom:14px' }, gtext(s.quote)));
+      for (const b of s.body) box.append(bulletLine('•', b, { cls: 'msg', style: 'font-size:23px;margin:8px 0' }));
       box.append(el('div', { style: 'position:absolute;left:40px;bottom:24px;font:20px var(--ui);color:#8fa7c0', text: `${i + 1} / ${slides.length}` }));
       box.append(el('div', { style: 'position:absolute;right:30px;bottom:20px' }, onTap(el('button', { class: 'btn', text: i < slides.length - 1 ? '다음 ▶' : '작전 개시!' }), () => {
         Sound.sfx('tap'); i++; if (i < slides.length) render(); else { m.close(); resolve(); }

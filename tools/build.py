@@ -27,6 +27,7 @@ BACKGROUNDS = [
     "bg-title", "bg-library", "bg-library-fog", "bg-ending",
     *[f"bg-stage{i}" for i in range(1, 9)],
     "scene-isabu", "scene-gangchi",
+    "bg-meiji", "bg-joseon-court", "bg-uldo",
 ]
 SPRITES = {
     "gaji-default": 420, "gaji-surprised": 420, "gaji-sad": 420, "gaji-cheer": 420,
@@ -37,6 +38,7 @@ OPTIONAL_SPRITES = {
     "char-isabu": 460, "char-isabu-bust": 420, "char-fisher": 420, "char-tottori": 420, "char-lee": 420,
     "char-shimane": 420, "char-shim": 420, "char-minister": 420, "char-guard": 420, "char-keeper": 420,
     "char-officer": 420, "char-resident": 420, "char-tourist": 420, "char-kid": 420, "char-student": 420,
+    "char-suto": 420,
 }
 # 전신 그림을 대사 창용으로 자를 곳 (머리~허리)
 BUST_CROPS = {"char-anyongbok": (300, 0, 954, 654)}
@@ -123,7 +125,7 @@ def build_font(text):
     from fontTools import subset
     from fontTools.ttLib import TTFont
     font = TTFont(str(path))
-    chars = set(text) | set(ks_hangul()) | {chr(c) for c in range(0x20, 0x7F)}
+    chars = set(text) | set(ks_hangul()) | {chr(c) for c in range(0x20, 0x7F)} | {"\u00a0"}
     opts = subset.Options()
     opts.flavor = "woff2"
     opts.layout_features = ["*"]

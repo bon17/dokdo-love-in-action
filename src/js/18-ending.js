@@ -145,7 +145,8 @@ async function showResult() {
   right.append(rk);
   const endMsg = el('div', { class: 'rbox' });
   endMsg.append(el('div', { class: 'msg', style: 'font-size:18px;line-height:1.65', text: '수고했어요, 독도 타임 패트롤 대원!\n4교시에는 오늘 플레이한 내용을 바탕으로 문제를 풀게 돼요.\n시간이 남았다면 아래 두 가지에 도전해 보세요.' }),
-    el('div', { class: 'msg', style: 'font-size:17px;line-height:1.6;margin:4px 0 0 8px', html: '• <b>증거 도감 보기:</b> 모은 증거를 다시 읽으며 복습해요.<br>• <b>다시 도전:</b> 한 번 더 공부하면서 더 높은 점수와 랭킹에 도전해요. 최고 기록을 넘어서 보세요!' }),
+    bulletLine('•', el('span', {}, el('b', { text: '증거 도감 보기:' }), ko(' 모은 증거와 낱말 풀이를 다시 읽으며 복습해요.')), { cls: 'msg', style: 'font-size:17px;line-height:1.6;margin:4px 0 0 8px' }),
+    bulletLine('•', el('span', {}, el('b', { text: '다시 도전:' }), ko(' 한 번 더 공부하면서 더 높은 점수와 랭킹에 도전해요. 최고 기록을 넘어서 보세요!')), { cls: 'msg', style: 'font-size:17px;line-height:1.6;margin:0 0 0 8px' }),
     el('div', { class: 'msg', style: 'font-size:18px;margin-top:4px', text: '좋은 결과 있기를 응원해요!' }),
     el('div', { style: 'display:flex;gap:14px;justify-content:center;margin-top:10px' },
       onTap(el('button', { class: 'btn blue', text: '📖 증거 도감 보기' }), () => { Sound.sfx('tap'); openBook(); }),
