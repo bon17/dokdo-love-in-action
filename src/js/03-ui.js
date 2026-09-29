@@ -262,9 +262,28 @@ function showDoc({ title, era, lines, ask, pick, rub, btn = '다 읽었어', key
     const btnRow = el('div', { class: 'dbtns' });
     foot.append(hintSlot, btnRow);
     doc.append(foot);
+    const more = onTap(el('div', { class: 'dmore', html: '▼<br>더' }), () => scroll.scrollBy({ top: 220, behavior: 'smooth' }));
+    doc.insertBefore(more, foot);
     const m = modal(doc, { closable: false });
     const prevHost = HINT.host; hintHost(hintSlot);
-    const finish = v => { HINT.host = prevHost; clearHint(); m.close(); resolve(v); };
+    /* 글이 창보다 길면 글자를 조금씩 줄여 한 화면에 담고, 그래도 넘치면 "아래에 더 있어요"를 보여 준다. */
+    const moreUpd = () => { const on = scroll.scrollHeight - scroll.clientHeight - scroll.scrollTop > 8; more.classList.toggle('on', on); doc.classList.toggle('hasmore', on); };
+    const fitDoc = () => {
+      if (!doc.isConnected) return;
+      for (const f of [24, 23, 22, 21, 20]) {
+        doc.style.setProperty('--dlf', f + 'px');
+        doc.classList.toggle('tight', f < 24);
+        if (scroll.scrollHeight <= scroll.clientHeight + 1) break;
+      }
+      moreUpd();
+    };
+    scroll.addEventListener('scroll', moreUpd);
+    requestAnimationFrame(fitDoc);
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitDoc);
+    let footH = 0;
+    const ro = window.ResizeObserver ? new ResizeObserver(() => { const h = foot.offsetHeight; if (h !== footH) { footH = h; fitDoc(); } }) : null;
+    if (ro) ro.observe(foot);
+    const finish = v => { if (ro) ro.disconnect(); HINT.host = prevHost; clearHint(); m.close(); resolve(v); };
     const showBtn = () => {
       if (btnRow.children.length) return;
       btnRow.append(onTap(el('button', { class: 'btn blue', text: btn }), () => { Sound.sfx('tap'); finish(true); }));
@@ -382,7 +401,7 @@ function getCard(id) {
     Sound.sfx('card');
     setTimeout(() => Sound.sfx('stamp'), 500);
     const big = cardEl(c);
-    big.append(el('div', { class: 'csrc', text: '출처: ' + c.src }), el('div', { class: 'stampfx', html: '증거<br>확보' }));
+    big.append(el('div', { class: 'cfoot' }, el('div', { class: 'csrc', text: '출처: ' + c.src }), el('div', { class: 'stampfx', html: '증거<br>확보' })));
     const wrap = el('div', { class: 'getcard' }, el('div', { class: 'label', text: c.rar === 'l' ? '✨ 전설 증거 발견! ✨' : '증거 발견!' }), big);
     const m = modal(wrap, { closable: false });
     const btn = onTap(el('button', { class: 'btn green', text: '증거 도감에 넣기' }), () => { Sound.sfx('tap'); m.close(); resolve(); });

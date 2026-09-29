@@ -11,7 +11,7 @@ const TIMELINE = [
   { y: '1696.1', t: '다케시마(울릉도) 도해금지령', c: 'r', r: 1, d: '돗토리번의 답을 받은 막부가 울릉도 도해를 금지함' },
   { y: '1696.5', t: '안용복 일본 도해', c: 'b', r: 1, d: '금지령이 내려진 그해 봄, 안용복이 다시 건너가 담판함' },
   { y: '1770', t: '『동국문헌비고』 「여지고」', c: 'b', r: 2, d: '조선 영조 때의 책: 우산은 일본이 말하는 송도' },
-  { y: '1870', t: '『조선국교제시말내탐서』', c: 'r', r: 2, d: '메이지 정부 초기, 외무성이 조선을 조사한 보고서' },
+  { y: '1870', t: '『조선국교제시말내탐서』', n: '『조선국교제시말\n내탐서』', c: 'r', r: 2, d: '메이지 정부 초기, 외무성이 조선을 조사한 보고서' },
   { y: '1877', t: '태정관지령', c: 'r', r: 2, d: '조사 뒤 최고 기관의 결론: "울릉도 외 1도는 일본과 관계없다"' },
   { y: '1900', t: '칙령 제41호 반포', c: 'b', r: 3, d: '대한제국이 법령으로 울도군이 석도를 다스리게 함' },
   { y: '1905', t: '시마네현 고시 제40호', c: 'r', r: 3, d: '러일전쟁 중, 대한제국 몰래 편입을 시도함' },
@@ -52,7 +52,7 @@ function timelineRush() {
       n.className = 'slot filled';
       n.style.background = e.c === 'r' ? 'rgba(224,72,72,.55)' : 'rgba(47,111,222,.55)';
       n.style.borderColor = e.c === 'r' ? '#ff8a8a' : '#7fb0ff';
-      n.innerHTML = `<div style="font:17px RIDIBatang;color:#ffe08a">${e.y}</div><div style="font:14px/1.2 RIDIBatang">${e.t}</div>`;
+      n.innerHTML = `<div style="font:17px RIDIBatang;color:#ffe08a">${e.y}</div><div style="font:14px/1.2 RIDIBatang;white-space:pre-line">${e.n || e.t}</div>`;
     };
     let total = 0;
     for (const r of [1, 2, 3]) {
