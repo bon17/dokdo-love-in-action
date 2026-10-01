@@ -31,9 +31,9 @@ function oneMoreIsland() {
       await doneBar(root, { msg: '"외 1도"는 마쓰시마, 곧 독도!' });
       HINT.host = null; m.close(); resolve();
     };
-    onTap(b, () => { Sound.sfx('good'); finish(); });
-    onTap(a, () => { tries++; if (wrongFeedback(tries, '이소타케시마는 "다케시마", 곧 울릉도야. "외 1도"는 그 밖의 한 섬!')) finish(); });
-    onTap(c, () => { tries++; if (wrongFeedback(tries, '오키섬은 일본의 섬이야. 문서가 말한 두 섬 가운데 나머지 하나를 찾아봐.')) finish(); });
+    onTap(b, () => { if (over) return; Sound.sfx('good'); finish(); });
+    onTap(a, () => { if (over) return; tries++; if (wrongFeedback(tries, '이소타케시마는 "다케시마", 곧 울릉도야. "외 1도"는 그 밖의 한 섬!')) finish(); });
+    onTap(c, () => { if (over) return; tries++; if (wrongFeedback(tries, '오키섬은 일본의 섬이야. 문서가 말한 두 섬 가운데 나머지 하나를 찾아봐.')) finish(); });
     DEV.solve = finish;
   });
 }

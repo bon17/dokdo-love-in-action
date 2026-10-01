@@ -203,12 +203,12 @@ function glossSplit(s, seen = new Set()) {
   if (last < s.length) out.push({ t: s.slice(last) });
   return out;
 }
-/* 밑줄 낱말을 누르면 풀이를 띄운다. 대사 창 안에서는 대사가 넘어가지 않게 막고,
-   고르는 문장(옛 문서 찾기)이나 조각 안에서는 원래 하던 일(고르기)도 그대로 한다. */
+/* 밑줄 낱말을 누르면 풀이만 띄운다. 대사 넘기기, 문장 고르기(틀리면 감점), 칸에 넣기 같은
+   바깥 동작은 하지 않는다. (끌어 옮기는 조각은 dragItem에서 조각 고르기와 풀이를 함께 한다) */
 function glossSpan(k) {
   const sp = el('span', { class: 'gl' });
   sp.dataset.k = k;
-  sp.addEventListener('click', e => { Sound.sfx('tap'); glossShow(k, sp); if (sp.closest('#dialog .dlg')) e.stopPropagation(); });
+  sp.addEventListener('click', e => { e.stopPropagation(); Sound.sfx('tap'); glossShow(k, sp); });
   return sp;
 }
 /* 밑줄 낱말이 들어간 글 조각 (el의 자식으로 넣어 쓴다) */

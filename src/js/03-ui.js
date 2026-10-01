@@ -296,7 +296,7 @@ function showDoc({ title, era, lines, ask, pick, rub, btn = '다 읽었어', key
     const body = el('div', { class: rub ? 'rubwrap' : '' });
     const lineEls = lines.map(ln => {
       const o = typeof ln === 'string' ? { t: ln } : ln;
-      const e = el('div', { class: 'dl' + (o.note ? ' note' : '') + (o.head ? ' head' : '') + (pick && !o.note && !o.head ? ' pick' : '') }, gtext(o.t, seen));
+      const e = el('div', { class: 'dl' + (o.note ? ' note' : '') + (o.head ? ' head' : '') + (o.hl ? ' good' : '') + (pick && !o.note && !o.head ? ' pick' : '') }, gtext(o.t, seen));
       body.append(e); return e;
     });
     scroll.append(body);
@@ -498,7 +498,7 @@ function placeSeal(stage) {
   L.hidden.innerHTML = '';
   if (!SEAL_POS[stage] || S.seals[stage]) return;
   const [x, y] = SEAL_POS[stage];
-  const s = el('div', { class: 'hseal', html: sealSvg(), style: { left: (x - 26) + 'px', top: (y - 20) + 'px' } });
+  const s = el('div', { class: 'hseal', html: sealSvg(), style: { left: (x - 32) + 'px', top: (y - 25) + 'px' } });
   onTap(s, () => {
     s.remove(); S.seals[stage] = true; Sound.sfx('ping'); addScore(SEAL_PTS, x, y);
     toast(`🦭 숨은 강치를 찾았다! (${Object.keys(S.seals).length}/8)`);
@@ -537,6 +537,7 @@ function evidenceBoard(stage) {
       setCount();
       bins.append(b);
       onTap(b, () => {
+        if (!left) return;
         if (!sel) { hint('먼저 위에서 카드를 하나 골라 줘!'); return; }
         const c = CARD[sel.dataset.id];
         const ok = k === c.cat || (c.alt || []).includes(k);
@@ -572,7 +573,8 @@ function missionCard(stage) {
       el('div', { style: 'font:24px var(--ui);color:#bcd3ea', text: `${stage}단계` }),
       el('div', { style: 'font:44px var(--ui);margin:8px 0 14px', text: `「${STAGE_NAMES[stage]}」` }),
       el('div', { style: 'font:22px var(--ui);color:#cfe6ff;margin-bottom:18px', text: `⏳ ${ERAS[stage]}` }),
-      el('div', { style: 'font:30px var(--ui);color:#ffd166' }, gtext(`🎯 미션: ${MISSIONS[stage]}`)));
+      el('div', { style: 'font:30px var(--ui);color:#ffd166' }, gtext(`🎯 미션: ${MISSIONS[stage]}`)),
+      SEAL_POS[stage] && !S.seals[stage] ? el('div', { style: 'font:19px/1.6 var(--ui);color:#cfe6ff;margin-top:14px;white-space:pre-line', text: `🦭 이 단계 화면 가장자리에도 강치 한 마리가 숨어 있어. 찾아서 눌러 봐!\n(찾은 강치 ${Object.keys(S.seals).length}/8 · 한 마리에 +${SEAL_PTS}점)` }) : null);
     const m = modal(box, { closable: false });
     box.append(el('div', { style: 'margin-top:26px' }, onTap(el('button', { class: 'btn', text: '시작!' }), () => { Sound.sfx('tap'); m.close(); resolve(); })));
     DEV.solve = () => { m.close(); resolve(); };

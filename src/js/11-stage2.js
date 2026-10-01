@@ -111,12 +111,12 @@ const STAGE2 = [
     await explore({
       title: '🔍 반짝이는 곳을 눌러 단서를 찾아봐!',
       spots: [
-        { x: 300, y: 400, ico: '📕', label: '펼쳐진 역사책', run: async () => {
+        { x: 300, y: 400, ico: '📕', label: '펼쳐진 역사책', once: false, run: async () => {
           seen.book = true;
           await showDoc({ title: '『삼국사기』 신라본기 (펼쳐진 쪽)', era: '고려 때 펴낸 역사책 · 신라 지증왕 이야기',
             lines: ['지증왕 13년 여름 6월, 우산국이 항복하여\n해마다 토산물을 바쳤다.', '우산국은 명주(지금의 강릉) 정동쪽 바다에 있는 섬으로,\n울릉도라고도 한다.', '땅이 험한 것을 믿고 항복하지 않자,\n이찬 이사부가 꾀를 내었다…', { t: '뒷장은 안개에 가려 읽을 수 없다. 나머지 기록은 궤짝 속에 있는 것 같다.', note: true }] });
         } },
-        { x: 690, y: 250, ico: '📜', label: '벽의 연대표', run: async () => {
+        { x: 690, y: 250, ico: '📜', label: '벽의 연대표', once: false, run: async () => {
           seen.chart = true;
           await showDoc({ title: '신라 왕 연대표', era: '서고 벽에 걸린 표',
             lines: ['지증왕 1년 = 500년', '법흥왕 1년 = 514년', { t: '왕이 된 해를 그 왕의 1년으로 센다.', note: true }] });
@@ -161,14 +161,17 @@ const STAGE2 = [
       jang: async () => { await say('gaji', '울릉도에서 동남쪽 바다에 보이는 작은 섬… 망원경으로 본 그 섬 같지 않아?'); await getCard('jang'); },
       munheon: async () => { await say('gaji:wow', '일본이 부르는 이름까지 적어 두었네! "우산"이 어느 섬인지 헷갈릴 때 아주 중요한 기록이야.'); await getCard('munheon'); },
     };
+    const restored = {};
     const spots = [['sejong', 230, 330, '📘'], ['yeoji', 440, 230, '📗'], ['jang', 860, 240, '🔭'], ['munheon', 1070, 340, '📜']].map(([id, x, y, ico]) => ({
       x, y, ico, label: BOOKS2[id].title.replace(/『|』|「|」/g, '').slice(0, 10), run: async () => {
+        if (restored[id]) { await showDoc({ ...BOOKS2[id], btn: '다 읽었어' }); return; }
         await showDoc({ ...BOOKS2[id], rub: true, btn: '다 읽었어' });
+        restored[id] = true;
         addScore(20, 640, 300);
         await after[id]();
       },
     }));
-    await explore({ title: '📚 흐려진 책을 눌러 되살려 봐!', spots });
+    await explore({ title: '📚 흐려진 책을 눌러 되살려 봐!', spots, review: true });
   },
   async () => {
     setBg('bg-stage2'); fogFx(0.7); Sound.play('mystery'); placeSeal(2);

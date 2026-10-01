@@ -17,11 +17,11 @@ const STAGE0 = [
     fog.remove();
     await talk([
       ['gaji:wow', '늦었다! 망각의 안개가 벌써 여기까지 왔어!'],
+      ['gaji', '앗, 방금 "망각"에 주황색 밑줄 보였어? 글 속에 밑줄이 그어진 낱말은 어려운 낱말이야. 누르면 뜻이 나와! 지금 이 "망각"을 눌러 봐.'],
       ['gaji', '안녕, 나는 가지야. 옛날 독도 바다에 살던 강치들의 기억을 간직하고 있어. 울릉도 사람들은 강치를 "가지"라고도 불렀대.'],
       ['gaji', '너는 오늘부터 독도 타임 패트롤 대원이야! 시간여행 배 "우산호"를 타고 여러 시대로 가서, 사라진 독도의 증거를 되찾아 줘.'],
       ['gaji', '증거를 찾을 때마다 위쪽의 흐린 독도 그림이 조금씩 선명해질 거야. 모은 증거는 📖 도감에서 언제든 다시 볼 수 있어.'],
       ['gaji', '틀려도 괜찮아. 게임이 끝나지는 않아. 대신 꼼꼼히 읽고 생각할수록 점수가 올라가!'],
-      ['gaji', '글 속에 주황색 밑줄이 그어진 낱말이 보이면 눌러 봐. 어려운 낱말의 뜻을 알려 줄게! 방금 나온 "망각"처럼 말이야.'],
       ['gaji:yay', '아, 그리고 단계마다 내 친구 강치가 한 마리씩 숨어 있어. 화면 가장자리를 잘 살펴봐! 그럼, 출발!'],
     ]);
     fogFx(0);
@@ -135,8 +135,9 @@ function startMessage() {
   return new Promise(resolve => {
     const box = el('div', { class: 'panel', style: 'width:960px;padding:36px 46px;text-align:center' });
     box.append(el('div', { style: 'font:24px var(--ui);color:#ffd9a8', text: SCHOOL }),
-      el('div', { class: 'msg', style: 'font-size:26px;margin:18px 0 24px;line-height:1.8', text:
-        '기산중학교 독도 사랑 실천대회에 온 것을 환영해요!\n오늘은 이 게임으로 독도의 역사와 이야기를 직접 탐험해요.\n4교시에는 여러분이 플레이하며 알게 된 내용을 바탕으로\n문제를 풀게 돼요.\n이야기와 사료를 꼼꼼히 읽고, 모은 증거를 잘 기억해 두세요.\n모은 증거는 언제든 \'증거 도감\'에서 다시 볼 수 있어요.\n그럼, 출발!' }));
+      el('div', { class: 'msg', style: 'font-size:25px;margin:16px 0 14px;line-height:1.75' }, gtext(
+        '기산중학교 독도 사랑 실천대회에 온 것을 환영해요!\n오늘은 이 게임으로 독도의 역사와 이야기를 직접 탐험해요.\n4교시에는 여러분이 플레이하며 알게 된 내용을 바탕으로\n문제를 풀게 돼요.\n이야기와 사료를 꼼꼼히 읽고, 모은 증거를 잘 기억해 두세요.\n모은 증거는 언제든 \'증거 도감\'에서 다시 볼 수 있어요.\n그럼, 출발!')),
+      el('div', { class: 'start-tip' }, '📖 글 속에 ', el('span', { class: 'gl-sample', text: '주황색 밑줄' }), ko('이 그어진 낱말은 누르면 뜻이 나와요.\n위 글의 "사료"를 눌러 보세요!')));
     const m = modal(box, { closable: false });
     box.append(onTap(el('button', { class: 'btn', text: '출발!', style: 'font-size:30px;min-height:66px;padding:0 50px' }), () => { Sound.sfx('tap'); m.close(); resolve(); }));
     DEV.solve = () => { m.close(); resolve(); };

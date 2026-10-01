@@ -414,7 +414,7 @@ function droneGame() {
       resolve();
     };
     let down = false;
-    cv.addEventListener('pointerdown', e => { down = true; cv.setPointerCapture(e.pointerId); const p = toLocal(e); dr = { x: p.x, y: p.y - 64 }; scan(); });
+    cv.addEventListener('pointerdown', e => { if (done) return; down = true; cv.setPointerCapture(e.pointerId); const p = toLocal(e); dr = { x: p.x, y: p.y - 64 }; scan(); });
     cv.addEventListener('pointermove', e => { if (!down || done) return; const p = toLocal(e); dr = { x: p.x, y: p.y - 64 }; scan(); });
     cv.addEventListener('pointerup', () => { down = false; });
     let raf; const loop = now => { if (!root.isConnected) return; drawAll(now); raf = requestAnimationFrame(loop); };

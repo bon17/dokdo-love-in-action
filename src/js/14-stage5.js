@@ -61,7 +61,7 @@ function contradictionGame() {
       onTap: () => { if (e.dataset.done) return; Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = e; e.classList.add('sel'); },
       onDrop: under => { const c = under.find(x => claims.includes(x)); if (c) link(e, c); },
     }));
-    claims.forEach(c => onTap(c, () => { if (sel) link(sel, c); else hint('먼저 오른쪽의 취재 수첩을 하나 골라 줘!', 'gaji', 3000); }));
+    claims.forEach(c => onTap(c, () => { if (linked === notes.length) return; if (sel) link(sel, c); else hint('먼저 오른쪽의 취재 수첩을 하나 골라 줘!', 'gaji', 3000); }));
     DEV.solve = () => noteEls.forEach(e => { if (!e.dataset.done) link(e, claims.find(c => c.dataset.id === notes.find(n => n.id === +e.dataset.id).ok)); });
   });
 }
@@ -153,8 +153,12 @@ const STAGE5 = [
       ['fog', '크크… 1905년, 일본은 주인 없는 섬을 정당하게 편입했다! 이걸로 끝이야!'],
       ['gaji', '기자라면 확인부터 해야지! 이 주장이 사실인지 취재해 보자. 인쇄소 곳곳에 자료가 있어.'],
     ]);
+    const seen = {};
+    const NIITAKA = { title: '일본 군함 니타카의 행동일지', era: '1904년 9월 · 러일전쟁 중의 해군 기록',
+      lines: ['마쓰시마(울릉도)에서\n리앙코르도암을 실제로 본 사람에게 들었다.', '리앙코르도암을 한인들은 "독도"라고 쓰고,\n일본 어부들은 줄여서 "리양코섬"이라 부른다.',
+        { t: '이 무렵 일본에서는 울릉도를 "마쓰시마", 독도를 "리앙코르도암(리앙쿠르 암)"이라고 불렀다.', note: true }] };
     await explore({
-      title: '📰 취재를 시작하자! 자료 세 가지를 모두 살펴봐.',
+      title: '📰 취재를 시작하자! 자료 세 가지를 모두 살펴봐.', review: true,
       spots: [
         { x: 270, y: 380, ico: '🦭', label: '어부의 청원서', run: async () => {
           setBg('scene-gangchi');
@@ -165,13 +169,13 @@ const STAGE5 = [
             ['gaji:sad', '그 뒤로 강치잡이는 더 심해졌어. 수많은 강치가 잡혀 갔지…'],
             ['gaji:sad', '결국 독도에서 강치는 모두 사라졌어. 마구 잡는 남획이 가장 큰 까닭이었대. 나는… 그 강치들의 기억을 간직하고 있어.'],
           ]);
-          await getCard('gangchi');
+          if (!seen.gangchi) { seen.gangchi = true; await getCard('gangchi'); }
           setBg('bg-stage5');
         } },
         { x: 660, y: 300, ico: '🚢', label: '군함의 일지', run: async () => {
-          await showDoc({ title: '일본 군함 니타카의 행동일지', era: '1904년 9월 · 러일전쟁 중의 해군 기록',
-            lines: ['마쓰시마(울릉도)에서\n리앙코르도암을 실제로 본 사람에게 들었다.', '리앙코르도암을 한인들은 "독도"라고 쓰고,\n일본 어부들은 줄여서 "리양코섬"이라 부른다.',
-              { t: '이 무렵 일본에서는 울릉도를 "마쓰시마", 독도를 "리앙코르도암(리앙쿠르 암)"이라고 불렀다.', note: true }] });
+          await showDoc(NIITAKA);
+          if (seen.niitaka) return;
+          seen.niitaka = true;
           await say('gaji:wow', '1904년에 이미 한국 사람들이 "독도"라는 이름을 쓰고 있었다는 거야! 그것도 일본 군함의 기록에!');
           await talk([
             ['gaji:wow', '그런데 잠깐, 3단계에서는 "마쓰시마"가 독도였잖아. 여기서는 왜 울릉도를 "마쓰시마"라고 불렀을까?'],
