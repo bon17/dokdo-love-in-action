@@ -59,7 +59,18 @@ b,strong{font-weight:700}
 .warn{border-left:5px solid var(--red);background:var(--red-soft);border-radius:10px;padding:12px 16px;margin:0 0 14px}
 .good{border-left:5px solid var(--green);background:var(--green-soft);border-radius:10px;padding:12px 16px;margin:0 0 14px}
 .note > :last-child,.warn > :last-child,.good > :last-child{margin-bottom:0}
-.kbd.url{white-space:normal;word-break:break-all}
+.kbd.url{white-space:normal;word-break:normal;overflow-wrap:anywhere}
+.nw{white-space:nowrap}
+.kbd.big{font-size:18px;font-weight:700;padding:3px 10px}
+.qrbox{display:flex;gap:18px;align-items:center;background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 10px;box-shadow:var(--shadow)}
+.qrbox img{flex:none;width:150px;height:150px;border-radius:8px;background:#fff;image-rendering:pixelated}
+.qrbox p{margin-bottom:8px}
+@media (max-width:480px){.qrbox{flex-direction:column;align-items:flex-start}.qrbox img{width:180px;height:180px;align-self:center}}
+.btn-dl{display:inline-block;background:var(--navy);color:#fff;text-decoration:none;font-weight:700;border-radius:10px;padding:8px 16px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn-dl{color:#11161d}}
+.cta{background:var(--orange-soft);border:2px solid var(--orange);border-radius:14px;padding:14px 16px;margin:10px 0 12px}
+.cta .cta-h{font-size:18px;font-weight:800;color:var(--orange);margin:0 0 6px}
+.cta > :last-child{margin-bottom:0}
 .kbd{display:inline-block;border:1px solid var(--line);background:var(--paper);border-radius:7px;padding:0 7px;font-size:.92em;line-height:1.5;white-space:nowrap}
 .big{font-size:20px;font-weight:800}
 
@@ -184,9 +195,9 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
 
 <header class="top">
   <div class="wrap">
-    <div class="kicker">기산중학교 독도 사랑 실천대회 · 3교시</div>
+    <div class="kicker">기산중학교 독도 사랑 실천대회 · 3교시 게임 · 4교시 퀴즈</div>
     <h1>「독도 타임 패트롤」<br>임장 선생님 가이드</h1>
-    <p>독도도, 이 게임도 처음이셔도 괜찮아요. 이 안내만 보고 한 시간을 진행하실 수 있게 정리했어요.</p>
+    <p>독도도, 이 게임도 처음이셔도 괜찮아요. 이 안내만 보고 3교시 게임과 4교시 퀴즈 감독을 진행하실 수 있게 정리했어요.</p>
   </div>
 </header>
 
@@ -195,7 +206,8 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
     <a href="#glance">한눈에 보기</a>
     <a href="#about">대회와 게임</a>
     <a href="#prep">수업 전 준비</a>
-    <a href="#flow">진행 순서</a>
+    <a href="#flow">3교시 진행</a>
+    <a href="#quiz">4교시 퀴즈</a>
     <a href="#screens">게임 화면</a>
     <a href="#stages">8단계</a>
     <a href="#help">도와주는 법</a>
@@ -210,40 +222,48 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
 <section id="glance">
   <h2><span class="n">0</span>한눈에 보기</h2>
   <div class="note">
-    <p><b>오늘은</b> 3교시에 학생 한 명이 태블릿 한 대로 독도 역사 게임을 해요. <b>4교시</b>에는 게임에서 읽은 내용을 바탕으로 퀴즈 대회를 해요.</p>
+    <p><b>3교시</b>에는 학생 한 명이 태블릿 한 대로 독도 역사 게임을 해요. <b>4교시</b>에는 게임 내용을 바탕으로 퀴즈 대회를 해요. (OMR 카드, 40분)</p>
   </div>
   <div class="glance">
     <div class="card">
       <h3>선생님이 하실 일</h3>
       <ol class="todo">
-        <li><b>쉬는 시간:</b> 태블릿 충전, 와이파이, 교실 TV 방송을 확인해요.</li>
-        <li><b>시작:</b> 방송에 나오는 QR 코드로 접속하게 하고, 이름을 바르게 쓰는지 봐 주세요.</li>
+        <li><b>쉬는 시간:</b> 태블릿, 와이파이, 교실 TV를 확인하고 <b>칠판에 게임 주소</b>를 써요.</li>
+        <li><b>시작:</b> 「독도는 우리 땅」을 함께 듣고, QR 코드로 접속해 이름을 정확히 쓰게 해요.</li>
         <li><b>게임 중:</b> 교실을 돌며 막힌 학생을 도와주세요. <b>답은 알려 주지 않아요.</b></li>
-        <li><b>30분:</b> 교실을 돌며 <b>6단계 이하</b>인 학생에게만 비밀번호를 알려 주세요.</li>
-        <li><b>45분:</b> 게임을 마치고 증거 도감으로 복습해요.</li>
+        <li><b>30분 방송:</b> <b>7단계에 못 들어간 학생</b>을 손들게 하고 비밀번호를 알려 줘요.</li>
+        <li><b>먼저 끝낸 학생:</b> <b>다시 도전</b>하거나 <b>증거 도감</b>으로 복습하게 해요.</li>
+        <li><b>3교시 끝:</b> 태블릿을 걷고, 쉬는 시간에 책상을 시험 대형으로 바꿔요.</li>
+        <li><b>4교시:</b> 퀴즈 대회를 감독해요. (12:05 시작, 12:45 끝)</li>
       </ol>
     </div>
     <div class="card">
       <h3>꼭 기억할 것</h3>
-      <p style="margin-bottom:4px">늦은 학생용 비밀번호 <span class="sub">(30분, 선생님이 직접)</span></p>
+      <p style="margin-bottom:4px">늦은 학생용 비밀번호 <span class="sub">(30분 방송 후, 7단계에 못 들어간 학생에게만)</span></p>
       <p class="code">1025</p>
-      <p class="sub" style="margin-top:-6px">독도의 날(10월 25일)이에요. 넣으면 8단계로 바로 가요. 반 전체에 크게 알리지 말고, 늦은 학생에게만 알려 주세요.</p>
+      <p class="sub" style="margin-top:-6px">독도의 날(10월 25일)이에요. 넣으면 마지막 8단계로 바로 가요.</p>
+      <p style="margin:10px 0 4px">칠판에 쓸 게임 주소</p>
+      <p><span class="kbd url big">bon17.github.io/<wbr><span class="nw">dokdo-love-in-action</span></span></p>
       <ul>
         <li><b>독도를 몰라도 괜찮아요.</b> 막힌 학생에게는 답 대신 "대사를 다시 읽어 봐"라고 말해 주세요.</li>
-        <li><b>이어폰이 없으니</b> 태블릿 소리는 아주 작게 하거나 꺼 주세요. 소리가 없어도 게임은 다 할 수 있어요.</li>
+        <li><b>이어폰이 없으니</b> 태블릿 소리는 작게 해 주세요. 소리가 없어도 게임은 다 할 수 있어요.</li>
       </ul>
     </div>
   </div>
   <table>
-    <thead><tr><th style="width:96px">시간</th><th>할 일</th></tr></thead>
+    <thead><tr><th style="width:104px">시간</th><th>할 일</th></tr></thead>
     <tbody>
-      <tr><td>쉬는 시간</td><td>태블릿·와이파이·TV 확인, 소리 줄이기</td></tr>
-      <tr><td>0–5분</td><td>방송 QR로 접속, 대원 등록 (학년·반·이름)</td></tr>
+      <tr><td>쉬는 시간</td><td>태블릿·와이파이·TV 확인, 칠판에 게임 주소 쓰기</td></tr>
+      <tr><td>0–5분</td><td>「독도는 우리 땅」 함께 듣기, QR로 접속, 대원 등록 (학년·반·이름)</td></tr>
       <tr><td>5–45분</td><td>게임 플레이, 교실 돌며 돕기</td></tr>
-      <tr><td><b style="color:var(--orange)">30분</b></td><td>6단계 이하인 학생에게만 <b>비밀번호 1025</b> 알려 주기</td></tr>
+      <tr><td><b style="color:var(--orange)">30분 방송</b></td><td><b>7단계에 못 들어간 학생</b> 손들기 → <b>비밀번호 1025</b> 알려 주기</td></tr>
       <tr><td><b>45분</b></td><td><b>게임 마감</b></td></tr>
-      <tr><td>45–55분</td><td>증거 도감으로 복습 (4교시 준비)</td></tr>
-      <tr><td>55–60분</td><td>마무리, 4교시 안내</td></tr>
+      <tr><td>45–55분</td><td><b>다시 도전</b> 또는 <b>증거 도감</b>으로 복습</td></tr>
+      <tr><td>55–60분</td><td>마무리, <b>태블릿 걷기</b></td></tr>
+      <tr><td>쉬는 시간</td><td>책상을 <b>시험 대형</b>으로 (5줄, 창가부터 번호순)</td></tr>
+      <tr><td>12:00</td><td>4교시 입실 완료, 시험지·OMR 카드 배부</td></tr>
+      <tr><td><b>12:05</b></td><td><b>퀴즈 시작</b> (방송부 타종)</td></tr>
+      <tr><td><b>12:45</b></td><td><b>퀴즈 끝</b>, 답안지 걷기 (방송부 타종)</td></tr>
     </tbody>
   </table>
 </section>
@@ -254,7 +274,7 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
   <div class="card">
     <h3 style="margin-top:0">3교시 게임과 4교시 퀴즈</h3>
     <p>「독도 타임 패트롤: 사라진 기록을 찾아라」는 우리 학교 독도 사랑 실천대회를 위해 만든 태블릿 게임이에요. 학생은 시간 여행을 하며 신라 때부터 오늘날까지 독도와 관련된 이야기와 옛 자료를 직접 읽고, 독도가 우리 땅인 근거를 <b>증거 카드</b>로 모아요.</p>
-    <p style="margin-bottom:0">4교시 퀴즈는 이 게임에서 읽은 내용을 바탕으로 나와요. 그래서 <b>대사와 자료를 꼼꼼히 읽은 학생이 유리</b>해요.</p>
+    <p style="margin-bottom:0">4교시 퀴즈는 이 게임 내용을 바탕으로 나와요. 그래서 <b>게임 속 이야기와 자료를 꼼꼼히 읽은 학생이 유리</b>해요. 게임을 시작하기 전에 꼭 알려 주세요.</p>
   </div>
   <h3>줄거리</h3>
   <p>대회 날 아침, 학교 도서관의 독도 기록이 <b>'망각의 안개'</b> 때문에 하얗게 지워지기 시작해요. 학생은 '타임 패트롤' 대원이 되어 강치 '가지'와 함께 시간 여행 배를 타고 여러 시대로 가서 사라진 증거를 되찾아요. 마지막에는 안개가 내뱉는 근거 없는 주장을 모은 증거로 반박해요.</p>
@@ -276,11 +296,20 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
     <ul class="check" id="checklist">
       <li><label><input type="checkbox" data-k="c1"><span><b>태블릿</b>이 학생 수만큼 있고, 배터리가 넉넉한지 (반 이상 권장)</span></label></li>
       <li><label><input type="checkbox" data-k="c2"><span>태블릿이 <b>학교 와이파이</b>에 연결되어 있는지</span></label></li>
-      <li><label><input type="checkbox" data-k="c3"><span>태블릿에 <b>크롬</b> 앱이 있는지 (게임은 크롬에 맞춰 만들었어요)</span></label></li>
-      <li><label><input type="checkbox" data-k="c4"><span><b>교실 TV</b>를 켜서 방송이 나오는지 (QR 코드와 랭킹이 방송으로 나와요)</span></label></li>
-      <li><label><input type="checkbox" data-k="c5"><span>태블릿 <b>소리를 1~2칸</b>으로 아주 작게 줄였는지 (이어폰이 없으니 30대가 동시에 소리를 내면 시끄러워요)</span></label></li>
+      <li><label><input type="checkbox" data-k="c4"><span><b>교실 TV</b>를 켜서 방송이 나오는지 (QR 코드와 실시간 랭킹이 방송으로 나와요)</span></label></li>
+      <li><label><input type="checkbox" data-k="c7"><span><b>칠판에 게임 주소</b>를 크게 썼는지: <span class="kbd url">bon17.github.io/<wbr><span class="nw">dokdo-love-in-action</span></span></span></label></li>
+      <li><label><input type="checkbox" data-k="c8"><span>아래 <b>QR 코드를 휴대폰에 저장</b>했는지 (방송 QR을 놓친 학생에게 직접 보여 줘요)</span></label></li>
       <li><label><input type="checkbox" data-k="c6"><span>이 가이드의 <a href="#faq">문제 해결</a>을 한 번 훑어보기</span></label></li>
     </ul>
+  </div>
+  <div class="qrbox">
+    <img src="{{QR}}" alt="게임 주소 QR 코드" class="noz">
+    <div>
+      <p class="big" style="margin-bottom:4px">게임 QR 코드</p>
+      <p class="sub">방송 화면의 QR과 같은 코드예요. 저장해 두었다가, QR을 못 찍은 학생에게 휴대폰 화면으로 보여 주세요.</p>
+      <p><a class="btn-dl" href="{{QR}}" download="독도타임패트롤-QR.png">⬇ QR 코드 저장하기</a></p>
+      <p class="sub" style="margin:0">버튼이 안 되면 QR 그림을 길게 눌러 "이미지 저장"을 고르세요.</p>
+    </div>
   </div>
   <p class="sub">체크 표시는 이 기기에만 남아요.</p>
 </section>
@@ -293,12 +322,13 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
     <li>
       <div class="t">0분</div>
       <div class="box">
-        <h4>접속하고 대원 등록하기</h4>
-        <p>방송에 QR 코드가 나오면 태블릿 <b>카메라</b>로 찍어 게임을 열게 해 주세요. 열리지 않으면 크롬 주소창에 아래 주소를 직접 써요.</p>
-        <p><span class="kbd url">bon17.github.io/dokdo-love-in-action</span></p>
+        <h4>노래 듣고, 접속하고, 대원 등록하기</h4>
+        <p>「독도는 우리 땅」을 함께 들으며 시작해요. 그다음 학생들에게 안내해 주세요.</p>
         <div class="say"><span class="lab">안내 멘트</span>
-          <p>"태블릿 카메라로 TV의 QR 코드를 찍어 게임을 여세요. <b>시작하기</b>를 누르고 학년, 반, 이름을 쓰세요. 이름은 꼭 <b>진짜 이름</b>으로 쓰세요. 이 이름으로 랭킹에 올라가요. 소리는 아주 작게 해 주세요."</p>
+          <p>"오늘 3교시에는 태블릿으로 독도 게임을 해요. <b>4교시 퀴즈 대회는 이 게임 내용으로 나와요.</b> 게임 속 이야기와 자료를 꼼꼼히 읽으세요."</p>
+          <p>"TV의 QR 코드를 태블릿 카메라로 찍어 게임을 여세요. <b>시작하기</b>를 누르고 <b>학년, 반, 이름을 정확히</b> 쓰세요. 점수와 순위가 이 이름으로 기록돼요. <b>이어폰이 없으니 소리를 작게</b> 해 주세요."</p>
         </div>
+        <p><b>QR을 못 찍은 학생</b>에게는 저장해 둔 <a href="#prep">QR 코드</a>를 휴대폰으로 보여 주거나, 칠판의 주소를 크롬 주소창에 쓰게 해 주세요.</p>
         <p class="sub">태블릿은 <b>가로로</b> 들고 해요. 세로로 들면 "가로로 돌려 주세요"가 나와요.</p>
       </div>
     </li>
@@ -306,9 +336,9 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
       <div class="t">5분</div>
       <div class="box">
         <h4>게임 하기, 교실 돌며 돕기</h4>
-        <p>시작 안내를 읽고 <b>출발!</b>을 누르면 게임이 시작돼요. 처음 몇 분 동안 아래 세 가지를 학생들에게 알려 주시면 좋아요.</p>
+        <p>시작 안내를 읽고 <b>출발!</b>을 누르면 게임이 시작돼요. 처음 몇 분 동안 아래 내용을 알려 주시면 좋아요.</p>
         <div class="say"><span class="lab">안내 멘트</span>
-          <p>"주황색 <b>밑줄</b>이 그어진 낱말은 누르면 뜻이 나와요. 대사는 글자가 다 나오고 <b>▼</b> 표시가 보일 때 눌러야 넘어가요. 모은 증거는 오른쪽 위 <b>📖 도감</b>에서 언제든 다시 볼 수 있어요. 4교시 퀴즈는 게임 속 대사와 자료에서 나오니까 꼼꼼히 읽으세요."</p>
+          <p>"주황색 <b>밑줄</b>이 그어진 낱말은 누르면 뜻이 나와요. 대사는 글자가 다 나오고 <b>▼</b> 표시가 보일 때 눌러야 넘어가요. 모은 증거는 오른쪽 위 <b>📖 도감</b>에서 언제든 다시 볼 수 있어요."</p>
         </div>
         <p>그다음에는 교실을 돌며 막힌 학생을 도와주세요. 방법은 <a href="#help">도와주는 법</a>에 있어요. 학생이 어디쯤인지는 화면 <b>왼쪽 위의 숫자</b>(예: "4. 암호 해독실")로 알 수 있어요.</p>
       </div>
@@ -316,12 +346,15 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
     <li class="hot">
       <div class="t">30분</div>
       <div class="box">
-        <h4>늦은 학생에게 비밀번호 1025 알려 주기</h4>
-        <p>교실을 돌며 학생들의 화면 <b>왼쪽 위 숫자</b>를 확인해 주세요. 숫자가 <b>6 이하</b>인 학생에게만 비밀번호를 <b>한 명씩</b> 알려 주세요. <b>7단계 이상</b>인 학생은 그대로 계속하면 45분 안에 끝낼 수 있어요.</p>
-        <div class="warn"><p>반 전체에 크게 말하지 마세요. 잘 가고 있는 학생이 쓰면 건너뛴 단계의 점수가 절반이 되어 오히려 손해예요.</p></div>
-        <div class="say"><span class="lab">학생에게 한 명씩</span>
-          <p>"이대로면 시간 안에 끝내기 어려워. 오른쪽 위 <b>☰</b> → <b>🔑 비밀번호 입력</b> → <b>1025</b> → <b>네</b>를 누르면 8단계로 바로 가. 끝까지 해야 랭킹에 기록이 남아."</p>
+        <h4>방송이 나오면: 7단계에 못 들어간 학생에게 비밀번호 알려 주기</h4>
+        <p>수업 시작 30분 뒤에 방송이 나와요. 그때 화면 왼쪽 위 숫자가 <b>1~6</b>인 학생, 곧 <b>아직 7단계에 들어가지 못한 학생</b>을 손들게 하고 비밀번호를 알려 주세요.</p>
+        <div class="say"><span class="lab">반 전체에</span>
+          <p>"화면 왼쪽 위 숫자를 보세요. <b>아직 7단계에 들어가지 못한 사람</b>, 숫자가 6 이하인 사람은 손을 드세요."</p>
         </div>
+        <div class="say"><span class="lab">손 든 학생에게</span>
+          <p>"오른쪽 위 <b>☰</b> → <b>🔑 비밀번호 입력</b> → <b>1025</b> → <b>네</b>를 누르세요. 마지막 8단계로 바로 가요. 끝까지 해야 랭킹에 기록이 남아요."</p>
+        </div>
+        <div class="warn"><p><b>7단계나 8단계인 학생은 쓰지 않게</b> 해 주세요. 그대로 하면 45분 안에 끝낼 수 있고, 비밀번호를 쓰면 건너뛴 단계의 점수가 절반이 되어 오히려 손해예요.</p></div>
         <ul>
           <li>비밀번호를 쓰면 건너뛴 단계의 증거가 흐린 <b>"빌린 증거"</b>로 나와서 그 카드의 점수가 절반이에요. 그래도 끝까지 해야 기록이 남으니 늦은 학생은 꼭 쓰게 해 주세요.</li>
           <li>8단계부터 결과 화면까지 보통 8분쯤, 천천히 하는 학생은 12분쯤 걸려요.</li>
@@ -334,28 +367,64 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
       <div class="box">
         <h4>게임 마감</h4>
         <p><b>결과 화면이 나와야 랭킹에 기록이 올라가요.</b> 8단계 반박 배틀을 하고 있는 학생은 마저 끝내게 해 주세요.</p>
-        <div class="say"><span class="lab">안내 멘트</span>
-          <p>"게임을 끝낸 사람은 결과 화면 아래 <b>📖 증거 도감 보기</b>를 눌러, 모은 증거를 다시 읽어 보세요. 4교시 퀴즈 준비예요."</p>
+        <div class="cta">
+          <p class="cta-h">⭐ 먼저 끝낸 학생, 시간이 남은 학생은</p>
+          <p><b>🔄 다시 도전</b>으로 더 높은 점수에 도전하거나, <b>📖 증거 도감 보기</b>로 모은 증거를 다시 읽으며 복습하게 해 주세요.</p>
+          <p class="sub" style="margin:0">다시 도전해도 랭킹에는 가장 좋은 기록만 남아서 손해가 없어요. 도감 복습은 4교시 퀴즈 준비가 돼요. 45분 전에 끝낸 학생도 마찬가지예요.</p>
         </div>
-        <p class="sub">결과 화면의 <b>다시 도전</b>은 처음부터 다시 하는 거라 10분 안에는 끝나지 않아요. 이 시간에는 도감 복습을 권해 주세요.</p>
+        <div class="say"><span class="lab">안내 멘트</span>
+          <p>"게임을 끝낸 사람은 결과 화면 아래 <b>🔄 다시 도전</b>으로 더 높은 점수에 도전하거나, <b>📖 증거 도감 보기</b>로 모은 증거를 다시 읽어 보세요. 4교시 퀴즈 준비가 돼요."</p>
+        </div>
       </div>
     </li>
     <li>
       <div class="t">55분</div>
       <div class="box">
-        <h4>마무리</h4>
+        <h4>마무리, 태블릿 걷기</h4>
         <div class="say"><span class="lab">안내 멘트</span>
-          <p>"수고했어요, 타임 패트롤 대원! 4교시에는 오늘 게임에서 읽은 내용으로 퀴즈 대회를 해요."</p>
+          <p>"수고했어요, 타임 패트롤 대원! 4교시에는 오늘 게임 내용으로 퀴즈 대회를 해요. 태블릿을 걷을게요."</p>
         </div>
-        <div class="note"><p><b>4교시 퀴즈 진행 방법</b>은 따로 안내드려요.</p></div>
+        <p>태블릿을 걷은 뒤, <b>쉬는 시간에 책상을 시험 대형으로</b> 바꿔요. 자세한 내용은 <a href="#quiz">4교시 퀴즈 대회</a>에 있어요.</p>
       </div>
     </li>
   </ol>
 </section>
 
-<!-- 4. 게임 화면 -->
+<!-- 4. 4교시 퀴즈 -->
+<section id="quiz">
+  <h2><span class="n">4</span>4교시 퀴즈 대회 (감독)</h2>
+  <div class="note">
+    <p>3교시 게임 내용을 바탕으로 출제돼요. 시험 시간은 <b>40분</b>이고, 답은 <b>OMR 카드</b>에 써요. 시작과 끝은 <b>방송부 타종</b>에 따라요.</p>
+  </div>
+  <h3>쉬는 시간에 준비하기</h3>
+  <ul class="check">
+    <li><label><input type="checkbox" data-k="q1"><span>책상을 <b>5줄 시험 대형</b>으로 바꾸기</span></label></li>
+    <li><label><input type="checkbox" data-k="q2"><span><b>운동장 쪽 창가 자리부터 1번</b>이 되도록 번호순으로 앉히기</span></label></li>
+    <li><label><input type="checkbox" data-k="q3"><span>시험지와 답안지(OMR 카드) 받아 오기: <b>2층 본교무실 꽂이함</b></span></label></li>
+  </ul>
+  <h3>시험 시간표</h3>
+  <table>
+    <thead><tr><th style="width:104px">시간</th><th>할 일</th><th>비고</th></tr></thead>
+    <tbody>
+      <tr><td><b>12:00</b></td><td>입실 완료, 답안지·시험지 배부</td><td>모두 교실 입실, 시험 대형과 번호순 착석 확인</td></tr>
+      <tr><td><b>12:05</b></td><td>시험 시작</td><td>방송부 타종에 따라 시작</td></tr>
+      <tr><td><b>12:45</b></td><td>시험 끝 (답안지 걷기)</td><td>방송부 타종에 따라 끝</td></tr>
+    </tbody>
+  </table>
+  <h3>감독 선생님이 확인할 것</h3>
+  <ul>
+    <li>시험 직전에 <b>학생 번호와 착석 상태</b>를 확인해요.</li>
+    <li><b>시험지와 OMR 카드</b>가 모두에게 정확히 나눠졌는지 확인해요.</li>
+    <li>OMR 카드를 <b>정확히 기입</b>하도록 안내하고, 걷을 때 다시 확인해요.</li>
+  </ul>
+  <div class="say"><span class="lab">안내 멘트</span>
+    <p>"OMR 카드에 인적 사항을 정확히 쓰고 표시하세요. 종이 울리면 시작해요. 시험 시간은 40분이에요."</p>
+  </div>
+</section>
+
+<!-- 5. 게임 화면 -->
 <section id="screens">
-  <h2><span class="n">4</span>게임 화면 살펴보기</h2>
+  <h2><span class="n">5</span>게임 화면 살펴보기</h2>
   <p>학생이 보게 될 화면을 순서대로 모았어요. 그림을 누르면 크게 볼 수 있어요.</p>
 
   <h3><span class="step-tag">①</span>처음 화면과 대원 등록</h3>
@@ -395,7 +464,7 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
   <h3><span class="step-tag">⑤</span>증거 도감</h3>
   <figure><img src="{{img:book}}" alt="증거 도감 화면"><figcaption>모은 증거 카드가 단계별로 모여 있어요. 카드를 누르면 크게 읽을 수 있어요. 위쪽 탭에서 노래 단서, 이름 도감, 낱말 풀이, 업적 배지도 볼 수 있어요. 막힌 학생에게 가장 먼저 권할 곳이에요.</figcaption></figure>
 
-  <h3 id="passcode"><span class="step-tag">⑥</span>비밀번호 넣기 (30분, 6단계 이하 학생만)</h3>
+  <h3 id="passcode"><span class="step-tag">⑥</span>비밀번호 넣기 (30분 방송 후, 7단계에 못 들어간 학생만)</h3>
   <div class="shots three">
     <figure><img src="{{img:menu}}" alt="메뉴 창"><figcaption>오른쪽 위 <b>☰</b> → <b>🔑 비밀번호 입력</b></figcaption></figure>
     <figure><img src="{{img:passcode}}" alt="비밀번호 입력 창"><figcaption><b>1025</b>를 쓰고 <b>확인</b></figcaption></figure>
@@ -403,15 +472,23 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
   </div>
 
   <h3><span class="step-tag">⑦</span>결과 화면</h3>
-  <figure><img src="{{img:result}}" alt="결과 화면: 점수, 등급, 실시간 랭킹"><figcaption>점수, 등급, 클리어 시간, 실시간 랭킹이 나와요. <b>이 화면이 나와야 기록이 올라가요.</b> 아래 <b>📖 증거 도감 보기</b>로 복습할 수 있어요.</figcaption></figure>
+  <figure><img src="{{img:result}}" alt="결과 화면: 점수, 등급, 실시간 랭킹"><figcaption>점수, 등급, 클리어 시간, 실시간 랭킹이 나와요. <b>이 화면이 나와야 기록이 올라가요.</b></figcaption></figure>
+  <div class="cta">
+    <p class="cta-h">⭐ 시간이 남은 학생은 이렇게 해 주세요</p>
+    <p>결과 화면 오른쪽 아래의 두 버튼 가운데 하나를 누르게 해 주세요.</p>
+    <ul>
+      <li><b>🔄 다시 도전:</b> 처음부터 다시 하며 더 높은 점수에 도전해요. 랭킹에는 가장 좋은 기록만 남아서 손해가 없어요.</li>
+      <li><b>📖 증거 도감 보기:</b> 모은 증거를 다시 읽으며 4교시 퀴즈를 준비해요.</li>
+    </ul>
+  </div>
 
   <h3><span class="step-tag">⑧</span>이어하기</h3>
   <figure><img src="{{img:title-continue}}" alt="처음 화면의 이어하기 버튼"><figcaption>창을 닫거나 새로 고쳐도 진행이 저장되어 있어요. 다시 열면 <b>▶ 이어하기</b>에 이름과 단계가 나와요. <b>새로 시작</b>을 누르면 진행이 지워지니 조심하세요.</figcaption></figure>
 </section>
 
-<!-- 5. 8단계 -->
+<!-- 6. 8단계 -->
 <section id="stages">
-  <h2><span class="n">5</span>8단계 한눈에</h2>
+  <h2><span class="n">6</span>8단계 한눈에</h2>
   <p>교실을 돌 때 "지금 무엇을 하고 있는지" 알아보는 용도예요. 1~7단계 끝에는 그 단계에서 얻은 증거 카드를 <b>역사적·지리적·국제법적 근거</b> 세 갈래로 나눠 담아요.</p>
   <div class="stages">
     <div class="stage"><img src="{{img:st1-play}}" alt="1단계 화면: 우산호 라디오"><div class="body"><div class="nm"><i>1</i>독도를 찾아라</div><div class="era">오늘날 · 동해</div><p>라디오 다이얼을 돌려 「독도는 우리 땅」 노래 속 단서를 모으고, 망원경으로 바다를 살핀 뒤, 안개 속에서 배를 몰아 독도를 찾아가요.</p></div></div>
@@ -426,9 +503,9 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
   <p style="margin-top:14px">8단계 다음에는 "독도가 우리 땅인 이유"를 세 줄로 정리하고 <b>결과 화면</b>으로 가요.</p>
 </section>
 
-<!-- 6. 도와주는 법 -->
+<!-- 7. 도와주는 법 -->
 <section id="help">
-  <h2><span class="n">6</span>돌아보며 도와주는 법</h2>
+  <h2><span class="n">7</span>돌아보며 도와주는 법</h2>
   <h3 style="margin-top:0">막힌 학생에게는 답 대신 이렇게</h3>
   <div class="talks">
     <div class="talk"><b>문제를 모를 때</b>"방금 나온 대사랑 자료를 다시 읽어 볼까?"</div>
@@ -447,24 +524,25 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
   <h3>이런 학생에게는</h3>
   <ul>
     <li><b>대사를 마구 넘기는 학생:</b> "4교시 퀴즈는 대사와 자료에서 나와."라고 알려 주세요.</li>
-    <li><b>일찍 끝낸 학생:</b> 결과 화면의 <b>📖 증거 도감 보기</b>로 복습하게 해 주세요.</li>
-    <li><b>많이 늦은 학생:</b> 30분에 6단계 이하라면 비밀번호(1025)를 알려 주세요. 끝까지 해야 기록이 남아요.</li>
+    <li><b>먼저 끝낸 학생:</b> 결과 화면의 <b>🔄 다시 도전</b>이나 <b>📖 증거 도감 보기</b>로 복습하게 해 주세요.</li>
+    <li><b>많이 늦은 학생:</b> 30분 방송 때 아직 7단계에 못 들어갔다면 비밀번호(1025)를 알려 주세요. 끝까지 해야 기록이 남아요.</li>
   </ul>
   <h3>하지 말아 주세요</h3>
   <ul class="dont">
     <li>정답을 알려 주거나 대신 눌러 주기</li>
     <li>친구 화면을 보고 따라 하게 두기</li>
-    <li>30분 전에 비밀번호를 알려 주거나, 반 전체에 크게 알려 주기</li>
+    <li>30분 방송 전에 비밀번호를 알려 주기</li>
+    <li>7단계, 8단계인 학생에게 비밀번호를 쓰게 하기 (점수가 깎여요)</li>
   </ul>
 </section>
 
-<!-- 7. 문제 해결 -->
+<!-- 8. 문제 해결 -->
 <section id="faq">
-  <h2><span class="n">7</span>자주 생기는 문제</h2>
+  <h2><span class="n">8</span>자주 생기는 문제</h2>
   <p>제목을 누르면 해결 방법이 펼쳐져요.</p>
 
-  <details><summary>QR 코드를 찍어도 게임이 안 열려요</summary><div class="a">
-    <ul><li>와이파이에 연결되어 있는지 확인해요.</li><li>크롬 주소창에 <span class="kbd url">bon17.github.io/dokdo-love-in-action</span>을 직접 써서 열어요.</li><li>다른 인터넷 앱으로 열려 화면이 이상하면, 크롬에서 다시 열어요.</li></ul>
+  <details><summary>QR 코드를 못 찍었어요 / 찍어도 게임이 안 열려요</summary><div class="a">
+    <ul><li>저장해 둔 <a href="#prep">QR 코드</a>를 휴대폰으로 보여 주세요.</li><li>칠판에 쓴 주소 <span class="kbd url">bon17.github.io/<wbr><span class="nw">dokdo-love-in-action</span></span>을 크롬 주소창에 직접 써서 열어요.</li><li>와이파이에 연결되어 있는지 확인해요.</li><li>다른 인터넷 앱으로 열려 화면이 이상하면, 크롬에서 다시 열어요.</li></ul>
   </div></details>
 
   <details><summary>교실이 너무 시끄러워요</summary><div class="a">
@@ -504,7 +582,7 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
   </div></details>
 
   <details><summary>"노래 다시 듣기"를 눌렀더니 유튜브가 열렸어요</summary><div class="a">
-    <p>노래는 다시 듣지 않아도 괜찮아요. 단서는 화면에 글자로 나와요. 유튜브 탭을 닫으면 게임 화면으로 돌아와요. 이어폰이 없으니 교실에서는 누르지 않게 해 주세요.</p>
+    <p>노래를 새 창에서 다시 들을 수 있는 버튼이에요. 이어폰이 없으니 소리를 작게 해서 듣게 해 주세요. 다시 듣지 않아도 단서는 화면에 글자로 나와요. 유튜브 탭을 닫으면 게임 화면으로 돌아와요.</p>
   </div></details>
 
   <details><summary>학생이 "선생님" 버튼을 눌렀어요</summary><div class="a">
@@ -516,13 +594,13 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
   </div></details>
 
   <details><summary>한 번 더 하고 싶대요</summary><div class="a">
-    <p>결과 화면의 <b>다시 도전</b>을 누르면 처음부터 다시 해요. 랭킹에는 가장 좋은 기록만 남아요. 다만 처음부터 끝까지 다시 하는 데 시간이 오래 걸려서, 3교시 안에는 도감 복습을 먼저 권해 주세요.</p>
+    <p>결과 화면의 <b>🔄 다시 도전</b>을 누르면 처음부터 다시 해요. 랭킹에는 가장 좋은 기록만 남으니, 시간이 남았다면 마음껏 도전하게 해 주세요. 끝까지 못 해도 앞의 기록은 그대로예요.</p>
   </div></details>
 </section>
 
-<!-- 8. 점수와 랭킹 -->
+<!-- 9. 점수와 랭킹 -->
 <section id="score">
-  <h2><span class="n">8</span>점수와 랭킹</h2>
+  <h2><span class="n">9</span>점수와 랭킹</h2>
   <p>학생이 물어볼 때 답해 줄 수 있을 만큼만 정리했어요.</p>
   <h3 style="margin-top:0">점수가 올라가는 방법</h3>
   <ul>
@@ -568,7 +646,7 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
   var KEY = 'dokdoGuide.check';
   var saved = {};
   try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
-  document.querySelectorAll('#checklist input').forEach(function (c) {
+  document.querySelectorAll('.check input').forEach(function (c) {
     c.checked = !!saved[c.dataset.k];
     c.addEventListener('change', function () {
       saved[c.dataset.k] = c.checked;
@@ -578,7 +656,7 @@ footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);colo
 
   // 그림 크게 보기
   var lb = document.getElementById('lb'), lbImg = lb.querySelector('img');
-  document.querySelectorAll('main img').forEach(function (im) {
+  document.querySelectorAll('main img:not(.noz)').forEach(function (im) {
     im.addEventListener('click', function () { lbImg.src = im.src; lbImg.alt = im.alt; lb.classList.add('on'); });
   });
   lb.addEventListener('click', function () { lb.classList.remove('on'); });

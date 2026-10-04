@@ -155,8 +155,8 @@ def build_qr():
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
-def build_guide():
-    """src/guide.template.html 의 {{img:이름}} 자리에 images/guide/이름.webp 를 넣는다."""
+def build_guide(qr):
+    """src/guide.template.html 의 {{img:이름}} 자리에 images/guide/이름.webp 를, {{QR}} 자리에 게임 QR 코드를 넣는다."""
     import re
     html = (SRC / "guide.template.html").read_text(encoding="utf-8")
 
@@ -166,20 +166,20 @@ def build_guide():
             raise SystemExit(f"가이드 그림이 없습니다: {f}")
         return data_uri(f.read_bytes())
 
-    html = re.sub(r"\{\{img:([\w-]+)\}\}", put, html)
+    html = re.sub(r"\{\{img:([\w-]+)\}\}", put, html).replace("{{QR}}", qr)
     out = ROOT / "guide.html"
     out.write_text(html, encoding="utf-8")
     print(f"guide.html {out.stat().st_size / 1024:.0f} KB")
 
 
 def main():
-    build_guide()
+    qr = build_qr()
+    build_guide(qr)
     css = (SRC / "style.css").read_text(encoding="utf-8")
     js = "\n".join(p.read_text(encoding="utf-8") for p in sorted((SRC / "js").glob("*.js")))
     html = (SRC / "index.template.html").read_text(encoding="utf-8")
     board = (SRC / "ranking.template.html").read_text(encoding="utf-8")
     face, link = build_font(css + js + html + board)
-    qr = build_qr()
     board = board.replace("/*__QR__*/", qr).replace("/*__URL__*/", GAME_URL)
     board = board.replace("/*__FONTFACE__*/", face).replace("<!--__FONTLINK__-->", link)
     (ROOT / "ranking.html").write_text(board, encoding="utf-8")

@@ -21,7 +21,7 @@ function radioGame() {
     const doneBtn = el('button', { class: 'btn', text: '단서 수신 완료!', disabled: true });
     btns.append(replay, doneBtn);
     root.append(radio, counter, btns,
-      el('div', { style: 'font:16px var(--body);color:#8fa7c0;margin-top:8px', text: '다시 듣기를 누르면 새 창에서 노래가 열려요. 교실에서는 이어폰을 써 주세요.' }));
+      el('div', { style: 'font:16px var(--body);color:#8fa7c0;margin-top:8px', text: '다시 듣기를 누르면 새 창에서 노래가 열려요. 이어폰이 없으니 소리를 작게 해 주세요.' }));
     const m = modal(root, { closable: false });
     const pos = CLUES.map((c, i) => 0.06 + i * (0.88 / (CLUES.length - 1)) + (i % 2 ? 0.012 : -0.01));
     const dots = pos.map((p, i) => { const d = el('div', { style: `position:absolute;left:${p * 100}%;top:58px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:#ffb347;box-shadow:0 0 10px #ffb347;animation:pulse 1.2s infinite` }); scale.append(d); return d; });
