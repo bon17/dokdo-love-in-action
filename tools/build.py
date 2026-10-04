@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""게임 파일(index.html)과 선생님용 랭킹 보드(ranking.html)를 만든다.
+"""게임 파일(index.html), 선생님용 랭킹 보드(ranking.html), 임장 가이드(guide.html)를 만든다.
 
 src/ 의 HTML, CSS, JS와 images/ 의 그림을 압축해서 HTML 파일 하나로 합친다.
+임장 가이드의 게임 화면은 images/guide/ 의 WebP 파일을 그대로 넣는다.
 게임 주소 QR 코드(docs/qr-game.png)도 함께 만든다.
 사용법: python3 tools/build.py   (필요한 것: pip install pillow qrcode fonttools brotli)
 """
@@ -154,7 +155,25 @@ def build_qr():
     return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
 
 
+def build_guide():
+    """src/guide.template.html 의 {{img:이름}} 자리에 images/guide/이름.webp 를 넣는다."""
+    import re
+    html = (SRC / "guide.template.html").read_text(encoding="utf-8")
+
+    def put(m):
+        f = IMAGES / "guide" / f"{m.group(1)}.webp"
+        if not f.exists():
+            raise SystemExit(f"가이드 그림이 없습니다: {f}")
+        return data_uri(f.read_bytes())
+
+    html = re.sub(r"\{\{img:([\w-]+)\}\}", put, html)
+    out = ROOT / "guide.html"
+    out.write_text(html, encoding="utf-8")
+    print(f"guide.html {out.stat().st_size / 1024:.0f} KB")
+
+
 def main():
+    build_guide()
     css = (SRC / "style.css").read_text(encoding="utf-8")
     js = "\n".join(p.read_text(encoding="utf-8") for p in sorted((SRC / "js").glob("*.js")))
     html = (SRC / "index.template.html").read_text(encoding="utf-8")

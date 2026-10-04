@@ -5,6 +5,7 @@
 
 - 게임: <https://bon17.github.io/dokdo-love-in-action/>
 - 선생님용 랭킹 보드: <https://bon17.github.io/dokdo-love-in-action/ranking.html>
+- 임장 선생님 가이드: <https://bon17.github.io/dokdo-love-in-action/guide.html>
 - (두 주소는 GitHub Pages를 켠 뒤에 열립니다.)
 
 ## 문서
@@ -15,7 +16,7 @@
 
 ## 만들기
 
-`index.html`과 `ranking.html`은 `src/`와 `images/`로 만든 파일입니다. 직접 고치지 말고 아래 명령으로 다시 만드세요.
+`index.html`, `ranking.html`, `guide.html`은 `src/`와 `images/`로 만든 파일입니다. 직접 고치지 말고 아래 명령으로 다시 만드세요.
 
 ```sh
 pip install pillow qrcode

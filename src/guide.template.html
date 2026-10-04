@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>독도 타임 패트롤 임장 가이드</title>
+<meta name="description" content="기산중학교 독도 사랑 실천대회 3교시, 임장 선생님을 위한 진행 안내">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+:root{
+  --bg:#f6f3ec; --paper:#ffffff; --ink:#1d2733; --sub:#56616e; --line:#e3ddd0;
+  --navy:#173a63; --navy-soft:#e8eef6; --orange:#e9761b; --orange-soft:#fdf0e3;
+  --green:#1f8a5a; --green-soft:#e5f4ec; --red:#c2412d; --red-soft:#fbeae6;
+  --shadow:0 1px 2px rgba(20,30,40,.06),0 4px 14px rgba(20,30,40,.06);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#11161d; --paper:#1a212b; --ink:#e7ecf2; --sub:#a3afbd; --line:#2c3643;
+    --navy:#9cc3ef; --navy-soft:#1f2c3c; --orange:#f39a4c; --orange-soft:#33251a;
+    --green:#5fcf98; --green-soft:#1a2e25; --red:#f08a78; --red-soft:#35201c;
+    --shadow:none;
+  }
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.75 "Pretendard Variable",Pretendard,-apple-system,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif;word-break:keep-all;overflow-wrap:break-word}
+a{color:var(--navy)}
+img{max-width:100%;display:block}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px}
+
+/* 머리 */
+header.top{background:var(--navy);color:#fff;padding:34px 0 26px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) header.top{background:#16263a}}
+header.top .kicker{font-size:15px;opacity:.85;letter-spacing:.02em}
+header.top h1{font-size:30px;line-height:1.3;margin:6px 0 8px;font-weight:800}
+header.top p{margin:0;opacity:.92;font-size:16px}
+
+/* 목차 */
+nav.toc{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:1px solid var(--line);box-shadow:var(--shadow)}
+nav.toc .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:8px;padding-bottom:8px;scrollbar-width:none}
+nav.toc .wrap::-webkit-scrollbar{display:none}
+nav.toc a{flex:none;text-decoration:none;color:var(--ink);font-size:15px;padding:6px 12px;border-radius:999px;background:var(--bg);border:1px solid var(--line);white-space:nowrap}
+nav.toc a.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) nav.toc a.on{color:#11161d}}
+
+/* 본문 */
+section{padding:30px 0 6px;scroll-margin-top:56px}
+h2{font-size:24px;line-height:1.35;margin:0 0 14px;font-weight:800;display:flex;gap:10px;align-items:baseline}
+h2 .n{flex:none;font-size:15px;font-weight:700;color:#fff;background:var(--orange);border-radius:8px;padding:1px 9px;position:relative;top:-2px}
+h3{font-size:19px;margin:26px 0 8px;font-weight:700}
+p{margin:0 0 12px}
+ul,ol{margin:0 0 12px;padding-left:1.3em}
+li{margin:3px 0}
+b,strong{font-weight:700}
+.sub{color:var(--sub);font-size:15px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:0 0 14px;box-shadow:var(--shadow)}
+.card > :last-child{margin-bottom:0}
+.note{border-left:5px solid var(--navy);background:var(--navy-soft);border-radius:10px;padding:12px 16px;margin:0 0 14px}
+.warn{border-left:5px solid var(--red);background:var(--red-soft);border-radius:10px;padding:12px 16px;margin:0 0 14px}
+.good{border-left:5px solid var(--green);background:var(--green-soft);border-radius:10px;padding:12px 16px;margin:0 0 14px}
+.note > :last-child,.warn > :last-child,.good > :last-child{margin-bottom:0}
+.kbd.url{white-space:normal;word-break:break-all}
+.kbd{display:inline-block;border:1px solid var(--line);background:var(--paper);border-radius:7px;padding:0 7px;font-size:.92em;line-height:1.5;white-space:nowrap}
+.big{font-size:20px;font-weight:800}
+
+/* 한눈에 보기 */
+.glance{display:grid;gap:12px;grid-template-columns:1fr}
+@media (min-width:700px){.glance{grid-template-columns:1fr 1fr}}
+.glance .card h3{margin-top:0}
+.todo{counter-reset:t;list-style:none;padding:0}
+.todo li{counter-increment:t;position:relative;padding-left:34px;margin:8px 0}
+.todo li::before{content:counter(t);position:absolute;left:0;top:2px;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .todo li::before{color:#11161d}}
+.code{font-size:30px;font-weight:800;letter-spacing:.12em;color:var(--orange)}
+
+/* 시간표 */
+.tl{list-style:none;padding:0;margin:0 0 14px;position:relative}
+.tl::before{content:"";position:absolute;left:62px;top:8px;bottom:8px;width:2px;background:var(--line)}
+.tl > li{position:relative;display:grid;grid-template-columns:52px 1fr;gap:22px;margin:0 0 14px}
+.tl .t{font-weight:800;color:var(--navy);text-align:right;font-size:15px;line-height:1.5;padding-top:15px}
+.tl .t::after{content:"";position:absolute;left:57px;top:21px;width:12px;height:12px;border-radius:50%;background:var(--paper);border:3px solid var(--navy)}
+.tl .hot .t{color:var(--orange)}
+.tl .hot .t::after{border-color:var(--orange);background:var(--orange)}
+.tl .box{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 16px;box-shadow:var(--shadow)}
+.tl .hot .box{border:2px solid var(--orange)}
+.tl .box h4{margin:0 0 4px;font-size:17px}
+@media (max-width:560px){
+  .tl::before{left:11px;top:14px}
+  .tl > li{display:block;padding-left:30px}
+  .tl .t{text-align:left;padding:0 0 4px}
+  .tl .t::after{left:5px;top:5px}
+  .tl .box{padding:12px 14px}
+  .say{padding:10px 12px 10px 40px}
+  .say::before{left:11px;top:9px;font-size:18px}
+}
+.tl .box > :last-child{margin-bottom:0}
+
+/* 멘트 */
+.say{position:relative;background:var(--orange-soft);border:1px solid color-mix(in srgb,var(--orange) 35%,transparent);border-radius:14px;padding:12px 16px 12px 46px;margin:10px 0 12px}
+.say::before{content:"📢";position:absolute;left:14px;top:11px;font-size:20px}
+.say .lab{display:block;font-size:13px;font-weight:700;color:var(--orange);margin-bottom:2px}
+.say > :last-child{margin-bottom:0}
+
+/* 그림 */
+figure{margin:0 0 18px}
+figure img{width:100%;border-radius:12px;border:1px solid var(--line);cursor:zoom-in;background:#0b1a2c}
+figure.hud img{border-radius:8px}
+.hudpair{display:grid;gap:8px;grid-template-columns:1fr;margin-bottom:6px}
+@media (min-width:700px){.hudpair{grid-template-columns:610fr 510fr}}
+.hudpair figure{margin:0}
+.hudpair figcaption{margin-top:2px;font-size:13px}
+figcaption{font-size:15px;color:var(--sub);margin-top:6px;line-height:1.6}
+.shots{display:grid;gap:12px;grid-template-columns:1fr}
+@media (min-width:640px){.shots.two{grid-template-columns:1fr 1fr}.shots.three{grid-template-columns:1fr 1fr 1fr}}
+.step-tag{display:inline-block;font-size:13px;font-weight:700;color:#fff;background:var(--navy);border-radius:6px;padding:0 8px;margin-right:6px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .step-tag{color:#11161d}}
+.legend{display:grid;grid-template-columns:1fr;gap:4px 18px;margin:8px 0 14px;padding:0;list-style:none}
+@media (min-width:640px){.legend{grid-template-columns:1fr 1fr}}
+.legend li{margin:0;display:flex;gap:8px}
+.legend .k{flex:none;min-width:84px;font-weight:700}
+
+/* 8단계 */
+.stages{display:grid;gap:14px;grid-template-columns:1fr}
+@media (min-width:640px){.stages{grid-template-columns:1fr 1fr}}
+.stage{background:var(--paper);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow)}
+.stage img{width:100%;aspect-ratio:16/9;object-fit:cover;cursor:zoom-in;background:#0b1a2c}
+.stage .body{padding:12px 16px 14px}
+.stage .nm{font-weight:800;font-size:18px}
+.stage .nm i{font-style:normal;color:var(--orange);margin-right:6px}
+.stage .era{font-size:14px;color:var(--sub);margin:1px 0 6px}
+.stage p{margin:0;font-size:16px}
+
+/* 표 */
+table{width:100%;border-collapse:collapse;margin:0 0 14px;background:var(--paper);border-radius:12px;overflow:hidden;font-size:16px}
+th,td{border-bottom:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+th{background:var(--navy-soft);font-weight:700}
+tr:last-child td{border-bottom:0}
+
+/* 체크리스트 */
+.check{list-style:none;padding:0}
+.check li{margin:0}
+.check label{display:flex;gap:12px;align-items:flex-start;padding:10px 4px;border-bottom:1px dashed var(--line);cursor:pointer}
+.check li:last-child label{border-bottom:0}
+.check input{flex:none;width:22px;height:22px;margin-top:3px;accent-color:var(--green)}
+.check input:checked + span{color:var(--sub);text-decoration:line-through;text-decoration-color:var(--sub)}
+
+/* 문제 해결 */
+details{background:var(--paper);border:1px solid var(--line);border-radius:14px;margin:0 0 10px;box-shadow:var(--shadow)}
+details summary{cursor:pointer;list-style:none;padding:13px 44px 13px 16px;font-weight:700;position:relative}
+details summary::-webkit-details-marker{display:none}
+details summary::after{content:"+";position:absolute;right:16px;top:9px;font-size:24px;font-weight:400;color:var(--sub)}
+details[open] summary::after{content:"−"}
+details .a{padding:0 16px 14px}
+details .a > :last-child{margin-bottom:0}
+
+/* 도와주는 말 */
+.talks{display:grid;gap:10px;grid-template-columns:1fr;margin-bottom:14px}
+@media (min-width:640px){.talks{grid-template-columns:1fr 1fr}}
+.talk{background:var(--paper);border:1px solid var(--line);border-radius:14px 14px 14px 4px;padding:10px 14px;box-shadow:var(--shadow)}
+.talk b{display:block;font-size:13px;color:var(--sub);font-weight:600}
+.dont li::marker{content:"✕  ";color:var(--red);font-weight:700}
+
+/* 아래 버튼 */
+.fab{position:fixed;right:12px;bottom:12px;z-index:30;background:var(--red);color:#fff;text-decoration:none;font-weight:700;border-radius:999px;padding:7px 13px;box-shadow:0 3px 12px rgba(0,0,0,.25);font-size:14px;opacity:.94}
+footer{margin:30px 0 0;padding:24px 0 80px;border-top:1px solid var(--line);color:var(--sub);font-size:15px}
+
+/* 크게 보기 */
+#lb{position:fixed;inset:0;z-index:50;background:rgba(5,10,18,.92);display:none;align-items:center;justify-content:center;padding:12px;cursor:zoom-out}
+#lb.on{display:flex}
+#lb img{max-width:100%;max-height:100%;border-radius:8px}
+
+@media print{
+  nav.toc,.fab,#lb{display:none!important}
+  header.top{background:none;color:#000;padding:0}
+  body{background:#fff;font-size:12pt}
+  section{break-inside:auto}
+  details{box-shadow:none}
+  details .a{display:block}
+  .card,.stage,.tl .box,figure{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="kicker">기산중학교 독도 사랑 실천대회 · 3교시</div>
+    <h1>「독도 타임 패트롤」<br>임장 선생님 가이드</h1>
+    <p>독도도, 이 게임도 처음이셔도 괜찮아요. 이 안내만 보고 한 시간을 진행하실 수 있게 정리했어요.</p>
+  </div>
+</header>
+
+<nav class="toc" aria-label="차례">
+  <div class="wrap">
+    <a href="#glance">한눈에 보기</a>
+    <a href="#about">대회와 게임</a>
+    <a href="#prep">수업 전 준비</a>
+    <a href="#flow">진행 순서</a>
+    <a href="#screens">게임 화면</a>
+    <a href="#stages">8단계</a>
+    <a href="#help">도와주는 법</a>
+    <a href="#faq">문제 해결</a>
+    <a href="#score">점수·랭킹</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<!-- 0. 한눈에 보기 -->
+<section id="glance">
+  <h2><span class="n">0</span>한눈에 보기</h2>
+  <div class="note">
+    <p><b>오늘은</b> 3교시에 학생 한 명이 태블릿 한 대로 독도 역사 게임을 해요. <b>4교시</b>에는 게임에서 읽은 내용을 바탕으로 퀴즈 대회를 해요.</p>
+  </div>
+  <div class="glance">
+    <div class="card">
+      <h3>선생님이 하실 일</h3>
+      <ol class="todo">
+        <li><b>쉬는 시간:</b> 태블릿 충전, 와이파이, 교실 TV 방송을 확인해요.</li>
+        <li><b>시작:</b> 방송에 나오는 QR 코드로 접속하게 하고, 이름을 바르게 쓰는지 봐 주세요.</li>
+        <li><b>게임 중:</b> 교실을 돌며 막힌 학생을 도와주세요. <b>답은 알려 주지 않아요.</b></li>
+        <li><b>30분:</b> 비밀번호가 방송되면 <b>6단계 이하</b>인 학생만 쓰게 해 주세요.</li>
+        <li><b>45분:</b> 게임을 마치고 증거 도감으로 복습해요.</li>
+      </ol>
+    </div>
+    <div class="card">
+      <h3>꼭 기억할 것</h3>
+      <p style="margin-bottom:4px">늦은 학생용 비밀번호 <span class="sub">(30분에 방송)</span></p>
+      <p class="code">1025</p>
+      <p class="sub" style="margin-top:-6px">독도의 날(10월 25일)이에요. 넣으면 8단계로 바로 가요.</p>
+      <ul>
+        <li><b>독도를 몰라도 괜찮아요.</b> 막힌 학생에게는 답 대신 "대사를 다시 읽어 봐"라고 말해 주세요.</li>
+        <li><b>이어폰이 없으니</b> 태블릿 소리는 아주 작게 하거나 꺼 주세요. 소리가 없어도 게임은 다 할 수 있어요.</li>
+      </ul>
+    </div>
+  </div>
+  <table>
+    <thead><tr><th style="width:96px">시간</th><th>할 일</th></tr></thead>
+    <tbody>
+      <tr><td>쉬는 시간</td><td>태블릿·와이파이·TV 확인, 소리 줄이기</td></tr>
+      <tr><td>0–5분</td><td>방송 QR로 접속, 대원 등록 (학년·반·이름)</td></tr>
+      <tr><td>5–45분</td><td>게임 플레이, 교실 돌며 돕기</td></tr>
+      <tr><td><b style="color:var(--orange)">30분</b></td><td><b>비밀번호 1025 방송</b> → 6단계 이하인 학생만 사용</td></tr>
+      <tr><td><b>45분</b></td><td><b>게임 마감</b></td></tr>
+      <tr><td>45–55분</td><td>증거 도감으로 복습 (4교시 준비)</td></tr>
+      <tr><td>55–60분</td><td>마무리, 4교시 안내</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 1. 대회와 게임 -->
+<section id="about">
+  <h2><span class="n">1</span>이 대회와 게임은 무엇인가요</h2>
+  <div class="card">
+    <h3 style="margin-top:0">3교시 게임과 4교시 퀴즈</h3>
+    <p>「독도 타임 패트롤: 사라진 기록을 찾아라」는 우리 학교 독도 사랑 실천대회를 위해 만든 태블릿 게임이에요. 학생은 시간 여행을 하며 신라 때부터 오늘날까지 독도와 관련된 이야기와 옛 자료를 직접 읽고, 독도가 우리 땅인 근거를 <b>증거 카드</b>로 모아요.</p>
+    <p style="margin-bottom:0">4교시 퀴즈는 이 게임에서 읽은 내용을 바탕으로 나와요. 그래서 <b>대사와 자료를 꼼꼼히 읽은 학생이 유리</b>해요.</p>
+  </div>
+  <h3>줄거리</h3>
+  <p>대회 날 아침, 학교 도서관의 독도 기록이 <b>'망각의 안개'</b> 때문에 하얗게 지워지기 시작해요. 학생은 '타임 패트롤' 대원이 되어 강치 '가지'와 함께 시간 여행 배를 타고 여러 시대로 가서 사라진 증거를 되찾아요. 마지막에는 안개가 내뱉는 근거 없는 주장을 모은 증거로 반박해요.</p>
+  <h3>정답을 알려 주지 않는 게임이에요</h3>
+  <ul>
+    <li>게임은 답을 바로 알려 주지 않고, 학생이 이야기와 자료를 읽으며 <b>스스로 찾게</b> 만들었어요.</li>
+    <li>그래서 선생님도 독도 내용을 알 필요가 없어요. 오히려 <b>답을 알려 주시면 안 돼요.</b> 퀴즈 대회가 공정하려면 모두 같은 조건에서 해야 하니까요.</li>
+    <li>틀려도 게임은 끝나지 않아요. 같은 곳에서 계속 틀리면 게임이 힌트를 주고, 세 번째에는 같이 찾아 줘요. <b>막혀서 못 나가는 일은 없어요.</b></li>
+  </ul>
+  <div class="good">
+    <p>모두 <b>8단계</b>이고, 한 단계에 4~5분, 전체 약 40분을 목표로 만들었어요. 학생마다 읽는 속도가 달라서 일찍 끝나는 학생도, 늦는 학생도 있어요.</p>
+  </div>
+</section>
+
+<!-- 2. 수업 전 준비 -->
+<section id="prep">
+  <h2><span class="n">2</span>수업 전 준비 <span class="sub" style="font-weight:500">쉬는 시간 10분</span></h2>
+  <div class="card">
+    <ul class="check" id="checklist">
+      <li><label><input type="checkbox" data-k="c1"><span><b>태블릿</b>이 학생 수만큼 있고, 배터리가 넉넉한지 (반 이상 권장)</span></label></li>
+      <li><label><input type="checkbox" data-k="c2"><span>태블릿이 <b>학교 와이파이</b>에 연결되어 있는지</span></label></li>
+      <li><label><input type="checkbox" data-k="c3"><span>태블릿에 <b>크롬</b> 앱이 있는지 (게임은 크롬에 맞춰 만들었어요)</span></label></li>
+      <li><label><input type="checkbox" data-k="c4"><span><b>교실 TV</b>를 켜서 방송이 나오는지 (QR 코드, 비밀번호, 랭킹이 방송으로 나와요)</span></label></li>
+      <li><label><input type="checkbox" data-k="c5"><span>태블릿 <b>소리를 1~2칸</b>으로 아주 작게 줄였는지 (이어폰이 없으니 30대가 동시에 소리를 내면 시끄러워요)</span></label></li>
+      <li><label><input type="checkbox" data-k="c6"><span>이 가이드의 <a href="#faq">문제 해결</a>을 한 번 훑어보기</span></label></li>
+    </ul>
+  </div>
+  <p class="sub">체크 표시는 이 기기에만 남아요.</p>
+</section>
+
+<!-- 3. 진행 순서 -->
+<section id="flow">
+  <h2><span class="n">3</span>3교시 진행 순서</h2>
+  <p>📢 표시는 그대로 읽어 주시면 되는 안내 멘트예요.</p>
+  <ol class="tl">
+    <li>
+      <div class="t">0분</div>
+      <div class="box">
+        <h4>접속하고 대원 등록하기</h4>
+        <p>방송에 QR 코드가 나오면 태블릿 <b>카메라</b>로 찍어 게임을 열게 해 주세요. 열리지 않으면 크롬 주소창에 아래 주소를 직접 써요.</p>
+        <p><span class="kbd url">bon17.github.io/dokdo-love-in-action</span></p>
+        <div class="say"><span class="lab">안내 멘트</span>
+          <p>"태블릿 카메라로 TV의 QR 코드를 찍어 게임을 여세요. <b>시작하기</b>를 누르고 학년, 반, 이름을 쓰세요. 이름은 꼭 <b>진짜 이름</b>으로 쓰세요. 이 이름으로 랭킹에 올라가요. 소리는 아주 작게 해 주세요."</p>
+        </div>
+        <p class="sub">태블릿은 <b>가로로</b> 들고 해요. 세로로 들면 "가로로 돌려 주세요"가 나와요.</p>
+      </div>
+    </li>
+    <li>
+      <div class="t">5분</div>
+      <div class="box">
+        <h4>게임 하기, 교실 돌며 돕기</h4>
+        <p>시작 안내를 읽고 <b>출발!</b>을 누르면 게임이 시작돼요. 처음 몇 분 동안 아래 세 가지를 학생들에게 알려 주시면 좋아요.</p>
+        <div class="say"><span class="lab">안내 멘트</span>
+          <p>"주황색 <b>밑줄</b>이 그어진 낱말은 누르면 뜻이 나와요. 대사는 글자가 다 나오고 <b>▼</b> 표시가 보일 때 눌러야 넘어가요. 모은 증거는 오른쪽 위 <b>📖 도감</b>에서 언제든 다시 볼 수 있어요. 4교시 퀴즈는 게임 속 대사와 자료에서 나오니까 꼼꼼히 읽으세요."</p>
+        </div>
+        <p>그다음에는 교실을 돌며 막힌 학생을 도와주세요. 방법은 <a href="#help">도와주는 법</a>에 있어요. 학생이 어디쯤인지는 화면 <b>왼쪽 위의 숫자</b>(예: "4. 암호 해독실")로 알 수 있어요.</p>
+      </div>
+    </li>
+    <li class="hot">
+      <div class="t">30분</div>
+      <div class="box">
+        <h4>비밀번호 1025 방송</h4>
+        <p>방송에 비밀번호가 나오면, 화면 왼쪽 위 숫자가 <b>6 이하</b>인 학생만 쓰게 해 주세요. <b>7단계 이상</b>인 학생은 그대로 계속하면 45분 안에 끝낼 수 있어요.</p>
+        <div class="say"><span class="lab">안내 멘트</span>
+          <p>"화면 왼쪽 위 숫자가 6 이하인 사람은 오른쪽 위 <b>☰</b> 버튼 → <b>🔑 비밀번호 입력</b> → <b>1025</b> → <b>네</b>를 누르세요. 8단계로 바로 가요. 7이나 8인 사람은 그대로 계속하세요."</p>
+        </div>
+        <ul>
+          <li>비밀번호를 쓰면 건너뛴 단계의 증거가 흐린 <b>"빌린 증거"</b>로 나와서 그 카드의 점수가 절반이에요. 그래도 끝까지 해야 기록이 남으니 늦은 학생은 꼭 쓰게 해 주세요.</li>
+          <li>8단계부터 결과 화면까지 보통 8분쯤, 천천히 하는 학생은 12분쯤 걸려요.</li>
+          <li>넣는 화면은 <a href="#passcode">게임 화면 ⑧</a>에 있어요.</li>
+        </ul>
+      </div>
+    </li>
+    <li class="hot">
+      <div class="t">45분</div>
+      <div class="box">
+        <h4>게임 마감</h4>
+        <p><b>결과 화면이 나와야 랭킹에 기록이 올라가요.</b> 8단계 반박 배틀을 하고 있는 학생은 마저 끝내게 해 주세요.</p>
+        <div class="say"><span class="lab">안내 멘트</span>
+          <p>"게임을 끝낸 사람은 결과 화면 아래 <b>📖 증거 도감 보기</b>를 눌러, 모은 증거를 다시 읽어 보세요. 4교시 퀴즈 준비예요."</p>
+        </div>
+        <p class="sub">결과 화면의 <b>다시 도전</b>은 처음부터 다시 하는 거라 10분 안에는 끝나지 않아요. 이 시간에는 도감 복습을 권해 주세요.</p>
+      </div>
+    </li>
+    <li>
+      <div class="t">55분</div>
+      <div class="box">
+        <h4>마무리</h4>
+        <div class="say"><span class="lab">안내 멘트</span>
+          <p>"수고했어요, 타임 패트롤 대원! 4교시에는 오늘 게임에서 읽은 내용으로 퀴즈 대회를 해요."</p>
+        </div>
+        <div class="note"><p><b>4교시 퀴즈 진행 방법</b>은 따로 안내드려요.</p></div>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<!-- 4. 게임 화면 -->
+<section id="screens">
+  <h2><span class="n">4</span>게임 화면 살펴보기</h2>
+  <p>학생이 보게 될 화면을 순서대로 모았어요. 그림을 누르면 크게 볼 수 있어요.</p>
+
+  <h3><span class="step-tag">①</span>처음 화면과 대원 등록</h3>
+  <div class="shots two">
+    <figure><img src="{{img:title}}" alt="처음 화면: 독도 타임 패트롤 제목과 시작하기 버튼"><figcaption><b>시작하기</b>를 눌러요. 오른쪽 아래 "선생님" 버튼은 담당 선생님용이에요.</figcaption></figure>
+    <figure><img src="{{img:register}}" alt="대원 등록: 학년, 반, 이름 입력"><figcaption>학년, 반을 고르고 <b>진짜 이름</b>을 써요. 랭킹에는 가운데 글자를 가려서 보여 줘요 (홍○동).</figcaption></figure>
+    <figure><img src="{{img:register-confirm}}" alt="등록 확인 창"><figcaption>한 번 더 확인해요. 틀렸으면 <b>다시 쓸래요</b>.</figcaption></figure>
+    <figure><img src="{{img:start-message}}" alt="시작 안내 화면"><figcaption>시작 안내예요. 밑줄 낱말을 눌러 보는 연습도 해요. 다 읽으면 <b>출발!</b></figcaption></figure>
+  </div>
+
+  <h3><span class="step-tag">②</span>대사 넘기기와 밑줄 낱말</h3>
+  <div class="shots two">
+    <figure><img src="{{img:dialog-underline}}" alt="대사 창: 주황색 밑줄 낱말과 오른쪽 아래 ▼ 표시"><figcaption>글자가 다 나오고 오른쪽 아래에 <b>▼</b>가 보일 때 누르면 다음 대사로 넘어가요. 너무 빨리 누르면 넘어가지 않는데, 일부러 그렇게 만든 거예요.</figcaption></figure>
+    <figure><img src="{{img:dialog-gloss}}" alt="밑줄 낱말을 눌러 뜻이 나온 모습"><figcaption><b>주황색 밑줄</b> 낱말을 누르면 뜻이 나와요. 뜻을 봐도 대사는 넘어가지 않아요.</figcaption></figure>
+  </div>
+
+  <h3><span class="step-tag">③</span>단계 시작: 미션 카드</h3>
+  <figure><img src="{{img:mission-card}}" alt="1단계 미션 카드"><figcaption>단계마다 처음에 미션 카드가 나와요. 화면 가장자리에 <b>숨은 강치</b>가 한 마리씩 있는데, 찾아 누르면 보너스 점수(+50점)를 받아요.</figcaption></figure>
+
+  <h3><span class="step-tag">④</span>위쪽 막대</h3>
+  <div class="hudpair">
+    <figure class="hud"><img src="{{img:hud-left}}" alt="위쪽 막대 왼쪽: 단계, 시대, 되찾은 기록"><figcaption>왼쪽</figcaption></figure>
+    <figure class="hud"><img src="{{img:hud-right}}" alt="위쪽 막대 오른쪽: 지난 시간, 점수, 도감, 소리, 전체 화면, 메뉴"><figcaption>오른쪽</figcaption></figure>
+  </div>
+  <ul class="legend">
+    <li><span class="k">4. 암호 해독실</span><span>지금 단계 (진도 확인은 여기를 보세요)</span></li>
+    <li><span class="k">⏳ 시대</span><span>이야기 속 시대</span></li>
+    <li><span class="k">독도 · %</span><span>되찾은 기록 (증거를 모을수록 독도가 선명해져요)</span></li>
+    <li><span class="k">⏱ 지난 시간</span><span>지금까지 플레이한 시간</span></li>
+    <li><span class="k">점수</span><span>지금 점수</span></li>
+    <li><span class="k">📖 도감</span><span>모은 증거 카드, 낱말 풀이 다시 보기</span></li>
+    <li><span class="k">🔊</span><span>소리 켜기·끄기</span></li>
+    <li><span class="k">⛶</span><span>전체 화면</span></li>
+    <li><span class="k">☰</span><span>메뉴 (비밀번호 입력, 처음 화면으로)</span></li>
+  </ul>
+
+  <h3><span class="step-tag">⑤</span>증거 도감</h3>
+  <figure><img src="{{img:book}}" alt="증거 도감 화면"><figcaption>모은 증거 카드가 단계별로 모여 있어요. 카드를 누르면 크게 읽을 수 있어요. 위쪽 탭에서 노래 단서, 이름 도감, 낱말 풀이, 업적 배지도 볼 수 있어요. 막힌 학생에게 가장 먼저 권할 곳이에요.</figcaption></figure>
+
+  <h3 id="passcode"><span class="step-tag">⑥</span>비밀번호 넣기 (30분, 6단계 이하 학생만)</h3>
+  <div class="shots three">
+    <figure><img src="{{img:menu}}" alt="메뉴 창"><figcaption>오른쪽 위 <b>☰</b> → <b>🔑 비밀번호 입력</b></figcaption></figure>
+    <figure><img src="{{img:passcode}}" alt="비밀번호 입력 창"><figcaption><b>1025</b>를 쓰고 <b>확인</b></figcaption></figure>
+    <figure><img src="{{img:passcode-confirm}}" alt="8단계로 갈지 묻는 창"><figcaption><b>네</b>를 누르면 8단계로 가요</figcaption></figure>
+  </div>
+
+  <h3><span class="step-tag">⑦</span>결과 화면</h3>
+  <figure><img src="{{img:result}}" alt="결과 화면: 점수, 등급, 실시간 랭킹"><figcaption>점수, 등급, 클리어 시간, 실시간 랭킹이 나와요. <b>이 화면이 나와야 기록이 올라가요.</b> 아래 <b>📖 증거 도감 보기</b>로 복습할 수 있어요.</figcaption></figure>
+
+  <h3><span class="step-tag">⑧</span>이어하기</h3>
+  <figure><img src="{{img:title-continue}}" alt="처음 화면의 이어하기 버튼"><figcaption>창을 닫거나 새로 고쳐도 진행이 저장되어 있어요. 다시 열면 <b>▶ 이어하기</b>에 이름과 단계가 나와요. <b>새로 시작</b>을 누르면 진행이 지워지니 조심하세요.</figcaption></figure>
+</section>
+
+<!-- 5. 8단계 -->
+<section id="stages">
+  <h2><span class="n">5</span>8단계 한눈에</h2>
+  <p>교실을 돌 때 "지금 무엇을 하고 있는지" 알아보는 용도예요. 1~7단계 끝에는 그 단계에서 얻은 증거 카드를 <b>역사적·지리적·국제법적 근거</b> 세 갈래로 나눠 담아요.</p>
+  <div class="stages">
+    <div class="stage"><img src="{{img:st1-play}}" alt="1단계 화면: 우산호 라디오"><div class="body"><div class="nm"><i>1</i>독도를 찾아라</div><div class="era">오늘날 · 동해</div><p>라디오 다이얼을 돌려 「독도는 우리 땅」 노래 속 단서를 모으고, 망원경으로 바다를 살핀 뒤, 안개 속에서 배를 몰아 독도를 찾아가요.</p></div></div>
+    <div class="stage"><img src="{{img:st2-play}}" alt="2단계 화면: 사관의 서고"><div class="body"><div class="nm"><i>2</i>사관의 서고</div><div class="era">512년 신라 ~ 1770년 조선</div><p>서고에서 옛 책과 연대표를 살펴 단서를 찾고 자물쇠를 열어요. 나무 사자 작전 미니게임도 있어요.</p></div></div>
+    <div class="stage"><img src="{{img:st3-play}}" alt="3단계 화면: 옛 문서 읽기"><div class="body"><div class="nm"><i>3</i>안용복의 담판</div><div class="era">1693~1696년 · 조선 숙종 때, 일본 에도 막부</div><p>옛 문서와 가로챈 편지를 읽고, 대화를 골라 담판에서 상대를 설득해요.</p></div></div>
+    <div class="stage"><img src="{{img:st4-play}}" alt="4단계 화면: 문서 이름 풀기"><div class="body"><div class="nm"><i>4</i>암호 해독실</div><div class="era">1870~1900년 · 조선 말 ~ 대한제국</div><p>어려운 옛 문서 이름을 조각내어 뜻을 풀고, 보고서를 읽고, 사투리 단서로 암호를 풀어요.</p></div></div>
+    <div class="stage"><img src="{{img:st5-play}}" alt="5단계 화면: 신문사 취재"><div class="body"><div class="nm"><i>5</i>특종 기자 수사</div><div class="era">1904~1906년 · 러일전쟁 무렵</div><p>기자가 되어 자료를 취재하고, 날짜를 비교해 이상한 점(모순)을 찾아내요.</p></div></div>
+    <div class="stage"><img src="{{img:st6-play}}" alt="6단계 화면: 연표 잇기"><div class="body"><div class="nm"><i>6</i>연표 러시</div><div class="era">1945~1953년 · 광복 이후</div><p>짝 맞추기를 한 뒤, 사건 카드를 순서대로 이어 연표를 완성하고, 거짓 주장 풍선을 터뜨려요.</p></div></div>
+    <div class="stage"><img src="{{img:st7-play}}" alt="7단계 화면: 시설 배치"><div class="body"><div class="nm"><i>7</i>독도 관리소</div><div class="era">오늘날 · 대한민국</div><p>독도의 시설을 알맞은 자리에 놓고, 관람객의 질문에 답하며 오늘의 독도를 알아봐요.</p></div></div>
+    <div class="stage"><img src="{{img:st8-play}}" alt="8단계 화면: 반박 배틀"><div class="body"><div class="nm"><i>8</i>최종 반박 배틀</div><div class="era">오늘날 · 국제 토론장</div><p>작전 브리핑을 읽고, 모은 증거 카드로 근거 없는 주장 일곱 개를 반박해요. 주장마다 30초 제한 시간이 있어요.</p></div></div>
+  </div>
+  <p style="margin-top:14px">8단계 다음에는 "독도가 우리 땅인 이유"를 세 줄로 정리하고 <b>결과 화면</b>으로 가요.</p>
+</section>
+
+<!-- 6. 도와주는 법 -->
+<section id="help">
+  <h2><span class="n">6</span>돌아보며 도와주는 법</h2>
+  <h3 style="margin-top:0">막힌 학생에게는 답 대신 이렇게</h3>
+  <div class="talks">
+    <div class="talk"><b>문제를 모를 때</b>"방금 나온 대사랑 자료를 다시 읽어 볼까?"</div>
+    <div class="talk"><b>증거를 골라야 할 때</b>"📖 도감에서 모은 카드를 열어 읽어 봐."</div>
+    <div class="talk"><b>낱말이 어려울 때</b>"밑줄 그어진 낱말을 눌러 봐. 뜻이 나와."</div>
+    <div class="talk"><b>자꾸 틀려 속상할 때</b>"괜찮아. 한 번 더 틀리면 힌트가 나오고, 그다음엔 게임이 같이 찾아 줘."</div>
+  </div>
+  <h3>게임이 알아서 도와줘요</h3>
+  <table>
+    <tbody>
+      <tr><td style="width:110px"><b>1번 틀림</b></td><td>격려하는 말이 나와요.</td></tr>
+      <tr><td><b>2번 틀림</b></td><td>힌트가 나와요.</td></tr>
+      <tr><td><b>3번 틀림</b></td><td>게임이 맞는 쪽으로 이끌어 주며 같이 찾아요. 점수만 조금 덜 받고 넘어가요.</td></tr>
+    </tbody>
+  </table>
+  <h3>이런 학생에게는</h3>
+  <ul>
+    <li><b>대사를 마구 넘기는 학생:</b> "4교시 퀴즈는 대사와 자료에서 나와."라고 알려 주세요.</li>
+    <li><b>일찍 끝낸 학생:</b> 결과 화면의 <b>📖 증거 도감 보기</b>로 복습하게 해 주세요.</li>
+    <li><b>많이 늦은 학생:</b> 30분 비밀번호(1025)를 꼭 쓰게 해 주세요. 끝까지 해야 기록이 남아요.</li>
+  </ul>
+  <h3>하지 말아 주세요</h3>
+  <ul class="dont">
+    <li>정답을 알려 주거나 대신 눌러 주기</li>
+    <li>친구 화면을 보고 따라 하게 두기</li>
+    <li>30분 전에 비밀번호를 알려 주기</li>
+  </ul>
+</section>
+
+<!-- 7. 문제 해결 -->
+<section id="faq">
+  <h2><span class="n">7</span>자주 생기는 문제</h2>
+  <p>제목을 누르면 해결 방법이 펼쳐져요.</p>
+
+  <details><summary>QR 코드를 찍어도 게임이 안 열려요</summary><div class="a">
+    <ul><li>와이파이에 연결되어 있는지 확인해요.</li><li>크롬 주소창에 <span class="kbd url">bon17.github.io/dokdo-love-in-action</span>을 직접 써서 열어요.</li><li>다른 인터넷 앱으로 열려 화면이 이상하면, 크롬에서 다시 열어요.</li></ul>
+  </div></details>
+
+  <details><summary>교실이 너무 시끄러워요</summary><div class="a">
+    <p>태블릿 옆의 소리 버튼으로 줄이거나, 게임 오른쪽 위 <b>🔊</b>를 눌러 <b>🔇</b>로 끄면 돼요. 소리가 없어도 게임은 다 할 수 있어요. 노래 단서도 화면에 글자로 나와요.</p>
+  </div></details>
+
+  <details><summary>대사가 안 넘어가요</summary><div class="a">
+    <ul><li>글자가 다 나오고 오른쪽 아래에 <b>▼</b>가 보인 뒤에 눌러야 넘어가요. 학생이 대사를 읽지 않고 넘기지 않게 일부러 만든 거예요.</li><li>밑줄 낱말을 누르면 뜻만 나오고 대사는 넘어가지 않아요. 밑줄이 없는 곳을 누르면 돼요.</li><li>키보드의 스페이스바, 엔터로는 넘어가지 않아요.</li></ul>
+  </div></details>
+
+  <details><summary>화면이 너무 작거나 "가로로 돌려 주세요"가 나와요</summary><div class="a">
+    <p>태블릿을 가로로 돌려요. 오른쪽 위 <b>⛶</b>를 누르면 전체 화면으로 크게 볼 수 있어요.</p>
+  </div></details>
+
+  <details><summary>실수로 창을 닫았어요 / 태블릿이 꺼졌어요</summary><div class="a">
+    <p>진행은 자동으로 저장돼요. 게임을 다시 열고 <b>▶ 이어하기</b>를 누르면 이어서 할 수 있어요. 화면이 꺼져 있던 동안은 시간도 세지 않아요.</p>
+  </div></details>
+
+  <details><summary>화면이 멈췄어요 / 이상하게 나와요</summary><div class="a">
+    <p>크롬의 <b>새로 고침</b>(주소창 옆 ⟳)을 누른 뒤 <b>▶ 이어하기</b>를 눌러요. 지금 하던 활동의 처음부터 다시 나올 수 있지만, 그 전까지 모은 증거와 점수는 그대로예요.</p>
+  </div></details>
+
+  <details><summary>처음 화면에 다른 사람 이름으로 "이어하기"가 떠요</summary><div class="a">
+    <p>전에 이 태블릿을 쓴 사람의 기록이에요. <b>새로 시작</b>을 누르고 자기 이름으로 등록해요. 자기 이름이 맞으면 <b>새로 시작</b>을 누르지 말고 <b>이어하기</b>를 눌러요.</p>
+  </div></details>
+
+  <details><summary>이름을 잘못 썼어요</summary><div class="a">
+    <ul><li><b>막 시작했다면:</b> 오른쪽 위 <b>☰</b> → <b>처음 화면으로 (새로 시작)</b>을 누르고 다시 등록해요.</li><li><b>많이 진행했다면:</b> 그대로 끝까지 하고, 대회 담당 선생님께 학생의 진짜 이름과 잘못 쓴 이름을 알려 주세요. 기록을 고칠 수 있어요.</li></ul>
+  </div></details>
+
+  <details><summary>인터넷이 끊겼어요</summary><div class="a">
+    <p>게임은 이미 태블릿에 열려 있어서 계속할 수 있어요. 결과 화면의 기록은 인터넷이 다시 연결되면 저절로 올라가요. 창을 닫았더라도 게임을 다시 열면 그때 올라가요.</p>
+  </div></details>
+
+  <details><summary>랭킹 방송에 이름이 안 보여요</summary><div class="a">
+    <ul><li>결과 화면까지 가야 기록이 올라가요.</li><li>랭킹은 몇 초마다 새로 고쳐져요. 조금 기다려 보세요.</li><li>이름 가운데 글자는 ○로 가려져요. (홍길동 → 홍○동)</li><li>너무 짧은 시간(4분 이내)에 끝난 기록은 저장되지 않아요.</li></ul>
+  </div></details>
+
+  <details><summary>"노래 다시 듣기"를 눌렀더니 유튜브가 열렸어요</summary><div class="a">
+    <p>노래는 다시 듣지 않아도 괜찮아요. 단서는 화면에 글자로 나와요. 유튜브 탭을 닫으면 게임 화면으로 돌아와요. 이어폰이 없으니 교실에서는 누르지 않게 해 주세요.</p>
+  </div></details>
+
+  <details><summary>학생이 "선생님" 버튼을 눌렀어요</summary><div class="a">
+    <p>담당 선생님용 버튼이에요. 비밀번호 창이 뜨면 <b>취소</b>를 누르면 돼요.</p>
+  </div></details>
+
+  <details><summary>학생이 노래 속 "대마도"에 대해 물어요</summary><div class="a">
+    <p>"우리 정부는 대마도를 우리 땅이라고 주장하지 않아요. 그래서 이 게임에서는 그 구절을 쓰지 않았어요."라고 답해 주시면 돼요.</p>
+  </div></details>
+
+  <details><summary>한 번 더 하고 싶대요</summary><div class="a">
+    <p>결과 화면의 <b>다시 도전</b>을 누르면 처음부터 다시 해요. 랭킹에는 가장 좋은 기록만 남아요. 다만 처음부터 끝까지 다시 하는 데 시간이 오래 걸려서, 3교시 안에는 도감 복습을 먼저 권해 주세요.</p>
+  </div></details>
+</section>
+
+<!-- 8. 점수와 랭킹 -->
+<section id="score">
+  <h2><span class="n">8</span>점수와 랭킹</h2>
+  <p>학생이 물어볼 때 답해 줄 수 있을 만큼만 정리했어요.</p>
+  <h3 style="margin-top:0">점수가 올라가는 방법</h3>
+  <ul>
+    <li>문제와 미니게임을 <b>한 번에</b> 맞힐수록 점수가 높아요.</li>
+    <li>연속으로 맞히면 <b>콤보</b> 점수가 더해져요.</li>
+    <li>증거 카드를 알맞은 근거로 나누면 점수를 받아요.</li>
+    <li>숨은 <b>강치</b>를 찾으면 한 마리에 +50점, 8마리를 모두 찾으면 배지를 받아요.</li>
+    <li>비밀번호(1025)로 건너뛴 단계의 증거는 점수가 절반이에요.</li>
+  </ul>
+  <h3>등급</h3>
+  <table>
+    <thead><tr><th>등급</th><th>점수</th></tr></thead>
+    <tbody>
+      <tr><td><b>S</b></td><td>7,344점 이상</td></tr>
+      <tr><td><b>A</b></td><td>6,048점 이상</td></tr>
+      <tr><td><b>B</b></td><td>4,320점 이상</td></tr>
+      <tr><td><b>C</b></td><td>그 아래</td></tr>
+    </tbody>
+  </table>
+  <h3>랭킹</h3>
+  <ul>
+    <li>점수가 높은 순서, 점수가 같으면 클리어 시간이 짧은 순서예요.</li>
+    <li>결과 화면에서 우리 반, 학년 전체, 전교 순위를 볼 수 있어요. 방송실에서도 랭킹을 띄워요.</li>
+    <li>다시 도전하면 가장 좋은 기록 하나만 남아요.</li>
+  </ul>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>게임 주소: <a href="./">bon17.github.io/dokdo-love-in-action</a></p>
+    <p style="margin:0">기산중학교 독도 사랑 실천대회 · 「독도 타임 패트롤: 사라진 기록을 찾아라」</p>
+  </div>
+</footer>
+
+<a class="fab" href="#faq">🆘 문제 해결</a>
+<div id="lb" role="dialog" aria-label="크게 보기"><img alt=""></div>
+
+<script>
+(function () {
+  // 체크리스트: 이 기기에만 저장
+  var KEY = 'dokdoGuide.check';
+  var saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { saved = {}; }
+  document.querySelectorAll('#checklist input').forEach(function (c) {
+    c.checked = !!saved[c.dataset.k];
+    c.addEventListener('change', function () {
+      saved[c.dataset.k] = c.checked;
+      try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) { }
+    });
+  });
+
+  // 그림 크게 보기
+  var lb = document.getElementById('lb'), lbImg = lb.querySelector('img');
+  document.querySelectorAll('main img').forEach(function (im) {
+    im.addEventListener('click', function () { lbImg.src = im.src; lbImg.alt = im.alt; lb.classList.add('on'); });
+  });
+  lb.addEventListener('click', function () { lb.classList.remove('on'); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') lb.classList.remove('on'); });
+
+  // 목차: 지금 읽는 곳 표시
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav.toc a'));
+  var secs = links.map(function (a) { return document.querySelector(a.getAttribute('href')); });
+  var cur = -1;
+  function mark() {
+    var y = window.scrollY + 80, i = 0;
+    secs.forEach(function (s, k) { if (s && s.offsetTop <= y) i = k; });
+    if (i === cur) return;
+    cur = i;
+    links.forEach(function (a, k) { a.classList.toggle('on', k === i); });
+    var a = links[i], bar = a.parentNode;
+    bar.scrollTo({ left: a.offsetLeft - bar.clientWidth / 2 + a.clientWidth / 2, behavior: 'smooth' });
+  }
+  window.addEventListener('scroll', mark, { passive: true });
+  mark();
+})();
+</script>
+</body>
+</html>
