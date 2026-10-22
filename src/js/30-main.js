@@ -79,7 +79,7 @@ function teacherPanel() {
       if (!S) S = newState({ grade: 0, cls: 0, name: '선생님' });
       S.teacher = true; S.submitted = true;
       CARDS.forEach(c => { S.cards[c.id] = true; S.boarded[c.id] = c.cat; });
-      CLUES.forEach(c => S.clues[c.id] = 'solved'); NAMES.forEach(n => S.names[n.key] = true);
+      CLUES.forEach(c => S.clues[c.id] = 'solved'); NAMES.forEach(n => S.names[n.key] = true); S.tlDone = true;
       save(); HUD.update(); toast('모든 증거와 단서를 넣었어요.');
     }),
     el('a', { class: 'btn small', href: 'ranking.html', target: '_blank', rel: 'noopener', style: 'text-decoration:none', text: '🏆 랭킹 보드 열기' }),

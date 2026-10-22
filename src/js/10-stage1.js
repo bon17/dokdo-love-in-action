@@ -208,7 +208,7 @@ function sailGame() {
     root.append(cv);
     const g = cv.getContext('2d');
     const boatImg = new Image(); boatImg.src = img('boat-top');
-    const title = el('div', { class: 'mg-title', text: '⛵ 가고 싶은 곳을 누르면 우산호가 그쪽으로 가!' });
+    const title = el('div', { class: 'mg-title', text: '⛵ 반짝이는 ✨ 쪽을 누르면 우산호가 그리로 가!' });
     const meter = el('div', { style: 'position:absolute;left:18px;top:140px;background:rgba(8,26,48,.85);border-radius:14px;padding:10px 16px;font:22px var(--ui);line-height:1.5;border:2px solid rgba(143,211,255,.4)' });
     const compass = el('div', { style: 'position:absolute;left:18px;bottom:18px;width:150px;height:150px;border-radius:50%;background:rgba(8,26,48,.85);border:3px solid #8fd3ff' });
     compass.innerHTML = `<div style="position:absolute;left:0;right:0;top:4px;text-align:center;font:18px RIDIBatang">북</div><div style="position:absolute;right:8px;top:62px;font:18px RIDIBatang">동</div><div style="position:absolute;left:0;right:0;bottom:4px;text-align:center;font:18px RIDIBatang">남</div><div style="position:absolute;left:8px;top:62px;font:18px RIDIBatang">서</div>`;
@@ -266,11 +266,11 @@ function sailGame() {
         reveal(boat.x, boat.y, 120);
         for (const w of whirls) {
           w.a += dt * 0.5; w.x += Math.cos(w.a) * 14 * dt; w.y += Math.sin(w.a * 1.3) * 10 * dt;
-          if (boat.spin <= 0 && Math.hypot(w.x - boat.x, w.y - boat.y) < w.r) { boat.spin = 0.8; target = null; Sound.sfx('whoosh'); hint('앗, 안개 소용돌이! 빙글빙글~', 'wow', 2000); w.x += 120; }
+          if (boat.spin <= 0 && Math.hypot(w.x - boat.x, w.y - boat.y) < w.r) { boat.spin = 0.8; Sound.sfx('whoosh'); hint('앗, 안개 소용돌이! 빙글빙글~', 'wow', 2000); w.x += 120; }
         }
         for (const b of buoys) if (!b.got && Math.hypot(b.x - boat.x, b.y - boat.y) < 40) { busy = true; openBuoy(b).then(() => { busy = false; }); }
         if (Math.hypot(D.x - boat.x, D.y - boat.y) < 44) { arrived = true; arrive(); }
-        if (now - lastHint > 25000 && !arrived) { lastHint = now; hint('나침반을 봐! 전망대에서 섬을 본 방향으로 배를 몰아 볼까?', 'gaji'); }
+        if (now - lastHint > 20000 && !arrived) { lastHint = now; hint('안개 속에 반짝이는 ✨ 빛을 눌러 봐! 전망대에서 섬을 본 동남쪽이야.', 'gaji'); }
       }
       if (!arrived) { cam.x += (boat.x - cam.x) * 0.1; cam.y += (boat.y - cam.y) * 0.1; }
       render(now);
@@ -295,6 +295,22 @@ function sailGame() {
       g.save(); g.imageSmoothingEnabled = true;
       const o = W2S(0, 0); g.drawImage(fogCv, o.x, o.y, WORLD.w * cam.z, WORLD.h * cam.z); g.restore();
       for (const b of buoys) { if (b.got) continue; const s = W2S(b.x, b.y); g.fillStyle = `rgba(255,190,60,${0.5 + 0.3 * Math.sin(now / 250)})`; g.beginPath(); g.arc(s.x, s.y, 9, 0, 7); g.fill(); }
+      /* 독도 자리 힌트: 안개 위로 반짝이는 빛. 화면 밖에 있으면 화면 가장자리에 그쪽을 가리키는 화살표를 띄운다. */
+      if (!arrived) {
+        const ds = W2S(D.x, D.y), p = 0.5 + 0.5 * Math.sin(now / 260);
+        if (ds.x > 40 && ds.x < W - 40 && ds.y > 110 && ds.y < H - 40) {
+          const r = 70 + 18 * p, gr = g.createRadialGradient(ds.x, ds.y, 0, ds.x, ds.y, r);
+          gr.addColorStop(0, 'rgba(255,250,220,.95)'); gr.addColorStop(0.35, 'rgba(255,214,102,.6)'); gr.addColorStop(1, 'rgba(255,214,102,0)');
+          g.fillStyle = gr; g.beginPath(); g.arc(ds.x, ds.y, r, 0, 7); g.fill();
+          g.font = `${30 + 8 * p}px sans-serif`; g.textAlign = 'center'; g.fillText('✨', ds.x, ds.y + 12);
+        } else {
+          const cS = W2S(cam.x, cam.y), ang = Math.atan2(ds.y - cS.y, ds.x - cS.x);
+          const ex = clamp(ds.x, 70, W - 70), ey = clamp(ds.y, 140, H - 70);
+          g.save(); g.translate(ex, ey); g.rotate(ang); g.fillStyle = `rgba(255,214,102,${0.7 + 0.3 * p})`; g.strokeStyle = 'rgba(0,0,0,.4)'; g.lineWidth = 3;
+          g.beginPath(); g.moveTo(30, 0); g.lineTo(-16, -20); g.lineTo(-16, 20); g.closePath(); g.fill(); g.stroke(); g.restore();
+          g.font = '28px sans-serif'; g.textAlign = 'center'; g.fillText('✨', ex - Math.cos(ang) * 40, ey - Math.sin(ang) * 40 + 10);
+        }
+      }
       if (arrived) {
         const a = W2S(U.x, U.y), b = W2S(D.x, D.y), c = W2S(OKI.x, OKI.y);
         g.setLineDash([12, 8]); g.lineWidth = 4;
@@ -317,7 +333,7 @@ function sailGame() {
       g.fillStyle = '#6aa37a'; for (const k of ['ulleung', 'oki', 'oki2', 'oki3']) mpoly(ISLES[k].shape);
       g.drawImage(fogCv, MM.x, MM.y, MM.w, MM.h);
       g.fillStyle = '#ff5a4a'; g.beginPath(); g.arc(MM.x + boat.x * mk, MM.y + boat.y * mk, 4, 0, 7); g.fill();
-      if (arrived) { g.fillStyle = '#ffe08a'; g.beginPath(); g.arc(MM.x + D.x * mk, MM.y + D.y * mk, 4, 0, 7); g.fill(); }
+      g.fillStyle = '#ffe08a'; g.beginPath(); g.arc(MM.x + D.x * mk, MM.y + D.y * mk, 4 + 2 * Math.sin(now / 260), 0, 7); g.fill();
       meterUpdate();
     };
     const meterUpdate = () => {
@@ -367,58 +383,101 @@ function dokdoTopView(g, cx, cy, sc, opts = {}) {
   g.fillStyle = '#2a6e9e'; g.beginPath(); g.ellipse(cx + 150 * sc, cy - 20 * sc, 28 * sc, 20 * sc, 0, 0, 7); g.fill();
   return { west, east };
 }
+/* 드론 탐사: 반짝이는 곳 6곳(큰 섬 2곳, 둘레 바다 4곳)을 누르면 드론이 날아가 그 둘레의 섬을 살핀다.
+   손가락으로 끌어서 날려도 된다. 6곳을 모두 살피면 끝난다. */
 function droneGame() {
   return new Promise(resolve => {
     const root = el('div', { style: 'position:absolute;inset:0;background:radial-gradient(circle at 50% 55%,#2f8cc9,#0f4d7d)' });
     L.scene.append(root);
-    root.append(el('div', { class: 'mg-title', text: '🚁 드론을 끌고 다니며 독도의 섬들을 모두 살펴봐!' }));
+    root.append(el('div', { class: 'mg-title', text: '🚁 반짝이는 동그라미 6곳을 눌러 봐!' }));
     const cv = el('canvas', { width: W, height: H - 64, style: 'position:absolute;left:0;top:64px;touch-action:none' });
     const info = el('div', { style: 'position:absolute;right:20px;top:130px;width:300px;background:rgba(8,26,48,.88);border-radius:16px;padding:14px 18px;font:21px/1.6 var(--ui);border:2px solid rgba(143,211,255,.4)' });
     root.append(cv, info);
     const g = cv.getContext('2d');
     const cx = 560, cy = 330, rnd = prng(1905);
+    /* 바위섬이 어느 쪽 바다에 있는지 */
+    const zoneOf = (x, y) => { const a = Math.atan2((y - cy) / 0.75, (x - cx) / 1.3) * 180 / Math.PI; return a < -135 || a >= 135 ? 'W' : a < -45 ? 'N' : a < 45 ? 'E' : 'S'; };
     const rocks = [];
     while (rocks.length < 89) {
       const a = rnd() * 7, r = 150 + rnd() * 260, x = cx + Math.cos(a) * r * 1.3, y = cy + Math.sin(a) * r * 0.75;
       if (x < 40 || x > 900 || y < 40 || y > 610) continue;
       if (Math.abs(x - cx) < 280 && Math.abs(y - cy) < 150) continue;
-      rocks.push({ x, y, r: 4 + rnd() * 9, seen: false });
+      rocks.push({ x, y, r: 4 + rnd() * 9, seen: false, z: zoneOf(x, y) });
     }
-    let dr = { x: 560, y: 560 }, seen = 0, big = { w: false, e: false }, done = false;
+    const spots = [
+      { id: 'w', x: cx - 140, y: cy - 40, label: '큰 섬' }, { id: 'e', x: cx + 140, y: cy - 20, label: '큰 섬' },
+      { id: 'N', x: cx, y: cy - 205, label: '북쪽 바다' }, { id: 'E', x: cx + 310, y: cy + 10, label: '동쪽 바다' },
+      { id: 'S', x: cx, y: cy + 250, label: '남쪽 바다' }, { id: 'W', x: cx - 380, y: cy, label: '서쪽 바다' },
+    ];
+    let dr = { x: 560, y: 560 }, target = null, down = false, seen = 0, done = false, prevT = 0, t0 = performance.now(), nudged = false;
     const drawAll = now => {
       g.clearRect(0, 0, W, H);
       g.strokeStyle = 'rgba(255,255,255,.12)'; g.lineWidth = 2;
       for (let i = 0; i < 14; i++) { g.beginPath(); g.ellipse(cx, cy, 300 + i * 22, 180 + i * 14, 0, 0, 7); g.stroke(); }
       dokdoTopView(g, cx, cy, 1);
       for (const k of rocks) { g.fillStyle = k.seen ? '#ffd166' : '#6f7d63'; g.beginPath(); g.arc(k.x, k.y, k.r, 0, 7); g.fill(); }
-      g.font = '26px RIDIBatang, serif'; g.textAlign = 'center'; g.fillStyle = '#fff';
-      if (big.w) g.fillText('서도', cx - 140, cy + 140);
-      if (big.e) g.fillText('동도', cx + 140, cy + 150);
+      g.textAlign = 'center';
+      for (const s of spots) {
+        if (s.done) {
+          g.fillStyle = 'rgba(61,214,140,.85)'; g.beginPath(); g.arc(s.x, s.y, 20, 0, 7); g.fill();
+          g.fillStyle = '#fff'; g.font = '22px sans-serif'; g.fillText('✓', s.x, s.y + 8);
+          g.font = '24px RIDIBatang, serif'; g.fillText(s.id === 'w' ? '서도' : s.id === 'e' ? '동도' : s.label, s.x, s.y + 48);
+        } else {
+          const p = 0.5 + 0.5 * Math.sin(now / 220);
+          g.strokeStyle = `rgba(255,209,102,${0.6 + 0.4 * p})`; g.lineWidth = 5; g.beginPath(); g.arc(s.x, s.y, 30 + 6 * p, 0, 7); g.stroke();
+          g.fillStyle = 'rgba(255,209,102,.35)'; g.beginPath(); g.arc(s.x, s.y, 26, 0, 7); g.fill();
+          g.fillStyle = '#fff'; g.font = '26px RIDIBatang, serif'; g.fillText('?', s.x, s.y + 9);
+          g.font = '18px RIDIBatang, serif'; g.fillText(s.label, s.x, s.y + 58);
+        }
+      }
       g.strokeStyle = 'rgba(255,255,255,.9)'; g.lineWidth = 3; g.setLineDash([8, 6]);
       g.beginPath(); g.arc(dr.x, dr.y, 80, 0, 7); g.stroke(); g.setLineDash([]);
       g.font = '46px sans-serif'; g.fillText('🚁', dr.x, dr.y + 16);
     };
-    const scan = () => {
-      for (const k of rocks) if (!k.seen && Math.hypot(k.x - dr.x, k.y - dr.y) < 80) { k.seen = true; seen++; }
-      if (!big.w && Math.hypot(dr.x - (cx - 140), dr.y - (cy - 40)) < 120) { big.w = true; Sound.sfx('ping'); }
-      if (!big.e && Math.hypot(dr.x - (cx + 140), dr.y - (cy - 20)) < 120) { big.e = true; Sound.sfx('ping'); }
-      info.innerHTML = `큰 섬: ${big.w ? '서도 ✓' : '?'} · ${big.e ? '동도 ✓' : '?'}<br>작은 바위섬(부속도서): <b style="color:#ffd166">${seen}</b>개 확인`;
-      if (!done && big.w && big.e && seen >= 55) finish();
+    const visit = s => {
+      if (s.done) return;
+      s.done = true; Sound.sfx('ping');
+      for (const k of rocks) if (!k.seen && (k.z === s.id || Math.hypot(k.x - s.x, k.y - s.y) < 80)) { k.seen = true; seen++; }
+      update();
+      if (!done && spots.every(x => x.done)) finish();
+    };
+    const update = () => {
+      const n = spots.filter(s => s.done).length, w = spots[0].done, e = spots[1].done;
+      info.innerHTML = `살펴본 곳: <b style="color:#ffd166">${n} / ${spots.length}</b><br>큰 섬: ${w ? '서도 ✓' : '?'} · ${e ? '동도 ✓' : '?'}<br>작은 바위섬: <b style="color:#ffd166">${seen}</b>개 확인`;
     };
     const finish = async () => {
-      done = true; DEV.solve = null;
-      rocks.forEach(k => k.seen = true); big.w = big.e = true; seen = 89; drawAll();
+      done = true; DEV.solve = null; clearHint();
+      rocks.forEach(k => k.seen = true); spots.forEach(s => s.done = true); seen = 89; drawAll(performance.now());
       info.innerHTML = `큰 섬: 서도 ✓ · 동도 ✓<br>작은 바위섬(부속도서): <b style="color:#ffd166">89</b>개<br><span style="font-size:18px;color:#bcd3ea">드론 측정 넓이: 모두 합쳐 187,554㎡</span>`;
       Sound.sfx('good'); award('s1_drone', 1);
       await doneBar(info);
       resolve();
     };
-    let down = false;
-    cv.addEventListener('pointerdown', e => { if (done) return; down = true; cv.setPointerCapture(e.pointerId); const p = toLocal(e); dr = { x: p.x, y: p.y - 64 }; scan(); });
-    cv.addEventListener('pointermove', e => { if (!down || done) return; const p = toLocal(e); dr = { x: p.x, y: p.y - 64 }; scan(); });
+    /* 누른 곳 가까이에 아직 안 본 곳이 있으면 그리로 날아간다. 끌면 손가락을 따라간다. */
+    const aim = e => {
+      const p = toLocal(e), pt = { x: p.x, y: p.y - 64 };
+      const near = spots.filter(s => !s.done).sort((a, b) => Math.hypot(a.x - pt.x, a.y - pt.y) - Math.hypot(b.x - pt.x, b.y - pt.y))[0];
+      target = near && Math.hypot(near.x - pt.x, near.y - pt.y) < 90 ? { x: near.x, y: near.y } : pt;
+    };
+    cv.addEventListener('pointerdown', e => { if (done) return; down = true; cv.setPointerCapture(e.pointerId); aim(e); });
+    cv.addEventListener('pointermove', e => { if (down && !done) aim(e); });
     cv.addEventListener('pointerup', () => { down = false; });
-    let raf; const loop = now => { if (!root.isConnected) return; drawAll(now); raf = requestAnimationFrame(loop); };
-    raf = requestAnimationFrame(loop); scan();
+    let raf;
+    const loop = now => {
+      if (!root.isConnected) return;
+      const dt = prevT ? Math.min(0.05, (now - prevT) / 1000) : 0; prevT = now;
+      if (target && !done) {
+        const dx = target.x - dr.x, dy = target.y - dr.y, d = Math.hypot(dx, dy), step = 700 * dt;
+        if (d <= step) { dr = { x: target.x, y: target.y }; target = null; } else { dr = { x: dr.x + dx / d * step, y: dr.y + dy / d * step }; }
+        for (const k of rocks) if (!k.seen && Math.hypot(k.x - dr.x, k.y - dr.y) < 80) { k.seen = true; seen++; update(); }
+        for (const s of spots) if (!s.done && Math.hypot(s.x - dr.x, s.y - dr.y) < 40) visit(s);
+      }
+      if (!nudged && !done && now - t0 > 8000 && !spots.some(s => s.done)) { nudged = true; hint('반짝이는 동그라미를 손가락으로 눌러 봐! 드론이 그곳으로 날아가.', 'gaji', 6000); }
+      drawAll(now);
+      raf = requestAnimationFrame(loop);
+    };
+    update();
+    raf = requestAnimationFrame(loop);
     DEV.solve = finish;
   });
 }
@@ -451,7 +510,7 @@ const STAGE1 = [
   },
   async () => {
     setBg('bg-stage1'); fogFx(0); Sound.play('sail'); placeSeal(1);
-    await say('gaji', '이제 우산호를 몰고 그 섬으로 가 보자! 가는 길의 반짝이는 부표에도 정보가 있어.');
+    await say('gaji', '이제 우산호를 몰고 그 섬으로 가 보자! 안개 속에 반짝이는 ✨ 빛이 바로 그 섬이야. 가는 길의 반짝이는 부표에도 정보가 있어.');
     clearScene();
     const r = await sailGame();
     await talk([
@@ -505,14 +564,14 @@ const STAGE1 = [
   },
 ];
 
-/* 음파 탐지: 바닷속 화산의 모습 */
+/* 음파 탐지: 바닷속 화산의 모습. 반짝이는 동그라미를 ①→②→③ 차례로 누르면 설명이 나온다. */
 function sonarScene() {
   return new Promise(resolve => {
     const root = el('div', { class: 'panel', style: 'width:1100px;padding:20px;text-align:center' });
     root.append(el('div', { style: 'font:30px var(--ui)', text: '📡 음파 탐지기: 바닷속 단면' }),
-      el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin:4px 0 10px', text: '반짝이는 곳 세 군데를 눌러 바닷속을 조사해 봐.' }));
-    const cv = el('canvas', { width: 1040, height: 400, style: 'border-radius:14px' });
-    const note = el('div', { class: 'msg', style: 'min-height:84px;font-size:21px;margin-top:10px' });
+      el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin:4px 0 10px', text: '반짝이는 동그라미를 ①→②→③ 차례로 눌러 바닷속을 조사해 봐.' }));
+    const cv = el('canvas', { width: 1040, height: 400, style: 'border-radius:14px;cursor:pointer' });
+    const note = el('div', { class: 'msg', style: 'min-height:84px;font-size:21px;margin-top:10px;padding:10px 18px;border-radius:14px;background:rgba(255,255,255,.08)' });
     root.append(cv, note);
     const m = modal(root, { closable: false });
     const g = cv.getContext('2d');
@@ -527,34 +586,44 @@ function sonarScene() {
       g.fillStyle = '#fff'; g.font = '18px RIDIBatang, serif'; g.textAlign = 'left';
       g.fillText('바다 표면', 12, 54); g.fillText('바다 밑바닥 (약 2,000m 아래)', 12, 372);
     };
-    bg();
     const spots = [
       { x: 540, y: 50, t: '물 위로 드러난 두 바위섬(동도와 서도)은 거대한 산의 꼭대기 부분이야.' },
       { x: 420, y: 200, t: '산의 몸통은 용암이 식어서 굳은 바위와 화산재가 겹겹이 쌓여 만들어졌어.' },
       { x: 260, y: 350, t: '이 산은 약 2,000m 깊이의 바다 밑바닥에서부터 솟아올랐어. 약 460만~250만 년 전의 일이야.' },
     ];
     const got = new Set();
+    const NUM = ['①', '②', '③'];
+    note.textContent = '👆 꼭대기의 반짝이는 ①번 동그라미부터 눌러 봐!';
     const draw = now => {
       bg();
+      const next = spots.findIndex((s, i) => !got.has(i));
       for (const [i, s] of spots.entries()) {
-        g.fillStyle = got.has(i) ? 'rgba(61,214,140,.9)' : `rgba(255,190,60,${0.6 + 0.3 * Math.sin(now / 200)})`;
-        g.beginPath(); g.arc(s.x, s.y, 16, 0, 7); g.fill();
+        const p = 0.5 + 0.5 * Math.sin(now / 200);
+        if (got.has(i)) { g.fillStyle = 'rgba(61,214,140,.95)'; g.beginPath(); g.arc(s.x, s.y, 20, 0, 7); g.fill(); }
+        else if (i === next) {
+          g.strokeStyle = `rgba(255,209,102,${0.6 + 0.4 * p})`; g.lineWidth = 5; g.beginPath(); g.arc(s.x, s.y, 28 + 8 * p, 0, 7); g.stroke();
+          g.fillStyle = 'rgba(255,190,60,.95)'; g.beginPath(); g.arc(s.x, s.y, 22, 0, 7); g.fill();
+        } else { g.fillStyle = 'rgba(255,190,60,.45)'; g.beginPath(); g.arc(s.x, s.y, 18, 0, 7); g.fill(); }
+        g.fillStyle = '#fff'; g.font = '22px RIDIBatang, serif'; g.textAlign = 'center';
+        g.fillText(got.has(i) ? '✓' : NUM[i], s.x, s.y + 8);
+        if (i === next) { g.font = '20px RIDIBatang, serif'; g.textAlign = 'left'; g.fillText('👆 눌러 봐', s.x + 34, s.y + 7); }
       }
       if (root.isConnected) requestAnimationFrame(draw);
     };
     requestAnimationFrame(draw);
     cv.addEventListener('click', e => {
+      if (got.size === spots.length) return;
       const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / SCALE, y = (e.clientY - r.top) / SCALE;
-      spots.forEach((s, i) => {
-        if (Math.hypot(s.x - x, s.y - y) < 40 && !got.has(i)) {
-          got.add(i); Sound.sfx('ping'); note.textContent = s.t;
-          if (got.size === spots.length) {
-            root.append(el('div', { class: 'msg', style: 'font-size:22px;color:#ffd9a8;margin-top:6px', text: '가지: 그럼 독도는… 바닷속 화산 활동이 만든 섬이구나!' }));
-            root.append(el('div', { style: 'margin-top:12px' }, onTap(el('button', { class: 'btn blue', text: '조사 끝!' }), () => { m.close(); resolve(); })));
-            DEV.solve = () => { m.close(); resolve(); };
-          }
-        }
-      });
+      const hit = spots.map((s, i) => [i, Math.hypot(s.x - x, s.y - y)]).filter(([i, d]) => !got.has(i) && d < 70).sort((a, b) => a[1] - b[1])[0];
+      if (!hit) { const n = spots.findIndex((s, i) => !got.has(i)); hint(`반짝이는 ${NUM[n]}번 동그라미를 눌러 봐!`, 'gaji', 3000); return; }
+      const i = hit[0];
+      got.add(i); Sound.sfx('ping'); clearHint();
+      note.textContent = `📡 ${NUM[i]} ${spots[i].t}`;
+      if (got.size === spots.length) {
+        root.append(el('div', { class: 'msg', style: 'font-size:22px;color:#ffd9a8;margin-top:6px', text: '가지: 그럼 독도는… 바닷속 화산 활동이 만든 섬이구나!' }));
+        root.append(el('div', { style: 'margin-top:12px' }, onTap(el('button', { class: 'btn blue', text: '조사 끝!' }), () => { m.close(); resolve(); })));
+        DEV.solve = () => { m.close(); resolve(); };
+      }
     });
     DEV.solve = () => { m.close(); resolve(); };
   });

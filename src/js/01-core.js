@@ -75,7 +75,7 @@ function newState(player, attempt = 1) {
     v: 1, player, attempt, runId: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
     stage: 0, step: 0, playMs: 0, score: 0, combo: 0, maxCombo: 0,
     cards: {}, cardOrder: [], boarded: {}, clues: {}, seals: {}, badges: {}, mistakes: {}, stars: {}, stageMiss: {}, era: '',
-    names: {}, skipped: false, teacher: false, finished: false, submitted: false, expl: [null, null, null], boardMiss: 0,
+    names: {}, skipped: false, teacher: false, finished: false, submitted: false, expl: [null, null, null],
     bonus: 0,
   };
 }

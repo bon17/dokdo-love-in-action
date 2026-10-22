@@ -90,6 +90,43 @@ function contradictionGame() {
   });
 }
 
+/* 러일전쟁 연표: 세로 시간 선 위에 일을 차례로 놓고, 전쟁 기간을 붉은 선으로, 일과 일 사이의 시간을 "○개월 뒤"로 보여 준다. */
+function warTimeline() {
+  return new Promise(resolve => {
+    const items = [
+      { y: 1904, m: 2, ico: '⚔️', t: '러일전쟁 시작' },
+      { y: 1904, m: 2, ico: '📜', t: '한일의정서: 일본군이 대한제국 땅을 군사적으로 쓸 수 있게 함' },
+      { y: 1904, m: 9, ico: '🔭', t: '일본 군함이 독도에 망루(감시탑) 세울 곳을 조사' },
+      { y: 1905, m: 2, ico: '📌', t: '시마네현 고시 제40호' },
+      { y: 1905, m: 5, ico: '🌊', t: '동해에서 큰 해전이 벌어짐' },
+      { y: 1905, m: 8, ico: '🗼', t: '독도에 망루 완성' },
+      { y: 1905, m: 9, ico: '🕊️', t: '러일전쟁 끝' },
+    ];
+    const seen = new Set();
+    const box = el('div', { class: 'paper', style: 'width:1040px;padding:18px 34px 20px' });
+    box.append(el('div', { style: 'font:700 30px var(--old);text-align:center', text: '러일전쟁 연표' }),
+      el('div', { style: 'font:18px var(--body);color:#8a6a45;text-align:center;margin-bottom:10px', text: '신문사 벽에 붙은 메모 · 위에서 아래로 시간이 흘러요 · 붉은 선은 러일전쟁이 이어진 기간' }));
+    const list = el('div', { class: 'wt-list' });
+    let prev = null;
+    for (const it of items) {
+      const gap = prev ? (it.y - prev.y) * 12 + it.m - prev.m : 0;
+      if (gap >= 2) list.append(el('div', { class: 'wt-gap' }, el('span'), el('i'), el('em', { text: `↓ ${gap}개월 뒤` })));
+      const newYear = !prev || prev.y !== it.y;
+      list.append(el('div', { class: 'wt-row' },
+        el('div', { class: 'wt-when' }, newYear ? el('b', { text: it.y + '년' }) : null, el('span', { text: it.m + '월' })),
+        el('i', { class: 'wt-dot' }),
+        el('div', { class: 'wt-text' }, el('span', { class: 'wt-ico', text: it.ico }), gtext(it.t, seen))));
+      prev = it;
+    }
+    box.append(list,
+      el('div', { class: 'wt-note' }, gtext('일본 외무성 관리의 말: "지금이야말로 편입이 필요하다. 망루를 세우고 전선을 깔면 적의 군함을 감시하는 데 유리하다."', seen)));
+    const m = modal(box, { closable: false });
+    const done = () => { m.close(); resolve(); };
+    box.append(el('div', { style: 'text-align:center;margin-top:12px' }, onTap(el('button', { class: 'btn blue', text: '다 읽었어' }), () => { Sound.sfx('tap'); done(); })));
+    DEV.solve = done;
+  });
+}
+
 /* 날짜 비교: 러일전쟁 기간과 고시 날짜를 한 창에서 보고, 창 안의 답 단추로 고른다. */
 function dateCompare() {
   return new Promise(resolve => {
@@ -212,9 +249,7 @@ const STAGE5 = [
           await getCard('niitaka');
         } },
         { x: 1060, y: 360, ico: '⚔️', label: '전쟁 연표', run: async () => {
-          await showDoc({ title: '러일전쟁 연표', era: '신문사 벽에 붙은 메모',
-            lines: ['1904년 2월  러일전쟁 시작', '1904년 2월  한일의정서:\n일본군이 대한제국 땅을 군사적으로 쓸 수 있게 함', '1904년 9월  일본 군함이 독도에 망루(감시탑) 세울 곳을 조사', '1905년 2월  시마네현 고시 제40호', '1905년 5월  동해에서 큰 해전이 벌어짐', '1905년 8월  독도에 망루 완성', '1905년 9월  러일전쟁 끝',
-              { t: '일본 외무성 관리의 말: "지금이야말로 편입이 필요하다.\n망루를 세우고 전선을 깔면 적의 군함을 감시하는 데 유리하다."', note: true }] });
+          await warTimeline();
           await say('gaji', '날짜를 잘 봐. 고시가 나온 건 언제였지? 그리고 일본은 독도를 어디에 쓰려고 했을까?');
         } },
       ],

@@ -225,7 +225,8 @@ function panelQuiz({ host, text, options, key, base, cols = 3 }) {
   });
 }
 
-/* 여러 개 중 알맞은 것을 골라 쓰기 (반박 연습 등). 항목: { id, ico, t, why } — t 안의 \n은 줄바꿈 */
+/* 여러 개 중 알맞은 것을 골라 쓰기 (반박 연습 등). 항목: { id, ico, t, sum, doc, why } — t 안의 \n은 줄바꿈
+   sum은 그 기록의 핵심 한 줄, doc이 있으면 "📖 다시 읽기" 단추로 원문을 다시 볼 수 있다. */
 function pickItem({ claim, prompt, items, correct, hintText, reveal, key, base, doneMsg }) {
   return new Promise(resolve => {
     const root = el('div', { class: 'panel', style: 'width:1160px;padding:22px;text-align:center' });
@@ -250,7 +251,9 @@ function pickItem({ claim, prompt, items, correct, hintText, reveal, key, base, 
     const nodes = {};
     items.forEach(it => {
       const node = it.card ? cardEl(CARD[it.card], { mini: true }) : el('div', { class: 'tile', style: 'width:300px;min-height:118px;flex-direction:column;gap:4px;font-size:21px' },
-        it.ico ? el('div', { style: 'font-size:30px;line-height:1', text: it.ico }) : null, el('div', { style: 'white-space:pre-line;line-height:1.4', text: it.t }));
+        it.ico ? el('div', { style: 'font-size:30px;line-height:1', text: it.ico }) : null, el('div', { style: 'white-space:pre-line;line-height:1.4', text: it.t }),
+        it.sum ? el('div', { style: 'font:16px/1.45 var(--body);color:#6a553f;margin-top:2px' }, gtext(it.sum)) : null,
+        it.doc ? onTap(el('button', { class: 'btn small blue', style: 'margin-top:4px;font-size:15px;min-height:34px;padding:2px 12px', text: '📖 다시 읽기' }), () => { if (!over) { Sound.sfx('tap'); showDoc({ ...it.doc, btn: '다 읽었어' }); } }) : null);
       node.style.cursor = 'pointer';
       nodes[it.id] = node;
       onTap(node, () => {
@@ -305,57 +308,62 @@ function pressStamp({ title, note, label = '確認', color = '#c0392b', doc, key
   });
 }
 
-/* 짝 맞추기 (기억력 카드) */
-function memoryGame({ title, pairs, key, base = 150 }) {
+/* 기록 맞추기: 위에 설명을 하나씩 보여 주고, 아래 이름 카드(모두 펼쳐 둠)에서 알맞은 것을 고른다.
+   맞춘 이름은 흐려져서 고를 카드가 점점 줄고, 맞춘 기록은 오른쪽 정리판에 시간 순서대로 쌓인다.
+   항목: { when, name, d(설명), h(두 번째로 틀렸을 때 힌트) } — 시간 순서대로 넣는다. */
+function matchGame({ title, items, key }) {
   return new Promise(resolve => {
-    const root = el('div', { class: 'panel', style: 'width:1160px;padding:18px 20px;text-align:center' });
-    root.append(el('div', { style: 'font:30px var(--ui)', text: title }),
-      el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin:6px 0 6px', text: '카드를 두 장씩 뒤집어 사건과 그 내용을 짝지어 봐! 맞춘 짝은 같은 색, 같은 번호로 표시돼.' }));
-    const grid = el('div', { style: 'display:grid;grid-template-columns:repeat(4,260px);gap:12px;justify-content:center' });
-    root.append(grid);
-    /* 짝마다 다른 색과 번호 */
-    const PAIR_COL = [['#e8f4ff', '#2b7bd6'], ['#fff0d9', '#e08a1c'], ['#e6f7ea', '#2e9e6a'], ['#f6e8ff', '#8a4fc9'], ['#ffe6e6', '#d0463a'], ['#e3f7f7', '#1a8f8f'], ['#fff9d6', '#b8961a'], ['#f0f0f0', '#5d6d82']];
+    const root = el('div', { class: 'panel', style: 'width:1180px;padding:18px 24px 20px;text-align:center' });
+    const prog = el('span', { style: 'font:22px var(--ui);color:#ffd166;margin-left:14px' });
+    root.append(el('div', { style: 'font:30px var(--ui)' }, ko(title), prog),
+      el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin:4px 0 12px', text: '위의 설명은 어떤 기록일까? 아래 이름 카드에서 알맞은 것을 골라 눌러 봐.' }));
+    const left = el('div', { style: 'flex:1;min-width:0' });
+    const q = el('div', { class: 'paper', style: 'min-height:112px;padding:14px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px' });
+    const grid = el('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px' });
+    const slot = el('div', { class: 'hintslot' });
+    left.append(q, grid, slot);
+    const list = el('div', { class: 'mboard' });
+    const right = el('div', { style: 'flex:none;width:420px;text-align:left' }, el('div', { style: 'font:21px var(--ui);color:#ffd9a8;margin-bottom:8px', text: '📋 정리판 (시간 순서)' }), list);
+    root.append(el('div', { style: 'display:flex;gap:22px;align-items:flex-start' }, left, right));
     const m = modal(root, { closable: false });
-    const deck = shuffle(pairs.flatMap((p, i) => [{ i, t: p[0], k: 'a' }, { i, t: p[1], k: 'b' }]));
-    let open = [], found = 0, flips = 0, lock = false;
-    deck.forEach(d => {
-      const c = el('div', { style: `position:relative;height:118px;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:8px 12px;cursor:pointer;
-        background:#2b4f78;border:3px solid #8fd3ff;font:34px var(--ui);color:#cfe6ff;transition:transform .2s;text-wrap:balance`, text: '?' });
-      c.dataset.i = d.i;
-      onTap(c, () => {
-        if (lock || c.dataset.open || c.dataset.done) return;
-        Sound.sfx('tap');
-        c.dataset.open = 1; c.textContent = ''; c.append(el('span', {}, gtext(d.t))); c.style.background = d.k === 'a' ? '#fff3dc' : '#e3f1ff'; c.style.color = '#2b2521';
-        c.style.font = d.k === 'a' ? '23px/1.4 var(--ui)' : '19px/1.5 var(--body)';
-        open.push(c);
-        if (open.length === 2) {
-          flips++; lock = true;
-          const [a, b] = open;
-          if (a.dataset.i === b.dataset.i) {
-            Sound.sfx('good'); a.dataset.done = b.dataset.done = 1;
-            const [bg, bd] = PAIR_COL[found % PAIR_COL.length];
-            for (const x of [a, b]) {
-              x.style.background = bg; x.style.borderColor = bd; x.style.borderWidth = '4px';
-              x.append(el('div', { class: 'mpair', style: `background:${bd}`, text: String(found + 1) }));
-            }
-            open = []; lock = false; found++;
-            if (found === pairs.length) done();
-          } else setTimeout(() => {
-            for (const x of open) { delete x.dataset.open; x.textContent = '?'; x.style.background = '#2b4f78'; x.style.color = '#cfe6ff'; x.style.font = '34px var(--ui)'; }
-            open = []; lock = false;
-          }, 900);
-        }
-      });
-      grid.append(c);
+    hintHost(slot);
+    let cur = 0, tries = 0;
+    const tiles = shuffle(items.map((it, i) => i)).map(i => {
+      const t = el('div', { class: 'tile', style: 'min-height:64px;font:23px var(--ui)', text: items[i].name });
+      t.dataset.i = i; grid.append(t);
+      onTap(t, () => pick(t));
+      return t;
     });
-    const done = async () => {
-      DEV.solve = null;
-      const extra = Math.max(0, flips - pairs.length);
-      addScore(Math.max(40, base - extra * 12), 640, 300);
-      await doneBar(root, { msg: '짝을 모두 찾았어! 같은 색·같은 번호끼리 짝이야. 한 번 더 읽어 봐.' });
-      m.close(); resolve();
+    const show = () => {
+      const it = items[cur];
+      prog.textContent = `${cur + 1} / ${items.length}`;
+      q.innerHTML = '';
+      q.append(el('div', { style: 'font:18px var(--ui);color:#7a4a22;background:#f1dcb0;border-radius:10px;padding:1px 12px', text: '📅 ' + it.when }),
+        el('div', { style: 'font:26px/1.45 var(--ui);color:#2b2521' }, gtext(it.d)));
+      q.classList.remove('popin'); void q.offsetWidth; q.classList.add('popin');
+      tries = 0;
     };
-    DEV.solve = () => { flips = pairs.length; done(); };
+    const pick = t => {
+      if (cur >= items.length || t.classList.contains('done')) return;
+      const it = items[cur];
+      if (+t.dataset.i === cur) {
+        Sound.sfx('good'); award(key, tries + 1, Math.round(CH[key] / items.length));
+        t.classList.remove('hi'); t.classList.add('done'); t.textContent = '✓ ' + it.name;
+        list.append(el('div', { class: 'mrow popin' }, el('span', { class: 'mw', text: it.when }), el('b', { text: it.name }), el('div', { class: 'md' }, gtext(it.d))));
+        clearHint(); cur++;
+        if (cur < items.length) return show();
+        DEV.solve = null; q.innerHTML = ''; q.append(el('div', { style: 'font:24px var(--ui);color:#2b2521', text: '🎉 여섯 기록을 모두 정리했어!' }));
+        doneBar(left, { msg: '오른쪽 정리판을 위에서부터 읽어 봐. 시간 순서대로야.' }).then(() => { HINT.host = null; m.close(); resolve(); });
+      } else {
+        tries++; t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake');
+        if (wrongFeedback(tries, it.h, '음… 설명을 다시 읽어 볼까?')) {
+          tiles.find(x => +x.dataset.i === cur).classList.add('hi');
+          hint('같이 찾아보자! 반짝이는 카드를 눌러 봐.', 'gaji', 60000);
+        }
+      }
+    };
+    show();
+    DEV.solve = () => { while (cur < items.length) pick(tiles.find(x => +x.dataset.i === cur)); };
   });
 }
 

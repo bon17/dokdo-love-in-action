@@ -40,7 +40,10 @@ function facilityGame() {
     ];
     const tray = el('div', { style: 'position:absolute;right:20px;top:70px;width:340px;display:flex;flex-wrap:wrap;gap:12px;justify-content:center' });
     root.append(tray);
-    let sel = null, tries = 0, left = 6;
+    let sel = null, left = 6;
+    const tries = {};
+    /* 한 아이콘에서 3번 틀리면 알맞은 자리를 반짝이게 해서 학생이 직접 놓게 한다. (틀린 횟수는 아이콘마다 센다) */
+    const glowFor = ic => [...zEls, noBin].forEach(z => z.classList.toggle('hi', !!ic && tries[ic.dataset.id] >= 3 && +z.dataset.id === +ic.dataset.id));
     const put = (ic, target) => {
       const want = +ic.dataset.id, got = +target.dataset.id;
       if (ic.dataset.done || target.dataset.full) return;
@@ -49,12 +52,12 @@ function facilityGame() {
         target.classList.add('filled'); target.innerHTML = '';
         target.append(el('img', { src: img('fac-' + want), style: 'width:64px;height:64px' }), el('div', { style: 'font:16px var(--ui)', text: names[want] }));
         if (want === 5) target.firstChild.style.filter = 'grayscale(1)';
-        ic.remove(); Sound.sfx('good'); award('s7_place', 1, 40); left--;
-        if (!left) { DEV.solve = null; root.append(endBox); doneBar(endBox, { msg: '시설을 모두 제자리에 놓았어!' }).then(() => { HINT.pos = 'left'; root.remove(); resolve(tries); }); }
+        target.classList.remove('hi'); ic.remove(); Sound.sfx('good'); award('s7_place', 1, 40); left--;
+        if (!left) { DEV.solve = null; root.append(endBox); doneBar(endBox, { msg: '시설을 모두 제자리에 놓았어!' }).then(() => { HINT.pos = 'left'; root.remove(); resolve(); }); }
       } else {
-        tries++; target.classList.remove('shake'); void target.offsetWidth; target.classList.add('shake');
+        tries[want] = (tries[want] || 0) + 1; target.classList.remove('shake'); void target.offsetWidth; target.classList.add('shake');
         if (want === 5) { miss(); hint(hints[5], 'wow'); }
-        else if (wrongFeedback(tries, hints[want], hints[want])) { tries = 0; put(ic, want === 5 ? noBin : zEls.find(z => +z.dataset.id === want)); }
+        else if (wrongFeedback(tries[want], hints[want], hints[want])) { glowFor(ic); hint('같이 찾아보자! 반짝이는 자리에 놓아 봐.', 'gaji', 60000); }
       }
     };
     const icons = shuffle([0, 1, 2, 3, 4, 5]).map(i => {
@@ -62,7 +65,7 @@ function facilityGame() {
         el('img', { src: img('fac-' + i), style: 'width:88px;height:88px;pointer-events:none' }), el('div', {}, gtext(names[i])));
       ic.dataset.id = i;
       dragItem(ic, {
-        onTap: () => { Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = ic; ic.classList.add('sel'); },
+        onTap: () => { Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = ic; ic.classList.add('sel'); glowFor(ic); },
         onDrop: under => { const t = under.find(x => zEls.includes(x) || x === noBin); if (t) put(ic, t); },
       });
       tray.append(ic); return ic;
@@ -116,17 +119,10 @@ const STAGE7 = [
     });
     await getCard('people');
     await solveClue('people');
-    await say('gaji', '대한민국이 지금 독도를 어떻게 지키고 다스리고 있는지, 섬 둘레를 살펴볼까?');
-    await explore({
-      title: '🛡️ 오늘의 독도를 지키는 네 가지 모습을 찾아봐!', review: true,
-      spots: [
-        { x: 1030, y: 380, ico: '🚓', label: '섬', run: () => say('gaji', '섬에서는 경찰(독도경비대)이 경비를 서.') },
-        { x: 560, y: 520, ico: '⚓', label: '바다', run: () => say('gaji', '주변 바다는 해군과 해양경찰의 배가 지켜.') },
-        { x: 640, y: 150, ico: '✈️', label: '하늘', run: () => say('gaji', '하늘은 공군이 지키고 있어. 우리 영공이니까!') },
-        { x: 200, y: 250, ico: '📜', label: '법', run: () => say('gaji', '독도에 관한 여러 법령이 시행되고, 시설을 세워 운영하고, 주민이 살아. 이 모두가 나라가 섬을 다스리는 모습이야.') },
-      ],
-    });
-    addScore(40, 640, 300);
+    await talk([
+      ['gaji', '대한민국은 지금 독도를 이렇게 지키고 있어. 섬은 경찰(독도경비대)이, 둘레 바다는 해군과 해양경찰의 배가, 하늘은 공군이 지켜.'],
+      ['gaji', '그리고 독도에 관한 여러 법령이 시행되고, 나라가 시설을 세워 운영하고, 주민이 살아. 이 모두가 나라가 섬을 실제로 다스리는 모습이야.'],
+    ]);
     await getCard('guard');
   },
   async () => {

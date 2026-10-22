@@ -508,24 +508,23 @@ function placeSeal(stage) {
   L.hidden.append(s);
 }
 
-/* 증거 보드: 단계에서 새로 모은 카드를 세 가지 근거로 나눈다.
+/* 증거 보드: 단계에서 새로 모은 카드를 세 가지 근거 칸으로 정리해 보여 준다.
+   카드에 이미 근거 이름이 적혀 있으므로 학생이 하나씩 옮기지 않고, 카드가 차례로 제 칸에 날아 들어간다.
    앞 단계에서 넣은 카드도 칸에 계속 보이고(연하게), 새로 넣은 카드는 맨 위에 쌓인다. */
 function evidenceBoard(stage) {
-  return new Promise(resolve => {
+  return new Promise(async resolve => {
     const ids = CARDS.filter(c => c.st === stage && S.cards[c.id] && !S.boarded[c.id]).map(c => c.id);
     if (!ids.length) return resolve();
     const root = el('div', { class: 'panel', style: 'width:1200px;height:660px;padding:16px 22px;position:relative;display:flex;flex-direction:column' });
-    root.append(el('div', { style: 'font:30px var(--ui);text-align:center', text: '증거 보드: 새로 찾은 증거를 분류해 봐!' }),
-      el('div', { style: 'font:19px var(--body);text-align:center;color:#bcd3ea;margin:6px 0 10px', text: '카드를 누른 다음, 알맞은 근거 칸을 눌러 줘.' }));
+    root.append(el('div', { style: 'font:30px var(--ui);text-align:center', text: '증거 보드: 새로 찾은 증거를 근거별로 정리해!' }),
+      el('div', { style: 'font:19px var(--body);text-align:center;color:#bcd3ea;margin:6px 0 10px', text: '카드에 적힌 근거를 보고 알맞은 칸에 넣어 둘게. 칸마다 어떤 증거가 모였는지 살펴봐.' }));
     const tray = el('div', { style: 'display:flex;gap:12px;justify-content:center;min-height:196px;flex-wrap:wrap' });
-    const slot = el('div', { class: 'hintslot', style: 'min-height:0' });
     const bins = el('div', { style: 'display:flex;gap:16px;margin-top:10px;flex:1;min-height:0' });
-    root.append(tray, slot, bins);
+    root.append(tray, bins);
     const m = modal(root, { closable: false });
-    hintHost(slot);
-    let sel = null, left = ids.length;
-    const tries = {};
+    let skip = false;
     const chip = (c, fresh) => el('div', { class: 'binchip' + (fresh ? ' fresh' : ''), text: c.name });
+    const binOf = {};
     for (const k of ['hist', 'geo', 'law']) {
       const list = el('div', { class: 'binlist' });
       for (const oid of S.cardOrder.slice().reverse()) if (S.boarded[oid] === k) list.append(chip(CARD[oid], false));
@@ -535,33 +534,30 @@ function evidenceBoard(stage) {
         el('div', { style: 'font:16px var(--body);color:#dfe9f5;margin:6px 0 8px' }, gtext(CAT[k].desc)), list);
       const setCount = () => { count.textContent = ` · ${list.children.length}장`; };
       setCount();
+      binOf[k] = { b, list, setCount };
       bins.append(b);
-      onTap(b, () => {
-        if (!left) return;
-        if (!sel) { hint('먼저 위에서 카드를 하나 골라 줘!'); return; }
-        const c = CARD[sel.dataset.id];
-        const ok = k === c.cat || (c.alt || []).includes(k);
-        if (ok) {
-          Sound.sfx('good'); clearHint();
-          addScore(tries[c.id] ? BOARD_PTS / 2 : BOARD_PTS, 640, 300);
-          S.boarded[c.id] = k;
-          sel.remove();
-          list.prepend(chip(c, true)); list.scrollTop = 0; setCount();
-          sel = null; left--;
-          if (!left) { DEV.solve = null; HINT.host = null; doneBar(root, { msg: '모든 증거를 분류했어! 칸마다 모인 증거를 살펴봐.' }).then(() => { m.close(); save(); resolve(); }); }
-        } else {
-          tries[c.id] = (tries[c.id] || 0) + 1; S.boardMiss++;
-          Sound.sfx('bad'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
-          hint(`"${c.name}"은(는) ${c.cat === 'geo' ? '위치나 자연' : c.cat === 'hist' ? '옛 기록이나 사건' : '법령, 조약, 지금 실제로 다스리는 모습'}에 대한 증거 같지 않아? 카드 내용을 다시 읽어 봐.`);
-        }
-      });
     }
-    for (const id of ids) {
-      const c = cardEl(CARD[id], { mini: true }); c.dataset.id = id; c.style.cursor = 'pointer';
-      onTap(c, () => { Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = c; c.classList.add('sel'); });
-      tray.append(c);
+    const cardEls = ids.map(id => { const c = cardEl(CARD[id], { mini: true }); tray.append(c); return c; });
+    DEV.solve = () => { skip = true; };
+    await sleep(700);
+    for (const [i, id] of ids.entries()) {
+      const c = CARD[id], ce = cardEls[i], bin = binOf[c.cat];
+      if (!skip) {
+        const a = ce.getBoundingClientRect(), t = bin.list.getBoundingClientRect();
+        ce.style.transition = 'transform .45s ease-in, opacity .45s ease-in';
+        ce.style.transform = `translate(${(t.left + t.width / 2 - a.left - a.width / 2) / SCALE}px,${(t.top + 20 - a.top - a.height / 2) / SCALE}px) scale(.35)`;
+        ce.style.opacity = '.2';
+        await sleep(450);
+      }
+      ce.style.visibility = 'hidden';
+      S.boarded[id] = c.cat;
+      bin.list.prepend(chip(c, true)); bin.list.scrollTop = 0; bin.setCount();
+      if (!skip) { Sound.sfx('good'); await sleep(150); }
     }
-    DEV.solve = () => { for (const id of ids) S.boarded[id] = CARD[id].cat; HINT.host = null; m.close(); resolve(); };
+    tray.remove();
+    save();
+    await doneBar(root, { msg: '새 증거를 근거별로 정리했어! 칸마다 모인 증거를 살펴봐.' });
+    m.close(); resolve();
   });
 }
 
@@ -620,7 +616,7 @@ function openBook(tab = 'cards') {
   const body = el('div', { class: 'body' });
   root.append(el('div', { style: 'font:30px var(--ui);margin-bottom:8px', text: '📖 증거 도감' }), tabs, body);
   const m = modal(root);
-  const TABS = [['cards', '증거 카드'], ['clues', '노래 단서 수첩'], ['names', '이름 도감'], ['words', '낱말 풀이'], ['badges', '업적 배지']];
+  const TABS = [['cards', '증거 카드'], ['timeline', '연표'], ['clues', '노래 단서 수첩'], ['names', '이름 도감'], ['words', '낱말 풀이'], ['badges', '업적 배지']];
   const render = t => {
     tabs.innerHTML = ''; body.innerHTML = '';
     for (const [k, n] of TABS) tabs.append(onTap(el('button', { class: 'tab' + (k === t ? ' on' : ''), text: n }), () => { Sound.sfx('tap'); render(k); }));
@@ -638,6 +634,15 @@ function openBook(tab = 'cards') {
         }
         body.append(g);
       }
+    } else if (t === 'timeline') {
+      body.append(el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin-bottom:10px', text: '독도를 둘러싼 일을 시간 순서대로 모았어요. 빨간 점은 일본 측 기록, 파란 점은 우리와 연합국 측 기록이에요.' }));
+      TIMELINE.forEach((e, i) => {
+        if (e.era) body.append(el('div', { style: 'font:21px var(--ui);margin:12px 0 6px;color:#ffd9a8', text: e.era }));
+        const open = S.finished || S.tlDone || S.stage > e.s;
+        body.append(el('div', { class: 'tlrow' + (open ? '' : ' lock') },
+          el('div', { class: 'ty', style: `color:${e.c === 'r' ? '#ff9a9a' : '#9cc4ff'}`, text: '● ' + tlYear(e) }),
+          el('div', {}, el('div', { class: 'tt', text: open ? e.t : '???' }), el('div', { class: 'td', text: open ? e.d : `${e.s}단계에서 열려요` }))));
+      });
     } else if (t === 'clues') {
       body.append(el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin-bottom:10px', text: '우산호 라디오에서 모은 「독도는 우리 땅」 속 단서예요. 증거를 찾으면 하나씩 풀려요.' }));
       CLUES.forEach((c, i) => {

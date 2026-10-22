@@ -103,7 +103,6 @@ async function showResult() {
   HUD.show(false); setBg('bg-library', 'brightness(.45) blur(2px)'); Sound.play('ending');
   const ownN = Object.keys(S.cards).length;
   if (ownN >= CARDS.length) giveBadge('collector');
-  if (S.boardMiss === 0 && Object.keys(S.boarded).length >= CARDS.length) giveBadge('sorter');
   const grade = gradeOf(S.score), time = resultTimeSec();
   const { best, isNew } = updateBest();
   if (!S.teacher && !S.submitted) {
