@@ -34,7 +34,10 @@ function briefing() {
   });
 }
 
-/* 카드 배틀: 안개의 주장마다, 내가 모은 증거 카드로 반박한다. */
+/* 카드 배틀: 안개의 주장마다, 내가 모은 증거 카드로 반박한다.
+   하트는 다시 채워지지 않고, 끝까지 남은 하트는 보너스 점수가 된다.
+   하트를 다 잃어도 배틀은 계속되지만, 그 뒤로는 틀릴 때마다 점수가 깎인다. (게임 오버 없음) */
+const MAX_LIFE = 5, HEART_PTS = 50, NO_HEART_LOSS = 30;
 function cardBattle() {
   return new Promise(resolve => {
     const root = el('div', { style: 'position:absolute;inset:64px 0 0 0' });
@@ -59,8 +62,11 @@ function cardBattle() {
     hintHost(tipSlot);
     bar.append(tip, readBtn, hitBtn);
     root.append(bossWrap, tbar, hearts, combo, hand, bar);
-    let life = 3, ci = 0, sel = null, tries = 0, t0 = 0, raf, busy = false, perfect = true, combo2 = 0;
-    const drawHearts = () => { hearts.textContent = '❤️'.repeat(life) + '🤍'.repeat(3 - life); };
+    let life = MAX_LIFE, ci = 0, sel = null, tries = 0, t0 = 0, raf, busy = false, perfect = true, combo2 = 0, pauseAt = 0;
+    const drawHearts = () => { hearts.textContent = life ? '❤️'.repeat(life) + '🤍'.repeat(MAX_LIFE - life) : '💔 하트 0 · 틀리면 -' + NO_HEART_LOSS + '점'; hearts.style.font = life ? '30px sans-serif' : '22px var(--ui)'; };
+    /* 가지가 말하는 동안에는 제한 시간을 멈춘다. */
+    const pause = () => { if (!pauseAt) pauseAt = performance.now(); };
+    const resume = () => { if (pauseAt) { t0 += performance.now() - pauseAt; pauseAt = 0; } };
     const drawCombo = () => { combo.textContent = combo2 >= 2 ? `반박 콤보 ×${combo2}` : '반박 콤보'; };
     drawHearts(); drawCombo();
     const makeHand = claim => {
@@ -93,6 +99,7 @@ function cardBattle() {
       t0 = performance.now();
       cancelAnimationFrame(raf);
       const tick = () => {
+        if (pauseAt) { raf = requestAnimationFrame(tick); return; }
         const p = Math.max(0, 1 - (performance.now() - t0) / 30000);
         tfill.style.width = (p * 100) + '%';
         if (p <= 0 && !busy) { timeUp(); return; }
@@ -137,10 +144,17 @@ function cardBattle() {
         tries++; perfect = false; combo2 = 0; drawCombo(); miss();
         bossImg.style.transform = 'scale(1.15)'; setTimeout(() => bossImg.style.transform = '', 250);
         root.classList.remove('shake'); void root.offsetWidth; root.classList.add('shake');
-        life--; drawHearts();
-        if (life <= 0) {
-          hint('안개에 휩싸였어! 잠깐 숨 고르고… 기억력을 되찾자!', 'wow', 3000);
-          addScore(-50, 640, 330); life = 3; setTimeout(drawHearts, 900);
+        if (life > 0) {
+          life--; drawHearts();
+          if (!life) {
+            busy = true; pause();
+            await say('gaji:wow', `앗, 하트를 모두 잃었어! 배틀은 끝까지 할 수 있어. 하지만 이제부터는 틀릴 때마다 점수가 ${NO_HEART_LOSS}점씩 깎여!`);
+            await say('gaji', '"🔍 카드 읽기"로 카드 내용을 꼼꼼히 확인한 다음 반박하자!');
+            resume(); busy = false;
+          }
+        } else {
+          addScore(-NO_HEART_LOSS, 340, 110);
+          hearts.classList.remove('shake'); void hearts.offsetWidth; hearts.classList.add('shake');
         }
         if (tries === 1) hint('그 증거로는 이 주장을 무너뜨리기 어려워. 주장의 어느 부분이 틀렸는지 다시 생각해 봐!', 'gaji', 5000);
         else if (tries === 2) hint(claim.hint, 'gaji', 7000);
@@ -151,6 +165,7 @@ function cardBattle() {
       cancelAnimationFrame(raf); DEV.solve = null; busy = true;
       readBtn.disabled = true; hitBtn.disabled = true; hand.innerHTML = '';
       if (perfect) giveBadge('debate');
+      if (life) { addScore(life * HEART_PTS, 120, 110); toast(`❤️ 남은 하트 ${life}개 보너스 +${life * HEART_PTS}점`, 3200); }
       bubble.textContent = '크아아… 근거 앞에서는… 버틸 수가… 없어…';
       bossImg.style.transition = 'opacity 2s, transform 2s'; bossImg.style.opacity = 0; bossImg.style.transform = 'scale(1.8)';
       Sound.sfx('clear');
@@ -181,6 +196,7 @@ const STAGE8 = [
     await talk([
       ['gaji', '좋아. 이제 안개가 일본 정부의 주장 일곱 가지를 쏟아 낼 거야.'],
       ['gaji', '우리가 모은 증거 카드 중에서 그 주장을 무너뜨릴 카드를 골라 반박하자! 못 모은 카드는 흐린 "빌린 증거"로 나와서 점수가 절반이야.'],
+      ['gaji', `하트는 ${MAX_LIFE}개야. 틀리면 하나씩 줄고, 다시 채워지지 않아. 끝까지 남은 하트는 하나에 ${HEART_PTS}점씩 보너스가 돼!`],
     ]);
   },
   async () => {

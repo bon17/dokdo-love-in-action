@@ -304,10 +304,10 @@ const CH = {
   s2_lock: 100, s2_lion: 100, s2_rub: 80, s2_fog1: 100, s2_fog2: 100,
   s3_why: 100, s3_names: 100, s3_letter: 100, s3_talk: 300,
   s4_puz: 100, s4_why1: 100, s4_why2: 100, s4_map: 100, s4_lee: 100, s4_cipher: 100, s4_seal: 30,
-  s5_links: 300, s5_fact: 100, s5_send: 100, s5_why: 100, s5_bar: 50,
+  s5_links: 240, s5_fact: 100, s5_send: 100, s5_why: 100, s5_bar: 50,
   s6_memory: 150, s6_line: 480, s6_balloon: 150,
   s7_place: 240, s7_people: 40, s7_guard: 40, s7_visit: 300, s7_value: 40,
-  s8_brief: 100, s8_battle: 1050, expl: 90,
+  s8_brief: 100, s8_battle: 1050, s8_heart: 250, expl: 90,
 };
 const BOARD_PTS = 20, CLUE_PTS = 30, SEAL_PTS = 50;
 const MAX_SCORE = Object.values(CH).reduce((a, b) => a + b, 0)

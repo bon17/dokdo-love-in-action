@@ -360,8 +360,10 @@ function memoryGame({ title, pairs, key, base = 150 }) {
 }
 
 /* 거짓 주장 풍선: 거짓은 터뜨리고 사실은 놓아준다.
-   문장마다 꼭 두 번씩 지나가게 해서, 처음에 헷갈린 문장도 한 번 더 볼 수 있게 한다. */
-function balloonGame({ items, key, gap = 1600 }) {
+   풍선은 기기의 화면 주사율과 상관없이 같은 빠르기(초당 50~60px)로 오르고,
+   gap(ms)보다 자주 나오지 않으며, 화면에는 많아야 maxAlive개만 뜬다.
+   한 바퀴가 끝나면 틀린 문장(사실을 터뜨렸거나 거짓을 놓친 것)만 한 번 더 날아온다. 두 번째 바퀴는 점수가 절반이다. */
+function balloonGame({ items, key, gap = 2600, maxAlive = 3 }) {
   return new Promise(resolve => {
     const root = el('div', { style: 'position:absolute;inset:0;background:linear-gradient(180deg,rgba(120,170,220,.55),rgba(20,50,90,.55))' });
     L.scene.append(root);
@@ -369,46 +371,59 @@ function balloonGame({ items, key, gap = 1600 }) {
     const head = el('div', { class: 'mg-title', html: '💥 <b>거짓 주장</b>은 터뜨리고, 🕊️ <b>기록된 사실</b>은 날려 보내!' });
     const info = el('div', { style: 'position:absolute;right:24px;top:80px;font:24px var(--ui);background:rgba(8,26,48,.85);padding:8px 16px;border-radius:12px;z-index:3' });
     root.append(head, info);
-    let last = -2000, raf, alive = [], pts = 0, good = 0, bad = 0, over = false;
-    const first = shuffle(items);
-    let second = shuffle(items);
-    while (second[0] === first[first.length - 1]) second = shuffle(items);
-    const pool = [...first, ...second];
-    let idx = 0;
+    let last = -Infinity, prev = 0, raf, alive = [], pts = 0, good = 0, bad = 0, over = false;
+    let round = 1, pool = shuffle(items), idx = 0, wrong = [];
+    /* 풍선이 겹치지 않게 세 줄 가운데 빈 줄에 띄운다. */
+    const LANES = [90, 500, 910];
     const spawn = () => {
       const it = pool[idx++];
-      const round = idx > items.length ? 2 : 1;
-      const x = 90 + Math.random() * 860;
+      const busy = alive.filter(o => !o.dead && o.y > 260).map(o => o.lane);
+      const free = LANES.map((x, i) => i).filter(i => !busy.includes(i));
+      const lane = free.length ? free[Math.floor(Math.random() * free.length)] : Math.floor(Math.random() * LANES.length);
+      const x = LANES[lane] + Math.random() * 30;
       const col = ['#ff9f7a', '#8fd3ff', '#ffd166', '#b8e986', '#d7a8ff'][Math.floor(Math.random() * 5)];
       const b = el('div', { style: `position:absolute;left:${x}px;top:720px;width:280px;height:150px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8,${col} 45%);
         box-shadow:0 8px 16px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;padding:14px 26px;text-align:center;font:19px/1.4 var(--ui);color:#1d2530;cursor:pointer;text-wrap:balance` }, it.t);
       b.append(el('div', { style: 'position:absolute;left:50%;bottom:-38px;width:2px;height:40px;background:#fff8' }));
       if (round === 2) b.append(el('div', { style: 'position:absolute;right:26px;top:-6px;font:14px var(--ui);background:#fff;color:#2b2521;border-radius:8px;padding:0 8px;box-shadow:0 2px 4px rgba(0,0,0,.25)', text: '한 번 더!' }));
-      const o = { b, it, y: 720, v: 78 + Math.random() * 18, dead: false };
+      const o = { b, it, y: 720, v: 50 + Math.random() * 10, dead: false, lane };
+      const popPts = round === 1 ? 15 : 8;
       onTap(b, () => {
         if (o.dead || over) return;
         o.dead = true;
-        if (!it.ok) { pts += 15; good++; Sound.sfx('pop'); floatText('+15 거짓 격파!', x + 60, o.y); b.style.transition = 'transform .2s,opacity .2s'; b.style.transform = 'scale(1.4)'; b.style.opacity = 0; }
-        else { pts = Math.max(0, pts - 10); bad++; miss(); floatText('앗, 그건 사실이야!', x + 40, o.y, true); b.style.filter = 'grayscale(1)'; b.style.opacity = .4; hint(`"${it.t}"는 기록으로 확인되는 사실이야. 사실은 날려 보내 줘!`, 'wow', 3500); }
+        if (!it.ok) { pts += popPts; good++; Sound.sfx('pop'); floatText(`+${popPts} 거짓 격파!`, x + 60, o.y); b.style.transition = 'transform .2s,opacity .2s'; b.style.transform = 'scale(1.4)'; b.style.opacity = 0; }
+        else { pts = Math.max(0, pts - 10); bad++; miss(); wrong.push(it); floatText('앗, 그건 사실이야!', x + 40, o.y, true); b.style.filter = 'grayscale(1)'; b.style.opacity = .4; hint(`"${it.t}"는 기록으로 확인되는 사실이야. 사실은 날려 보내 줘!`, 'wow', 3500); }
         setTimeout(() => b.remove(), 250);
       });
       root.append(b); alive.push(o);
     };
     const loop = now => {
-      const rem = pool.length - idx;
-      info.textContent = `남은 풍선 ${rem + alive.filter(o => !o.dead).length}개 · ${pts}점`;
-      if (rem > 0 && now - last > gap) { last = now; spawn(); }
+      const dt = prev ? Math.min(0.05, (now - prev) / 1000) : 0;
+      prev = now;
+      const rem = pool.length - idx, flying = alive.filter(o => !o.dead).length;
+      info.textContent = `${round === 1 ? '남은 풍선' : '한 번 더'} ${rem + flying}개 · ${pts}점`;
+      if (rem > 0 && flying < maxAlive && now - last > gap) { last = now; spawn(); }
       for (const o of alive) {
         if (o.dead) continue;
-        o.y -= o.v / 60; o.b.style.top = o.y + 'px';
-        if (o.y < -170) { o.dead = true; o.b.remove(); if (o.it.ok) pts += 5; }
+        o.y -= o.v * dt; o.b.style.top = o.y + 'px';
+        if (o.y < -170) {
+          o.dead = true; o.b.remove();
+          if (o.it.ok) pts += round === 1 ? 5 : 3;
+          else { wrong.push(o.it); floatText('거짓을 놓쳤어!', LANES[o.lane] + 60, 120, true); }
+        }
       }
       alive = alive.filter(o => !o.dead);
-      if (rem <= 0 && !alive.length) return end();
+      if (rem <= 0 && !alive.length) {
+        if (round > 1 || !wrong.length) return end();
+        round = 2; pool = shuffle(wrong); idx = 0; wrong = [];
+        last = now - gap + 2200;
+        hint(`헷갈린 문장 ${pool.length}개가 한 번 더 날아와! 이번엔 바로잡아 봐.`, 'gaji', 4000);
+      }
       raf = requestAnimationFrame(loop);
     };
     const end = async () => {
       if (over) return; over = true; cancelAnimationFrame(raf); DEV.solve = null; clearHint();
+      info.textContent = `${Math.min(pts, CH[key])}점`;
       addScore(Math.min(pts, CH[key]), 640, 300);
       const box = el('div', { class: 'panel popin', style: 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:620px;padding:28px;text-align:center' },
         el('div', { style: 'font:32px var(--ui)', text: '풍선 작전 끝!' }),

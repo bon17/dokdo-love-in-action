@@ -161,9 +161,9 @@ async function showResult() {
     for (const [k, n] of [['class', `${p.grade}학년 ${p.cls}반`], ['grade', `${p.grade}학년 전체`], ['all', '전교']]) tabs.append(onTap(el('button', { class: 'tab' + (k === scope ? ' on' : ''), text: n }), () => { scope = k; render(); }));
     list.innerHTML = '';
     if (!Rank.enabled()) { status.textContent = '랭킹 기능이 아직 설정되지 않았어요. (선생님 설정 필요) 내 최고 기록은 이 기기에 저장돼요.'; return; }
-    if (!rows) { status.textContent = '순위를 불러오는 중…'; return; }
+    if (!rows) { status.textContent = fails ? '순위를 아직 불러오지 못했어요. 잠시 뒤에 다시 받아 올게요.' : '순위를 불러오는 중…'; return; }
     const f = rows.filter(r => scope === 'all' || (r.g === p.grade && (scope === 'grade' || r.c === p.cls)));
-    status.textContent = `${f.length}명 참여 · 10초마다 새로 고침${Rank.queue.length ? ' · 내 기록을 보내는 중…' : ''}`;
+    status.textContent = `${f.length}명 참여 · ${fails ? '잠시 뒤에 다시 새로 고침' : '1분마다 새로 고침'}${Rank.queue.length ? ' · 내 기록을 보내는 중…' : ''}`;
     f.slice(0, 50).forEach((r, i) => {
       list.append(el('div', { class: 'rank-row' + (r.id === myId ? ' me' : '') },
         el('div', { class: 'rk', text: i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1 }), el('div', { class: 'cl', text: `${r.g}학년 ${r.c}반` }), el('div', { class: 'nm', text: r.n }),
@@ -172,15 +172,27 @@ async function showResult() {
     const mine = f.findIndex(r => r.id === myId);
     if (mine >= 50) list.append(el('div', { class: 'rank-row me' }, el('div', { class: 'rk', text: mine + 1 }), el('div', { class: 'nm', text: '나' }), el('div', { class: 'sc', text: fmtNum(f[mine].s) + '점' })));
   };
+  /* 순위는 1분 안팎마다 새로 받는다. 랭킹 서버(앱스 스크립트)는 동시에 30개까지만 실행되므로,
+     500명이 함께 결과 화면을 보아도 한도를 넘지 않게 태블릿마다 받는 때를 흩어 놓는다.
+     화면이 꺼져 있으면 쉬고, 받지 못하면 2분, 4분 뒤로 늦춰 다시 시도한다. */
+  const EVERY = 60000;
+  let fails = 0, lastLoad = 0;
+  const plan = ms => { clearTimeout(timer); timer = setTimeout(load, ms); };
+  const onVis = () => { if (!document.hidden && wrap.isConnected && Date.now() - lastLoad > EVERY) plan(1000 + Math.random() * 7000); };
   const load = async () => {
-    if (!wrap.isConnected) { clearInterval(timer); return; }
+    if (!wrap.isConnected) { clearTimeout(timer); document.removeEventListener('visibilitychange', onVis); return; }
     if (!Rank.enabled()) return render();
+    if (document.hidden) return plan(EVERY);
+    lastLoad = Date.now();
     await Rank.flush();
-    try { const j = await Rank.list(); if (j && j.ok) rows = j.rows; } catch (e) { }
+    let ok = false;
+    try { const j = await Rank.list(); if (j && j.ok) { rows = j.rows; ok = true; } } catch (e) { }
+    fails = ok ? 0 : Math.min(fails + 1, 2);
     render();
+    plan(EVERY * 2 ** fails * (0.75 + Math.random() * 0.5));
   };
+  document.addEventListener('visibilitychange', onVis);
   render(); load();
-  timer = setInterval(load, 10000);
 }
 function retry() {
   const p = S.player, a = S.attempt || 1;

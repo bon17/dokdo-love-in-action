@@ -2,16 +2,17 @@
 SPK.shimaneOff = { name: '시마네현 관리', img: 'char-shimane', ini: '관', color: 'gray' };
 SPK.minister = { name: '의정부 참정대신', img: 'char-minister', ini: '참', color: 'blue' };
 
-/* 모순 찾기: 주장 속 표현과 부딪히는 증거를 붉은 실로 잇는다. */
+/* 모순 찾기: 주장 속 표현과 부딪히는 증거를 붉은 실로 잇는다.
+   첫 번째 수첩은 가지가 같이 이어 보이고, 나머지는 학생이 잇는다. 틀린 횟수는 수첩마다 따로 센다. */
 function contradictionGame() {
-  return new Promise(resolve => {
+  return new Promise(async resolve => {
     const root = el('div', { style: 'position:absolute;inset:64px 0 0 0;background:rgba(40,28,18,.72)' });
     L.scene.append(root);
     root.append(el('div', { class: 'mg-title', style: 'top:12px;white-space:nowrap', text: '🧵 취재 수첩을 고른 뒤, 부딪히는 주장의 표현을 눌러 붉은 실로 이어!' }));
     const poster = el('div', { class: 'paper', style: 'position:absolute;left:40px;top:80px;width:470px;padding:22px 26px;font:21px/1.8 var(--old)' });
     poster.append(el('div', { style: 'font:700 26px/1.4 var(--old);text-align:center;margin-bottom:8px;white-space:pre-line', text: '시마네현 고시 제40호\n(1905년 2월 22일)' }),
       el('div', {}, gtext('북위 37도 9분 30초, 동경 131도 55분, 오키섬에서 서북쪽으로 85해리 떨어진 섬을 "다케시마"라 부르고, 이제부터 본현 소속 오키도사의 소관으로 정한다.')),
-      el('div', { style: 'margin-top:14px;padding-top:10px;border-top:2px dashed #b89a66;font:20px var(--ui);color:#5a2d18', text: '안개의 주장:' }));
+      el('div', { style: 'margin-top:14px;padding-top:10px;border-top:2px dashed #b89a66;font:20px var(--ui);color:#5a2d18', text: '② 안개의 주장: 수첩과 부딪히는 표현을 눌러' }));
     const slot = el('div', { class: 'hintslot' });
     const claims = [
       { id: 'A', t: '"독도는 주인 없는 섬이었다"' },
@@ -28,14 +29,21 @@ function contradictionGame() {
       { id: 4, ok: 'B', t: '⚔️ 1904~1905년 러일전쟁\n일본은 독도에 망루를 세워 군사적으로 쓰려 했다', why: '전쟁 중에, 군사적 필요로 서둘러 편입한 것이 "정당한 절차"일까?' },
       { id: 5, ok: 'B', t: '🤫 1905년 고시 방법\n현의 고시로 알렸고, 대한제국에는 알리지 않았다', why: '주인에게 알리지도 않고 가져간 것이 "정당한 절차"일까?' },
     ];
-    const col = el('div', { style: 'position:absolute;right:40px;top:76px;width:560px;display:flex;flex-direction:column;gap:12px' });
+    const col = el('div', { style: 'position:absolute;right:40px;top:70px;width:560px;display:flex;flex-direction:column;gap:12px' });
+    col.append(el('div', { style: 'font:20px var(--ui);color:#ffe2b8;margin-bottom:-4px', text: '① 📒 취재 수첩: 기록을 하나 골라' }));
     const svg = el('div', { style: 'position:absolute;inset:0;pointer-events:none' });
     root.append(svg, col, endBox);
     const noteEls = notes.map(n => {
       const e = el('div', { class: 'tile', style: 'justify-content:flex-start;text-align:left;white-space:pre-line;font:20px/1.45 var(--ui);background:#fdf6e3' }, el('span', {}, gtext(n.t)));
       e.dataset.id = n.id; col.append(e); return e;
     });
-    let sel = null, tries = 0, linked = 0;
+    let sel = null, linked = 0, ready = false;
+    const tries = {};
+    /* 한 수첩에서 3번 틀리면, 그 수첩과 부딪히는 주장을 반짝이게 해서 학생이 직접 누르게 한다. */
+    const glowFor = noteEl => {
+      const n = noteEl && notes.find(x => x.id === +noteEl.dataset.id);
+      claims.forEach(c => c.classList.toggle('hi', !!n && tries[n.id] >= 3 && c.dataset.id === n.ok));
+    };
     const lines = [];
     const drawLine = (a, b) => {
       const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(), r0 = root.getBoundingClientRect();
@@ -44,24 +52,40 @@ function contradictionGame() {
       lines.push(`<path d="M${x1} ${y1} C ${x1 - 120} ${y1}, ${x2 + 120} ${y2}, ${x2} ${y2}" stroke="#d63a2f" stroke-width="4" fill="none"/>`);
       svg.innerHTML = `<svg width="1280" height="656">${lines.join('')}</svg>`;
     };
+    const connect = (noteEl, claimEl) => {
+      noteEl.dataset.done = 1; noteEl.style.background = '#ffd6cf'; noteEl.classList.remove('sel', 'hi'); claimEl.classList.remove('hi'); sel = null;
+      Sound.sfx('hit'); drawLine(noteEl, claimEl); floatText('모순 발견!', 760, 300); linked++;
+    };
     const link = (noteEl, claimEl) => {
       const n = notes.find(x => x.id === +noteEl.dataset.id);
-      if (noteEl.dataset.done) return;
+      if (noteEl.dataset.done || !ready) return;
       if (n.ok === claimEl.dataset.id) {
-        noteEl.dataset.done = 1; noteEl.style.background = '#ffd6cf'; noteEl.classList.remove('sel'); sel = null;
-        Sound.sfx('hit'); drawLine(noteEl, claimEl); floatText('모순 발견!', 760, 300);
-        award('s5_links', 1, 60); linked++;
-        if (linked === notes.length) { DEV.solve = null; HINT.host = null; doneBar(endBox, { msg: '모순 다섯 개를 모두 찾았어!' }).then(() => { root.remove(); resolve(tries); }); }
+        connect(noteEl, claimEl);
+        award('s5_links', (tries[n.id] || 0) + 1, 60);
+        if (linked === notes.length) { DEV.solve = null; HINT.host = null; doneBar(endBox, { msg: '모순 다섯 개를 모두 찾았어!' }).then(() => { root.remove(); resolve(); }); }
       } else {
-        tries++; noteEl.classList.remove('shake'); void noteEl.offsetWidth; noteEl.classList.add('shake');
-        if (wrongFeedback(tries, n.why, n.why)) { tries = 0; link(noteEl, claims.find(c => c.dataset.id === n.ok)); }
+        tries[n.id] = (tries[n.id] || 0) + 1;
+        noteEl.classList.remove('shake'); void noteEl.offsetWidth; noteEl.classList.add('shake');
+        if (wrongFeedback(tries[n.id], n.why, n.why)) { glowFor(noteEl); hint('같이 찾아보자! 이 수첩은 반짝이는 주장과 부딪혀. 눌러 봐!', 'gaji', 60000); }
       }
     };
     noteEls.forEach(e => dragItem(e, {
-      onTap: () => { if (e.dataset.done) return; Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = e; e.classList.add('sel'); },
+      onTap: () => { if (e.dataset.done || !ready) return; Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = e; e.classList.add('sel'); glowFor(e); },
       onDrop: under => { const c = under.find(x => claims.includes(x)); if (c) link(e, c); },
     }));
-    claims.forEach(c => onTap(c, () => { if (linked === notes.length) return; if (sel) link(sel, c); else hint('먼저 오른쪽의 취재 수첩을 하나 골라 줘!', 'gaji', 3000); }));
+    claims.forEach(c => onTap(c, () => { if (linked === notes.length || !ready) return; if (sel) link(sel, c); else hint('먼저 오른쪽의 취재 수첩을 하나 골라 줘!', 'gaji', 3000); }));
+
+    // 첫 번째 수첩은 가지와 같이 잇는다.
+    const [n0, c0] = [noteEls[0], claims[0]];
+    await say('gaji', '처음 하나는 나랑 같이 이어 보자! 잘 봐.');
+    n0.classList.add('sel', 'hi');
+    await say('gaji', '① 먼저 오른쪽 취재 수첩에서 기록을 하나 골라. 1900년 칙령에는 울도군이 "석도"를 다스린다고 적혀 있지.');
+    c0.classList.add('hi');
+    await say('gaji', '② 그다음, 그 기록과 부딪히는 안개의 주장을 눌러. 대한제국이 이미 다스리던 섬인데 "주인 없는 섬"이라니, 말이 안 되잖아!');
+    connect(n0, c0);
+    await sleep(500);
+    await say('gaji:yay', '이렇게 붉은 실로 이어져! 남은 수첩 네 개는 네가 직접 이어 봐.');
+    ready = true;
     DEV.solve = () => noteEls.forEach(e => { if (!e.dataset.done) link(e, claims.find(c => c.dataset.id === notes.find(n => n.id === +e.dataset.id).ok)); });
   });
 }

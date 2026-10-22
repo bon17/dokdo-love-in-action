@@ -62,7 +62,13 @@ function lionGame() {
     const startRoar = () => {
       phase = 2; note.textContent = '2단계: "항복하지 않으면 이 맹수를 풀어 놓겠다!"\n어흥 버튼을 빠르게 눌러 우산국을 겁주자!';
       roar.style.display = ''; gaugeWrap.style.display = '';
-      const decay = () => { if (phase !== 2) return; fear = Math.max(0, fear - 0.25); gauge.style.width = fear + '%'; raf = requestAnimationFrame(decay); };
+      /* 게이지는 화면 주사율과 상관없이 1초에 15씩 줄어든다. */
+      let prevT = 0;
+      const decay = now => {
+        if (phase !== 2) return;
+        const dt = prevT ? Math.min(0.05, (now - prevT) / 1000) : 0; prevT = now;
+        fear = Math.max(0, fear - 15 * dt); gauge.style.width = fear + '%'; raf = requestAnimationFrame(decay);
+      };
       raf = requestAnimationFrame(decay);
     };
     roar.addEventListener('pointerdown', e => {

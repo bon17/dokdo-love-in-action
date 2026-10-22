@@ -256,6 +256,8 @@ mark.hl{background:linear-gradient(transparent 55%,rgba(255,214,90,.45) 55%);col
   font:23px var(--ui);box-shadow:0 5px 0 #c7b99b,0 8px 14px rgba(0,0,0,.3);cursor:pointer;border:3px solid transparent;text-align:center;touch-action:none}
 .tile.sel{border-color:var(--orange);transform:translateY(-4px)}
 .tile.done{opacity:.35;pointer-events:none}
+.tile.hi{animation:glowHi 1.1s ease-in-out infinite}
+@keyframes glowHi{0%,100%{box-shadow:0 0 0 4px #ffd166,0 0 14px #ffd166}50%{box-shadow:0 0 0 7px #ffd166,0 0 30px #ffd166}}
 .slot{min-height:64px;gap:6px;line-height:1.45;border-radius:14px;border:3px dashed rgba(255,255,255,.55);background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;
   font:22px var(--ui);color:#cfe6ff;padding:6px 12px;text-align:center}
 .slot.filled{border-style:solid;border-color:#7fe0a8;background:rgba(46,158,106,.35);color:#fff}
