@@ -456,6 +456,16 @@ function getCard(id) {
     DEV.solve = () => { m.close(); resolve(); };
   });
 }
+/* 창을 띄우지 않고 그 자리에서 증거를 얻는다. (장면 안에 이미 기록을 보여 줄 때) 새로 얻었으면 true */
+function collectCard(id) {
+  const c = CARD[id];
+  if (!c || S.cards[id]) return false;
+  S.cards[id] = true; S.cardOrder.push(id);
+  Sound.sfx('card'); setTimeout(() => Sound.sfx('stamp'), 350);
+  addScore(RARITY[c.rar].pts, 640, 140);
+  HUD.update(); save();
+  return true;
+}
 function openCard(c, borrowed) {
   const big = cardEl(c, { borrowed });
   big.classList.add('bigview');

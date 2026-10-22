@@ -1,5 +1,76 @@
 /* ===== 6단계: 연표 러시 ===== */
 
+/* 광복 이후의 기록: 위쪽 시간 줄의 반짝이는 점을 차례로 누르면 그 기록이 그림 카드로 펼쳐지고, 그 자리에서 증거를 얻는다.
+   카드에는 쉬운 핵심 한 줄을 두고, 원래의 긴 설명은 "자세히 보기"로 연다. */
+const POSTWAR = [
+  { when: '1946년 1월', card: 'scapin677', ico: '🗺️', name: 'SCAPIN 제677호', key: '연합국이 일본이 다스리는 범위에서 독도를 뺐다.',
+    more: '전쟁에서 진 일본을 점령한 연합국 최고사령관 총사령부가 지시를 내렸다. 일본이 통치·행정권을 행사할 수 있는 범위에서 울릉도, 독도(리앙쿠르암), 제주도를 뺀다. (다만 최종적인 영토 결정은 아니라는 단서가 붙어 있다.)' },
+  { when: '1946년 6월', card: 'scapin1033', ico: '🚫', name: 'SCAPIN 제1033호', key: '일본 배와 사람은 독도 12해리 안으로 들어올 수 없게 했다.',
+    more: '연합국 총사령부는 일본 어선이 고기를 잡을 수 있는 구역을 정했다. 일본 배와 사람은 독도 12해리 안으로 들어가거나 독도에 닿을 수 없다.' },
+  { when: '1947년 8월', card: 'alpine', ico: '🏔️', name: '조선산악회 학술조사', key: '우리 학술조사대가 독도에 건너가 자연과 지리를 조사했다.',
+    more: '조선산악회가 문교부의 후원을 받아 울릉도·독도 학술조사대를 꾸렸다. 조사대는 독도에 건너가 섬의 자연과 지리를 조사했다.' },
+  { when: '1951년 9월', card: 'sf', ico: '📜', name: '샌프란시스코 강화조약', key: '일본이 "제주도, 거문도, 울릉도를 포함한 한국"을 포기했다. 섬은 대표적인 것만 적었다.',
+    more: '제2차 세계대전을 마무리한 샌프란시스코 강화조약. 일본은 "제주도, 거문도, 울릉도를 포함한 한국"에 대한 모든 권리를 포기했다. 3,000개가 넘는 우리 섬 가운데 대표적인 섬만 적었다.' },
+  { when: '1952년 1월', card: 'peace', ico: '🌊', name: '평화선', key: '대통령 선언으로 바다에 주권의 선을 긋고, 독도를 그 안쪽에 넣었다.',
+    more: '대한민국 정부는 「인접 해양에 대한 주권에 관한 대통령 선언」을 발표하고 바다 위에 주권의 선을 그었다. 사람들은 이 선을 "평화선"이라 불렀다. 독도는 그 안쪽에 있다.' },
+  { when: '1953년 4월', card: 'volunteer', ico: '🛡️', name: '독도의용수비대', key: '울릉도 주민들이 스스로 모여 1956년까지 독도를 지켰다.',
+    more: '일본 사람들이 독도에 와서 자기네 표지를 세우는 일이 생기자, 울릉도 주민 홍순칠 등이 스스로 독도의용수비대를 만들었다. 이들은 1956년 경찰에게 임무를 넘길 때까지 독도를 지켰다.' },
+];
+function postwarRecords() {
+  return new Promise(resolve => {
+    const root = el('div', { style: 'position:absolute;inset:64px 0 0 0;background:rgba(6,20,37,.72)' });
+    L.scene.append(root);
+    HINT.pos = 'center';
+    const N = POSTWAR.length;
+    const strip = el('div', { class: 'pw-strip' });
+    strip.append(el('div', { class: 'pw-line' }), el('div', { class: 'pw-start', text: '1945년 8월\n광복' }));
+    const pts = POSTWAR.map((r, i) => {
+      const pt = el('div', { class: 'pw-pt', style: `left:${300 + i * 172}px` }, el('div', { class: 'pw-dot', text: '?' }), el('div', { class: 'pw-when', text: r.when }));
+      onTap(pt, () => tap(i)); strip.append(pt); return pt;
+    });
+    const card = el('div', { class: 'paper pw-card' }, el('div', { class: 'pw-empty', text: '👆 위쪽 시간 줄의 반짝이는 점을 눌러 봐!\n1946년부터 차례대로 기록이 떠올라.' }));
+    const endBox = el('div', { class: 'pw-end' });
+    const title = el('div', { class: 'mg-title', style: 'top:8px' });
+    root.append(title, strip, card, endBox);
+    const show = (i, fresh) => {
+      const r = POSTWAR[i];
+      card.innerHTML = '';
+      const more = el('div', { class: 'pw-more', style: 'display:none' }, gtext(r.more));
+      const moreBtn = onTap(el('button', { class: 'btn small blue', style: 'font-size:17px;min-height:38px;padding:2px 16px', text: '📖 자세히 보기' }), () => {
+        Sound.sfx('tap'); const on = more.style.display === 'none'; more.style.display = on ? '' : 'none'; moreBtn.textContent = on ? '접기' : '📖 자세히 보기';
+      });
+      card.append(el('div', { class: 'pw-ico', text: r.ico }),
+        el('div', { class: 'pw-body' },
+          el('div', { class: 'pw-date', text: '📅 ' + r.when }),
+          el('div', { class: 'pw-name', text: r.name }),
+          el('div', { class: 'pw-key' }, gtext(r.key)),
+          el('div', { style: 'margin-top:10px' }, moreBtn), more),
+        el('div', { class: 'stampfx', style: 'position:absolute;right:26px;top:22px' + (fresh ? '' : ';animation:none;opacity:.85;transform:rotate(-14deg)'), html: '증거<br>확보' }));
+      if (fresh) { card.classList.remove('popin'); void card.offsetWidth; card.classList.add('popin'); }
+    };
+    let next = 0, readyAt = 0;
+    const update = () => {
+      title.textContent = ko(`🌊 반짝이는 점을 눌러 기록을 붙잡아! (${next} / ${N})`);
+      pts.forEach((p, i) => p.classList.toggle('next', i === next));
+    };
+    const tap = i => {
+      if (i < next) { Sound.sfx('tap'); return show(i, false); }
+      if (i > next) { hint('1946년부터 차례대로! 반짝이는 점을 눌러 봐.', 'gaji', 3000); return; }
+      if (performance.now() < readyAt) return;
+      readyAt = performance.now() + 900;
+      const r = POSTWAR[i];
+      pts[i].classList.add('got'); pts[i].querySelector('.pw-dot').textContent = r.ico;
+      collectCard(r.card); show(i, true); clearHint();
+      next++; update();
+      if (next < N) return;
+      DEV.solve = null;
+      doneBar(endBox, { msg: '광복 이후의 기록 6개를 모두 붙잡았어! 증거는 📖 도감에서 다시 볼 수 있어.' }).then(() => { HINT.pos = 'left'; root.remove(); resolve(); });
+    };
+    update();
+    DEV.solve = () => { while (next < N) { readyAt = 0; tap(next); } };
+  });
+}
+
 /* 연표 한 바퀴: 독도 둘레 길 위의 칸을 ①번부터 차례로 눌러 불을 밝힌다. 틀릴 일은 없고, 칸마다 무슨 일이 있었는지 읽게 한다. */
 function timelineWalk() {
   return new Promise(resolve => {
@@ -81,20 +152,9 @@ const STAGE6 = [
     await timeJump('1945년 · 광복', '광복 이후의 동해');
     await talk([
       ['narr', '1945년 8월, 광복. 우산호는 거센 시간의 물살을 타고 광복 이후의 동해로 달려간다.'],
-      ['gaji', '광복 뒤 독도에는 어떤 일들이 있었을까? 시간의 물살에 떠밀려 오는 기록들을 붙잡자!'],
+      ['gaji', '광복 뒤 독도에는 어떤 일들이 있었을까? 시간 줄의 반짝이는 점을 눌러 기록을 하나씩 붙잡자!'],
     ]);
-    const panels = [
-      ['1946년 1월', '전쟁에서 진 일본을 점령한 연합국 최고사령관 총사령부가 지시를 내렸다. 일본이 통치·행정권을 행사할 수 있는 범위에서 울릉도, 독도(리앙쿠르암), 제주도를 뺀다. (다만 최종적인 영토 결정은 아니라는 단서가 붙어 있다.)', 'scapin677'],
-      ['1946년 6월', '연합국 총사령부는 일본 어선이 고기를 잡을 수 있는 구역을 정했다. 일본 배와 사람은 독도 12해리 안으로 들어가거나 독도에 닿을 수 없다.', 'scapin1033'],
-      ['1947년 8월', '조선산악회가 문교부의 후원을 받아 울릉도·독도 학술조사대를 꾸렸다. 조사대는 독도에 건너가 섬의 자연과 지리를 조사했다.', 'alpine'],
-      ['1951년 9월', '제2차 세계대전을 마무리한 샌프란시스코 강화조약. 일본은 "제주도, 거문도, 울릉도를 포함한 한국"에 대한 모든 권리를 포기했다. 3,000개가 넘는 우리 섬 가운데 대표적인 섬만 적었다.', 'sf'],
-      ['1952년 1월', '대한민국 정부는 「인접 해양에 대한 주권에 관한 대통령 선언」을 발표하고 바다 위에 주권의 선을 그었다. 사람들은 이 선을 "평화선"이라 불렀다. 독도는 그 안쪽에 있다.', 'peace'],
-      ['1953년 4월', '일본 사람들이 독도에 와서 자기네 표지를 세우는 일이 생기자, 울릉도 주민 홍순칠 등이 스스로 독도의용수비대를 만들었다. 이들은 1956년 경찰에게 임무를 넘길 때까지 독도를 지켰다.', 'volunteer'],
-    ];
-    for (const [when, text, card] of panels) {
-      await say('narr', `[${when}] ${text}`);
-      await getCard(card);
-    }
+    await postwarRecords();
     await say('gaji', '저기 언덕 위에 서 있는 사람들이 바로 독도의용수비대야. 섬을 지키겠다고 스스로 모인 울릉도 사람들이지.');
   },
   async () => {

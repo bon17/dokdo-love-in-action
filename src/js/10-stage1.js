@@ -5,7 +5,7 @@ function radioGame() {
   return new Promise(resolve => {
     const root = el('div', { class: 'panel', style: 'width:1120px;padding:22px 28px;text-align:center' });
     root.append(el('div', { style: 'font:32px var(--ui)', text: '📻 우산호 라디오' }),
-      el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin:4px 0 12px', text: '다이얼을 좌우로 움직여 반짝이는 주파수에 맞추면, 노래 속 단서가 들려와!' }));
+      el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin:4px 0 12px', text: '다이얼을 좌우로 움직이거나 반짝이는 점을 누르면, 노래 속 단서가 들려와!' }));
     const radio = el('div', { style: 'position:relative;margin:0 auto;width:1000px;height:330px;border-radius:30px;background:linear-gradient(180deg,#b5733c,#8a5227);box-shadow:inset 0 0 0 8px #6b3d1c,0 10px 24px rgba(0,0,0,.4)' });
     const screen = el('div', { style: 'position:absolute;left:40px;right:40px;top:30px;height:120px;border-radius:16px;background:#10281c;border:4px solid #2c1a0c;display:flex;align-items:center;justify-content:center;font:30px var(--ui);color:#8dffb8;text-shadow:0 0 10px #3dff8a;padding:0 20px' });
     const scale = el('div', { style: 'position:absolute;left:60px;right:60px;top:175px;height:90px;border-radius:14px;background:#f3e2b8;border:4px solid #2c1a0c;touch-action:none;cursor:ew-resize;overflow:hidden' });
@@ -33,16 +33,16 @@ function radioGame() {
       knob.style.transform = `rotate(${(v - 0.5) * 540}deg)`;
       let best = -1, bd = 1;
       pos.forEach((p, i) => { const d = Math.abs(p - v); if (d < bd) { bd = d; best = i; } });
-      const sig = Math.max(0, 1 - bd / 0.03);
+      const sig = Math.max(0, 1 - bd / 0.045);
       noise.set(1 - sig * 0.9);
       const c = CLUES[best];
       if (sig > 0.05) {
         screen.style.opacity = 0.3 + sig * 0.7;
         screen.textContent = sig > 0.6 ? `♪ ${c.radio} ♪` : '…지직… ' + c.radio.replace(/[^\s·…]/g, m => Math.random() < 0.5 ? '▒' : m) + ' …지직…';
       } else { screen.style.opacity = 0.5; screen.textContent = '지지직… 지직…'; }
-      if (sig > 0.72 && !S.clues[c.id]) {
+      if (sig > 0.55 && !S.clues[c.id]) {
         if (!lockT) lockT = performance.now();
-        else if (performance.now() - lockT > 350) {
+        else if (performance.now() - lockT > 250) {
           S.clues[c.id] = 'found'; found++; lockT = 0;
           dots[best].style.background = '#3dd68c'; dots[best].style.animation = 'none';
           Sound.sfx('ping'); addScore(10, 640, 330);
@@ -53,7 +53,12 @@ function radioGame() {
       if (found >= CLUES.length) doneBtn.disabled = false;
     };
     let drag = false;
-    const setFrom = e => { const r = scale.getBoundingClientRect(); v = clamp((e.clientX - r.left) / r.width, 0, 1); upd(); };
+    /* 반짝이는 점 가까이(눈금의 3% 안)를 누르거나 끌면 바늘이 점에 딱 맞는다. */
+    const setFrom = e => {
+      const r = scale.getBoundingClientRect(); v = clamp((e.clientX - r.left) / r.width, 0, 1);
+      const near = pos.find(p => Math.abs(p - v) < 0.03); if (near != null) v = near;
+      upd();
+    };
     scale.addEventListener('pointerdown', e => { drag = true; scale.setPointerCapture(e.pointerId); setFrom(e); });
     scale.addEventListener('pointermove', e => { if (drag) setFrom(e); });
     scale.addEventListener('pointerup', () => { drag = false; });

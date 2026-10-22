@@ -356,8 +356,9 @@ mark.hl{background:linear-gradient(transparent 55%,rgba(255,214,90,.45) 55%);col
 .loss-card{width:250px;border-radius:16px;background:#fff8ec;color:#2b2521;padding:10px 12px;border:3px solid #d9c3a0;display:flex;flex-direction:column;align-items:center;gap:2px}
 .loss-card .ly{font:18px var(--ui);color:#7a4a22}
 .loss-card .li{font-size:34px;line-height:1.2}
-.loss-card .ln{font:22px var(--ui);color:#b5463a}
-.loss-card .ld{font:17px/1.45 var(--body);white-space:pre-line;text-align:center}
+.loss-card .ln{font:17px var(--ui);color:#b5463a}
+.loss-card .ld{font:21px/1.4 var(--ui);white-space:pre-line;text-align:center;min-height:58px}
+.loss-say{margin:14px auto 0;max-width:1000px;font:22px/1.6 var(--ui);color:#fff;background:rgba(255,255,255,.08);border-radius:14px;padding:12px 20px}
 .loss-card.dk{border-style:dashed;border-color:#8fa7c0;background:#e9f1fa;opacity:.8}
 .loss-card.dk .ln{color:#2b5f9e}
 .loss-card.dk.on{border-style:solid;border-color:#ffd166;background:#fff3c4;opacity:1;box-shadow:0 0 0 4px #ffd166,0 0 26px rgba(255,209,102,.8);animation:popIn .4s}
@@ -404,3 +405,21 @@ mark.hl{background:linear-gradient(transparent 55%,rgba(255,214,90,.45) 55%);col
 /* 시간 선: 전쟁이 이어진 처음부터 끝까지 붉게 칠한다 */
 .wt-list::before{content:"";position:absolute;left:138px;top:20px;bottom:20px;width:6px;border-radius:3px;background:rgba(214,58,47,.75)}
 .wt-note{margin-top:12px;padding:10px 16px;border-left:6px solid #b89a66;background:rgba(184,154,102,.18);border-radius:8px;font:19px/1.6 var(--body);color:#4a3a2a}
+/* 6단계 광복 이후의 기록: 시간 줄 + 그림 카드 */
+.pw-strip{position:absolute;left:0;right:0;top:62px;height:110px}
+.pw-line{position:absolute;left:110px;right:70px;top:36px;height:6px;border-radius:3px;background:linear-gradient(90deg,#8fa7c0,#ffd166)}
+.pw-start{position:absolute;left:40px;top:58px;width:140px;text-align:center;font:16px/1.3 var(--ui);color:#cfe6ff;white-space:pre-line}
+.pw-pt{position:absolute;top:0;width:150px;margin-left:-75px;display:flex;flex-direction:column;align-items:center;cursor:pointer}
+.pw-dot{width:62px;height:62px;border-radius:50%;background:#132a48;border:4px solid #8fa7c0;display:flex;align-items:center;justify-content:center;font:28px var(--ui);color:#8fa7c0}
+.pw-pt.next .pw-dot{border-color:#ffd166;color:#ffd166;animation:glowHi 1.1s ease-in-out infinite}
+.pw-pt.got .pw-dot{background:#24497f;border-color:#7fb0ff;color:#fff;font-size:30px}
+.pw-when{font:17px var(--ui);color:#ffe2b8;margin-top:4px}
+.pw-card{position:absolute;left:170px;right:170px;top:180px;min-height:280px;max-height:345px;overflow:auto;padding:24px 30px;display:flex;gap:24px;align-items:flex-start}
+.pw-empty{flex:1;align-self:center;text-align:center;font:24px/1.7 var(--ui);color:#7a4a22;white-space:pre-line}
+.pw-ico{font-size:76px;line-height:1;flex:none;margin-top:6px}
+.pw-body{flex:1;min-width:0;padding-right:90px}
+.pw-date{display:inline-block;font:18px var(--ui);color:#7a4a22;background:#f1dcb0;border-radius:10px;padding:1px 12px}
+.pw-name{font:32px var(--ui);color:#2b2521;margin:6px 0 4px}
+.pw-key{font:25px/1.55 var(--ui);color:#2b2521}
+.pw-more{margin-top:10px;font:19px/1.65 var(--body);color:#4a3a2a;border-left:5px solid #b89a66;padding:6px 14px;background:rgba(184,154,102,.15);border-radius:6px}
+.pw-end{position:absolute;left:0;right:0;top:528px;display:flex;justify-content:center}

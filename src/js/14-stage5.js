@@ -154,37 +154,52 @@ function dateCompare() {
   });
 }
 
-/* 대한제국이 빼앗긴 순서 속에서 독도 사건의 뜻을 찾는다. 연도 맞히기가 아니라, 카드에 적힌 "무엇을 빼앗겼는지"를 읽고 답한다. */
+/* 대한제국이 빼앗긴 순서 속에서 독도 사건의 뜻을 찾는다.
+   카드를 왼쪽부터 하나씩 띄우며 쉬운 말로 설명하고, 날짜만 비교하면 풀 수 있는 "먼저/나중" 질문을 거쳐
+   "독도는 어떤 땅일까?"를 생각하게 한다. 어려운 이름(한일의정서 등)은 카드 아래에 작게 둔다. */
 function lossOrder() {
   return new Promise(async resolve => {
     const w = el('div', { class: 'panel', style: 'width:1200px;padding:16px 24px 18px;text-align:center' });
     w.append(el('div', { style: 'font:28px var(--ui)', text: '📅 일본이 대한제국을 빼앗아 간 순서' }),
-      el('div', { style: 'font:18px var(--body);color:#bcd3ea;margin:2px 0 10px' }, gtext('왼쪽에서 오른쪽으로 시간이 흘러. 카드마다 무엇을 빼앗겼는지 읽어 봐. 밑줄 친 낱말을 누르면 뜻이 나와.')));
+      el('div', { style: 'font:18px var(--body);color:#bcd3ea;margin:2px 0 10px', text: '왼쪽에서 오른쪽으로 시간이 흘러. 카드가 하나씩 나타나.' }));
     const steps = [
-      { y: '1904년 2월', n: '한일의정서', ico: '🪖', d: '일본군이 대한제국 땅을\n전쟁에 마음대로 쓰게 됨' },
-      { y: '1905년 2월', n: '❓ 독도 사건', ico: '🏝️', d: '시마네현 고시로\n독도를 가져가려 함', dk: true },
-      { y: '1905년 11월', n: '을사늑약', ico: '✉️', d: '다른 나라와 외교할 권리\n(외교권)를 빼앗김' },
-      { y: '1910년 8월', n: '국권 피탈', ico: '⛓️', d: '나라를 완전히 빼앗김' },
+      { y: '1904년 2월', ico: '🪖', d: '일본군이 우리 땅을\n전쟁에 마음대로 씀', n: '한일의정서', say: '① 1904년 2월, 러일전쟁이 일어나자 일본군이 우리 땅을 전쟁에 마음대로 쓰게 됐어. 이 약속을 "한일의정서"라고 해.' },
+      { y: '1905년 2월', ico: '🏝️', d: '시마네현이 독도를\n가져가려 함', n: '❓ 독도 사건', dk: true, say: '② 1905년 2월, 그 전쟁 중에 시마네현이 고시를 내어 독도를 가져가려 했어. 아까 취재한 바로 그 일이야.' },
+      { y: '1905년 11월', ico: '✉️', d: '다른 나라와 외교할\n권리를 빼앗김', n: '을사늑약', say: '③ 1905년 11월, "을사늑약"으로 다른 나라와 약속하고 따질 수 있는 권리, 곧 외교권을 빼앗겼어.' },
+      { y: '1910년 8월', ico: '⛓️', d: '나라를 완전히\n빼앗김', n: '국권 피탈', say: '④ 1910년 8월, 결국 나라를 완전히 빼앗겼어. 이것을 "국권 피탈"이라고 해.' },
     ];
     const row = el('div', { class: 'loss-row' });
+    const cards = [];
     let dkCard;
     steps.forEach((st, i) => {
-      if (i) row.append(el('div', { class: 'loss-arrow', text: '▶' }));
-      const c = el('div', { class: 'loss-card' + (st.dk ? ' dk' : '') },
+      if (i) row.append(el('div', { class: 'loss-arrow', style: 'visibility:hidden', text: '▶' }));
+      const c = el('div', { class: 'loss-card' + (st.dk ? ' dk' : ''), style: 'visibility:hidden' },
         el('div', { class: 'ly', text: st.y }), el('div', { class: 'li', text: st.ico }),
-        el('div', { class: 'ln' }, gtext(st.n)), el('div', { class: 'ld', text: st.d }));
+        el('div', { class: 'ld', text: st.d }), el('div', { class: 'ln' }, gtext(st.n)));
       if (st.dk) dkCard = c;
-      row.append(c);
+      cards.push(c); row.append(c);
     });
     w.append(row, el('div', { class: 'loss-axis' }, el('span', { text: '먼저' }), el('i'), el('span', { text: '나중' })));
     const qbox = el('div');
     w.append(qbox);
     const m = modal(w, { closable: false });
-    await panelQuiz({ host: qbox, key: 's5_bar', base: 25, cols: 1, text: '1905년 2월 시마네현이 독도를 가져가려 했을 때, 대한제국은 어떤 상태였을까?',
+    /* 카드를 하나씩 보여 주며 설명한다. */
+    let skip = false;
+    DEV.solve = () => { skip = true; const b = qbox.querySelector('button'); if (b) b.click(); };
+    for (const [i, st] of steps.entries()) {
+      cards[i].style.visibility = ''; cards[i].classList.add('popin');
+      if (i) cards[i].previousElementSibling.style.visibility = '';
+      Sound.sfx('ping');
+      qbox.innerHTML = '';
+      qbox.append(el('div', { class: 'loss-say' }, gtext(st.say)));
+      if (skip) continue;
+      await new Promise(go => qbox.append(el('div', { style: 'margin-top:10px' }, onTap(el('button', { class: 'btn blue', text: i < steps.length - 1 ? '다음 카드 ▶' : '알겠어!' }), () => { Sound.sfx('tap'); go(); }))));
+    }
+    qbox.innerHTML = '';
+    await panelQuiz({ host: qbox, key: 's5_bar', base: 25, cols: 2, text: '독도 사건(1905년 2월)은 외교권을 빼앗긴 일(1905년 11월)보다 먼저일까, 나중일까?',
       options: [
-        { t: '외교권도 나라도 아직 빼앗기지 않았다. 다만 한일의정서로 일본군이 땅을 전쟁에 쓰고 있었다.', ok: true },
-        { t: '을사늑약으로 이미 외교권을 빼앗긴 뒤였다.', re: '"외교권을 빼앗김"이 적힌 카드를 찾아봐. 그 일은 독도 사건보다 앞일까, 뒤일까?' },
-        { t: '국권 피탈로 나라를 완전히 빼앗긴 뒤였다.', re: '"나라를 완전히 빼앗김" 카드는 맨 오른쪽, 가장 나중이야. 독도 사건은 그보다 앞이었어.' },
+        { t: '먼저', ok: true },
+        { t: '나중', re: '카드는 왼쪽에 있을수록 먼저야. 독도 카드는 외교권 카드보다 왼쪽에 있어. 날짜도 비교해 봐!' },
       ] });
     dkCard.classList.add('on');
     dkCard.querySelector('.ln').textContent = ko('독도 편입 시도');
@@ -311,7 +326,7 @@ const STAGE5 = [
     setBg('bg-stage5'); fogFx(0); Sound.play('mystery'); placeSeal(5);
     await talk([
       ['gaji:sad', '그런데 1905년은 우리 역사에서 어떤 때였을까? 그 무렵 일본은 대한제국을 조금씩 빼앗아 가고 있었어.'],
-      ['gaji', '한일의정서, 을사늑약, 국권 피탈… 이름이 어렵지? 카드마다 "무엇을 빼앗겼는지" 적어 뒀어. 그 뜻을 읽고 독도 사건이 어떤 의미인지 생각해 보자.'],
+      ['gaji', '이름은 어려워도 괜찮아. 카드마다 "무엇을 빼앗겼는지" 쉬운 말로 적어 뒀어. 하나씩 같이 보자.'],
     ]);
     await lossOrder();
     await talk([
