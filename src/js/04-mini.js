@@ -225,14 +225,15 @@ function panelQuiz({ host, text, options, key, base, cols = 3 }) {
   });
 }
 
-/* 여러 개 중 알맞은 것을 골라 쓰기 (반박 연습 등). 항목: { id, ico, t, why } — t 안의 \n은 줄바꿈 */
+/* 여러 개 중 알맞은 것을 골라 쓰기 (반박 연습 등). 항목: { id, ico, t, sum, doc, why } — t 안의 \n은 줄바꿈
+   sum은 그 기록의 핵심 한 줄, doc이 있으면 "📖 다시 읽기" 단추로 원문을 다시 볼 수 있다. */
 function pickItem({ claim, prompt, items, correct, hintText, reveal, key, base, doneMsg }) {
   return new Promise(resolve => {
     const root = el('div', { class: 'panel', style: 'width:1160px;padding:22px;text-align:center' });
     if (claim) root.append(el('div', { style: 'display:flex;gap:14px;align-items:center;justify-content:center;margin-bottom:12px' },
-      el('img', { src: img('fog'), style: 'width:110px' }),
-      el('div', { style: 'font:28px/1.5 var(--ui);background:rgba(106,79,179,.5);padding:14px 22px;border-radius:18px;max-width:840px' }, gtext(`"${claim}"`))));
-    root.append(el('div', { class: 'msg', style: 'font-size:22px;margin-bottom:14px' }, gtext(prompt)));
+      el('img', { src: img('fog'), style: 'width:76px' }),
+      el('div', { style: 'font:26px/1.45 var(--ui);background:rgba(106,79,179,.5);padding:10px 20px;border-radius:18px;max-width:840px' }, gtext(`"${claim}"`))));
+    root.append(el('div', { class: 'msg', style: 'font-size:22px;margin-bottom:10px' }, gtext(prompt)));
     const row = el('div', { style: 'display:flex;gap:14px;justify-content:center;flex-wrap:wrap;max-width:1000px;margin:0 auto' });
     const slot = el('div', { class: 'hintslot' });
     root.append(row, slot);
@@ -243,14 +244,17 @@ function pickItem({ claim, prompt, items, correct, hintText, reveal, key, base, 
       if (over) return; over = true;
       DEV.solve = null; award(key, Math.min(tries + 1, 4), base);
       if (node) node.style.outline = '5px solid #7fe0a8';
-      if (revealed) hint(reveal, 'gaji', 60000);
-      await doneBar(root, { msg: doneMsg });
+      /* 떠 있던 힌트 아래에 계속 단추가 붙으면 창이 화면 밖으로 넘친다. 힌트는 걷고, 정답을 알려 줄 때는 그 말을 마무리 글로 보여 준다. */
+      clearHint();
+      await doneBar(root, { msg: revealed ? reveal : doneMsg });
       HINT.host = null; clearHint(); m.close(); resolve(tries);
     };
     const nodes = {};
     items.forEach(it => {
-      const node = it.card ? cardEl(CARD[it.card], { mini: true }) : el('div', { class: 'tile', style: 'width:300px;min-height:118px;flex-direction:column;gap:4px;font-size:21px' },
-        it.ico ? el('div', { style: 'font-size:30px;line-height:1', text: it.ico }) : null, el('div', { style: 'white-space:pre-line;line-height:1.4', text: it.t }));
+      const node = it.card ? cardEl(CARD[it.card], { mini: true }) : el('div', { class: 'tile', style: 'position:relative;width:300px;min-height:100px;flex-direction:column;gap:3px;font-size:21px;padding:10px 16px' },
+        it.ico ? el('div', { style: 'font-size:30px;line-height:1', text: it.ico }) : null, el('div', { style: 'white-space:pre-line;line-height:1.4', text: it.t }),
+        it.sum ? el('div', { style: 'font:16px/1.45 var(--body);color:#6a553f;margin-top:2px' }, gtext(it.sum)) : null,
+        it.doc ? onTap(el('button', { class: 'reread', title: '다시 읽기', text: '📖 다시 읽기' }), () => { if (!over) { Sound.sfx('tap'); showDoc({ ...it.doc, btn: '다 읽었어' }); } }) : null);
       node.style.cursor = 'pointer';
       nodes[it.id] = node;
       onTap(node, () => {
@@ -305,63 +309,70 @@ function pressStamp({ title, note, label = '確認', color = '#c0392b', doc, key
   });
 }
 
-/* 짝 맞추기 (기억력 카드) */
-function memoryGame({ title, pairs, key, base = 150 }) {
+/* 기록 맞추기: 위에 설명을 하나씩 보여 주고, 아래 이름 카드(모두 펼쳐 둠)에서 알맞은 것을 고른다.
+   맞춘 이름은 흐려져서 고를 카드가 점점 줄고, 맞춘 기록은 오른쪽 정리판에 시간 순서대로 쌓인다.
+   항목: { when, name, d(설명), h(두 번째로 틀렸을 때 힌트) } — 시간 순서대로 넣는다. */
+function matchGame({ title, items, key }) {
   return new Promise(resolve => {
-    const root = el('div', { class: 'panel', style: 'width:1160px;padding:18px 20px;text-align:center' });
-    root.append(el('div', { style: 'font:30px var(--ui)', text: title }),
-      el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin:6px 0 6px', text: '카드를 두 장씩 뒤집어 사건과 그 내용을 짝지어 봐! 맞춘 짝은 같은 색, 같은 번호로 표시돼.' }));
-    const grid = el('div', { style: 'display:grid;grid-template-columns:repeat(4,260px);gap:12px;justify-content:center' });
-    root.append(grid);
-    /* 짝마다 다른 색과 번호 */
-    const PAIR_COL = [['#e8f4ff', '#2b7bd6'], ['#fff0d9', '#e08a1c'], ['#e6f7ea', '#2e9e6a'], ['#f6e8ff', '#8a4fc9'], ['#ffe6e6', '#d0463a'], ['#e3f7f7', '#1a8f8f'], ['#fff9d6', '#b8961a'], ['#f0f0f0', '#5d6d82']];
+    const root = el('div', { class: 'panel', style: 'width:1180px;padding:18px 24px 20px;text-align:center' });
+    const prog = el('span', { style: 'font:22px var(--ui);color:#ffd166;margin-left:14px' });
+    root.append(el('div', { style: 'font:30px var(--ui)' }, ko(title), prog),
+      el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin:4px 0 12px', text: '위의 설명은 어떤 기록일까? 아래 이름 카드에서 알맞은 것을 골라 눌러 봐.' }));
+    const left = el('div', { style: 'flex:1;min-width:0' });
+    const q = el('div', { class: 'paper', style: 'min-height:112px;padding:14px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px' });
+    const grid = el('div', { style: 'display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px' });
+    const slot = el('div', { class: 'hintslot' });
+    left.append(q, grid, slot);
+    const list = el('div', { class: 'mboard' });
+    const right = el('div', { style: 'flex:none;width:420px;text-align:left' }, el('div', { style: 'font:21px var(--ui);color:#ffd9a8;margin-bottom:8px', text: '📋 정리판 (시간 순서)' }), list);
+    root.append(el('div', { style: 'display:flex;gap:22px;align-items:flex-start' }, left, right));
     const m = modal(root, { closable: false });
-    const deck = shuffle(pairs.flatMap((p, i) => [{ i, t: p[0], k: 'a' }, { i, t: p[1], k: 'b' }]));
-    let open = [], found = 0, flips = 0, lock = false;
-    deck.forEach(d => {
-      const c = el('div', { style: `position:relative;height:118px;border-radius:14px;display:flex;align-items:center;justify-content:center;padding:8px 12px;cursor:pointer;
-        background:#2b4f78;border:3px solid #8fd3ff;font:34px var(--ui);color:#cfe6ff;transition:transform .2s;text-wrap:balance`, text: '?' });
-      c.dataset.i = d.i;
-      onTap(c, () => {
-        if (lock || c.dataset.open || c.dataset.done) return;
-        Sound.sfx('tap');
-        c.dataset.open = 1; c.textContent = ''; c.append(el('span', {}, gtext(d.t))); c.style.background = d.k === 'a' ? '#fff3dc' : '#e3f1ff'; c.style.color = '#2b2521';
-        c.style.font = d.k === 'a' ? '23px/1.4 var(--ui)' : '19px/1.5 var(--body)';
-        open.push(c);
-        if (open.length === 2) {
-          flips++; lock = true;
-          const [a, b] = open;
-          if (a.dataset.i === b.dataset.i) {
-            Sound.sfx('good'); a.dataset.done = b.dataset.done = 1;
-            const [bg, bd] = PAIR_COL[found % PAIR_COL.length];
-            for (const x of [a, b]) {
-              x.style.background = bg; x.style.borderColor = bd; x.style.borderWidth = '4px';
-              x.append(el('div', { class: 'mpair', style: `background:${bd}`, text: String(found + 1) }));
-            }
-            open = []; lock = false; found++;
-            if (found === pairs.length) done();
-          } else setTimeout(() => {
-            for (const x of open) { delete x.dataset.open; x.textContent = '?'; x.style.background = '#2b4f78'; x.style.color = '#cfe6ff'; x.style.font = '34px var(--ui)'; }
-            open = []; lock = false;
-          }, 900);
-        }
-      });
-      grid.append(c);
+    hintHost(slot);
+    let cur = 0, tries = 0;
+    const tiles = shuffle(items.map((it, i) => i)).map(i => {
+      const t = el('div', { class: 'tile', style: 'min-height:64px;font:23px var(--ui)', text: items[i].name });
+      t.dataset.i = i; grid.append(t);
+      onTap(t, () => pick(t));
+      return t;
     });
-    const done = async () => {
-      DEV.solve = null;
-      const extra = Math.max(0, flips - pairs.length);
-      addScore(Math.max(40, base - extra * 12), 640, 300);
-      await doneBar(root, { msg: '짝을 모두 찾았어! 같은 색·같은 번호끼리 짝이야. 한 번 더 읽어 봐.' });
-      m.close(); resolve();
+    const show = () => {
+      const it = items[cur];
+      prog.textContent = `${cur + 1} / ${items.length}`;
+      q.innerHTML = '';
+      q.append(el('div', { style: 'font:18px var(--ui);color:#7a4a22;background:#f1dcb0;border-radius:10px;padding:1px 12px', text: '📅 ' + it.when }),
+        el('div', { style: 'font:26px/1.45 var(--ui);color:#2b2521' }, gtext(it.d)));
+      q.classList.remove('popin'); void q.offsetWidth; q.classList.add('popin');
+      tries = 0;
     };
-    DEV.solve = () => { flips = pairs.length; done(); };
+    const pick = t => {
+      if (cur >= items.length || t.classList.contains('done')) return;
+      const it = items[cur];
+      if (+t.dataset.i === cur) {
+        Sound.sfx('good'); award(key, tries + 1, Math.round(CH[key] / items.length));
+        t.classList.remove('hi'); t.classList.add('done'); t.textContent = '✓ ' + it.name;
+        list.append(el('div', { class: 'mrow popin' }, el('span', { class: 'mw', text: it.when }), el('b', { text: it.name }), el('div', { class: 'md' }, gtext(it.d))));
+        clearHint(); cur++;
+        if (cur < items.length) return show();
+        DEV.solve = null; q.innerHTML = ''; q.append(el('div', { style: 'font:24px var(--ui);color:#2b2521', text: '🎉 여섯 기록을 모두 정리했어!' }));
+        doneBar(left, { msg: '오른쪽 정리판을 위에서부터 읽어 봐. 시간 순서대로야.' }).then(() => { HINT.host = null; m.close(); resolve(); });
+      } else {
+        tries++; t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake');
+        if (wrongFeedback(tries, it.h, '음… 설명을 다시 읽어 볼까?')) {
+          tiles.find(x => +x.dataset.i === cur).classList.add('hi');
+          hint('같이 찾아보자! 반짝이는 카드를 눌러 봐.', 'gaji', 60000);
+        }
+      }
+    };
+    show();
+    DEV.solve = () => { while (cur < items.length) pick(tiles.find(x => +x.dataset.i === cur)); };
   });
 }
 
 /* 거짓 주장 풍선: 거짓은 터뜨리고 사실은 놓아준다.
-   문장마다 꼭 두 번씩 지나가게 해서, 처음에 헷갈린 문장도 한 번 더 볼 수 있게 한다. */
-function balloonGame({ items, key, gap = 1600 }) {
+   풍선은 기기의 화면 주사율과 상관없이 같은 빠르기(초당 50~60px)로 오르고,
+   gap(ms)보다 자주 나오지 않으며, 화면에는 많아야 maxAlive개만 뜬다.
+   한 바퀴가 끝나면 틀린 문장(사실을 터뜨렸거나 거짓을 놓친 것)만 한 번 더 날아온다. 두 번째 바퀴는 점수가 절반이다. */
+function balloonGame({ items, key, gap = 2600, maxAlive = 3 }) {
   return new Promise(resolve => {
     const root = el('div', { style: 'position:absolute;inset:0;background:linear-gradient(180deg,rgba(120,170,220,.55),rgba(20,50,90,.55))' });
     L.scene.append(root);
@@ -369,46 +380,59 @@ function balloonGame({ items, key, gap = 1600 }) {
     const head = el('div', { class: 'mg-title', html: '💥 <b>거짓 주장</b>은 터뜨리고, 🕊️ <b>기록된 사실</b>은 날려 보내!' });
     const info = el('div', { style: 'position:absolute;right:24px;top:80px;font:24px var(--ui);background:rgba(8,26,48,.85);padding:8px 16px;border-radius:12px;z-index:3' });
     root.append(head, info);
-    let last = -2000, raf, alive = [], pts = 0, good = 0, bad = 0, over = false;
-    const first = shuffle(items);
-    let second = shuffle(items);
-    while (second[0] === first[first.length - 1]) second = shuffle(items);
-    const pool = [...first, ...second];
-    let idx = 0;
+    let last = -Infinity, prev = 0, raf, alive = [], pts = 0, good = 0, bad = 0, over = false;
+    let round = 1, pool = shuffle(items), idx = 0, wrong = [];
+    /* 풍선이 겹치지 않게 세 줄 가운데 빈 줄에 띄운다. */
+    const LANES = [90, 500, 910];
     const spawn = () => {
       const it = pool[idx++];
-      const round = idx > items.length ? 2 : 1;
-      const x = 90 + Math.random() * 860;
+      const busy = alive.filter(o => !o.dead && o.y > 260).map(o => o.lane);
+      const free = LANES.map((x, i) => i).filter(i => !busy.includes(i));
+      const lane = free.length ? free[Math.floor(Math.random() * free.length)] : Math.floor(Math.random() * LANES.length);
+      const x = LANES[lane] + Math.random() * 30;
       const col = ['#ff9f7a', '#8fd3ff', '#ffd166', '#b8e986', '#d7a8ff'][Math.floor(Math.random() * 5)];
       const b = el('div', { style: `position:absolute;left:${x}px;top:720px;width:280px;height:150px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff8,${col} 45%);
         box-shadow:0 8px 16px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;padding:14px 26px;text-align:center;font:19px/1.4 var(--ui);color:#1d2530;cursor:pointer;text-wrap:balance` }, it.t);
       b.append(el('div', { style: 'position:absolute;left:50%;bottom:-38px;width:2px;height:40px;background:#fff8' }));
       if (round === 2) b.append(el('div', { style: 'position:absolute;right:26px;top:-6px;font:14px var(--ui);background:#fff;color:#2b2521;border-radius:8px;padding:0 8px;box-shadow:0 2px 4px rgba(0,0,0,.25)', text: '한 번 더!' }));
-      const o = { b, it, y: 720, v: 78 + Math.random() * 18, dead: false };
+      const o = { b, it, y: 720, v: 50 + Math.random() * 10, dead: false, lane };
+      const popPts = round === 1 ? 15 : 8;
       onTap(b, () => {
         if (o.dead || over) return;
         o.dead = true;
-        if (!it.ok) { pts += 15; good++; Sound.sfx('pop'); floatText('+15 거짓 격파!', x + 60, o.y); b.style.transition = 'transform .2s,opacity .2s'; b.style.transform = 'scale(1.4)'; b.style.opacity = 0; }
-        else { pts = Math.max(0, pts - 10); bad++; miss(); floatText('앗, 그건 사실이야!', x + 40, o.y, true); b.style.filter = 'grayscale(1)'; b.style.opacity = .4; hint(`"${it.t}"는 기록으로 확인되는 사실이야. 사실은 날려 보내 줘!`, 'wow', 3500); }
+        if (!it.ok) { pts += popPts; good++; Sound.sfx('pop'); floatText(`+${popPts} 거짓 격파!`, x + 60, o.y); b.style.transition = 'transform .2s,opacity .2s'; b.style.transform = 'scale(1.4)'; b.style.opacity = 0; }
+        else { pts = Math.max(0, pts - 10); bad++; miss(); wrong.push(it); floatText('앗, 그건 사실이야!', x + 40, o.y, true); b.style.filter = 'grayscale(1)'; b.style.opacity = .4; hint(`"${it.t}"는 기록으로 확인되는 사실이야. 사실은 날려 보내 줘!`, 'wow', 3500); }
         setTimeout(() => b.remove(), 250);
       });
       root.append(b); alive.push(o);
     };
     const loop = now => {
-      const rem = pool.length - idx;
-      info.textContent = `남은 풍선 ${rem + alive.filter(o => !o.dead).length}개 · ${pts}점`;
-      if (rem > 0 && now - last > gap) { last = now; spawn(); }
+      const dt = prev ? Math.min(0.05, (now - prev) / 1000) : 0;
+      prev = now;
+      const rem = pool.length - idx, flying = alive.filter(o => !o.dead).length;
+      info.textContent = `${round === 1 ? '남은 풍선' : '한 번 더'} ${rem + flying}개 · ${pts}점`;
+      if (rem > 0 && flying < maxAlive && now - last > gap) { last = now; spawn(); }
       for (const o of alive) {
         if (o.dead) continue;
-        o.y -= o.v / 60; o.b.style.top = o.y + 'px';
-        if (o.y < -170) { o.dead = true; o.b.remove(); if (o.it.ok) pts += 5; }
+        o.y -= o.v * dt; o.b.style.top = o.y + 'px';
+        if (o.y < -170) {
+          o.dead = true; o.b.remove();
+          if (o.it.ok) pts += round === 1 ? 5 : 3;
+          else { wrong.push(o.it); floatText('거짓을 놓쳤어!', LANES[o.lane] + 60, 120, true); }
+        }
       }
       alive = alive.filter(o => !o.dead);
-      if (rem <= 0 && !alive.length) return end();
+      if (rem <= 0 && !alive.length) {
+        if (round > 1 || !wrong.length) return end();
+        round = 2; pool = shuffle(wrong); idx = 0; wrong = [];
+        last = now - gap + 2200;
+        hint(`헷갈린 문장 ${pool.length}개가 한 번 더 날아와! 이번엔 바로잡아 봐.`, 'gaji', 4000);
+      }
       raf = requestAnimationFrame(loop);
     };
     const end = async () => {
       if (over) return; over = true; cancelAnimationFrame(raf); DEV.solve = null; clearHint();
+      info.textContent = `${Math.min(pts, CH[key])}점`;
       addScore(Math.min(pts, CH[key]), 640, 300);
       const box = el('div', { class: 'panel popin', style: 'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:620px;padding:28px;text-align:center' },
         el('div', { style: 'font:32px var(--ui)', text: '풍선 작전 끝!' }),

@@ -1,6 +1,7 @@
 /* ===== 8단계: 최종 반박 배틀 ===== */
 
-function briefing() {
+/* 작전 브리핑. review면 다 본 뒤 "닫기"로 끝나는 다시 보기 창이 된다. */
+function briefing({ review = false } = {}) {
   return new Promise(resolve => {
     const slides = [
       { t: '작전 브리핑 ① 지금의 갈등', body: [
@@ -25,16 +26,24 @@ function briefing() {
       if (s.quote) box.append(el('div', { style: 'font:23px/1.7 var(--old);background:rgba(255,255,255,.1);border-left:6px solid var(--orange);padding:14px 20px;border-radius:10px;margin-bottom:14px' }, gtext(s.quote)));
       for (const b of s.body) box.append(bulletLine('•', b, { cls: 'msg', style: 'font-size:23px;margin:8px 0' }));
       box.append(el('div', { style: 'position:absolute;left:40px;bottom:24px;font:20px var(--ui);color:#8fa7c0', text: `${i + 1} / ${slides.length}` }));
-      box.append(el('div', { style: 'position:absolute;right:30px;bottom:20px' }, onTap(el('button', { class: 'btn', text: i < slides.length - 1 ? '다음 ▶' : '작전 개시!' }), () => {
-        Sound.sfx('tap'); i++; if (i < slides.length) render(); else { m.close(); resolve(); }
-      })));
+      const nav = el('div', { style: 'position:absolute;right:30px;bottom:20px;display:flex;gap:12px' });
+      if (i > 0) nav.append(onTap(el('button', { class: 'btn gray', text: '◀ 이전' }), () => { Sound.sfx('tap'); i--; render(); }));
+      nav.append(onTap(el('button', { class: 'btn', text: i < slides.length - 1 ? '다음 ▶' : review ? '닫기' : '작전 개시!' }), () => {
+        Sound.sfx('tap'); i++; if (i < slides.length) render(); else done();
+      }));
+      box.append(nav);
     };
+    const prevSolve = DEV.solve;
+    const done = () => { m.close(); if (review) DEV.solve = prevSolve; resolve(); };
     render();
-    DEV.solve = () => { m.close(); resolve(); };
+    DEV.solve = done;
   });
 }
 
-/* 카드 배틀: 안개의 주장마다, 내가 모은 증거 카드로 반박한다. */
+/* 카드 배틀: 안개의 주장마다, 내가 모은 증거 카드로 반박한다.
+   하트는 다시 채워지지 않고, 끝까지 남은 하트는 보너스 점수가 된다.
+   하트를 다 잃어도 배틀은 계속되지만, 그 뒤로는 틀릴 때마다 점수가 깎인다. (게임 오버 없음) */
+const MAX_LIFE = 5, HEART_PTS = 50, NO_HEART_LOSS = 30;
 function cardBattle() {
   return new Promise(resolve => {
     const root = el('div', { style: 'position:absolute;inset:64px 0 0 0' });
@@ -59,8 +68,11 @@ function cardBattle() {
     hintHost(tipSlot);
     bar.append(tip, readBtn, hitBtn);
     root.append(bossWrap, tbar, hearts, combo, hand, bar);
-    let life = 3, ci = 0, sel = null, tries = 0, t0 = 0, raf, busy = false, perfect = true, combo2 = 0;
-    const drawHearts = () => { hearts.textContent = '❤️'.repeat(life) + '🤍'.repeat(3 - life); };
+    let life = MAX_LIFE, ci = 0, sel = null, tries = 0, t0 = 0, raf, busy = false, perfect = true, combo2 = 0, pauseAt = 0;
+    const drawHearts = () => { hearts.textContent = life ? '❤️'.repeat(life) + '🤍'.repeat(MAX_LIFE - life) : '💔 하트 0 · 틀리면 -' + NO_HEART_LOSS + '점'; hearts.style.font = life ? '30px sans-serif' : '22px var(--ui)'; };
+    /* 가지가 말하는 동안에는 제한 시간을 멈춘다. */
+    const pause = () => { if (!pauseAt) pauseAt = performance.now(); };
+    const resume = () => { if (pauseAt) { t0 += performance.now() - pauseAt; pauseAt = 0; } };
     const drawCombo = () => { combo.textContent = combo2 >= 2 ? `반박 콤보 ×${combo2}` : '반박 콤보'; };
     drawHearts(); drawCombo();
     const makeHand = claim => {
@@ -93,6 +105,7 @@ function cardBattle() {
       t0 = performance.now();
       cancelAnimationFrame(raf);
       const tick = () => {
+        if (pauseAt) { raf = requestAnimationFrame(tick); return; }
         const p = Math.max(0, 1 - (performance.now() - t0) / 30000);
         tfill.style.width = (p * 100) + '%';
         if (p <= 0 && !busy) { timeUp(); return; }
@@ -109,6 +122,29 @@ function cardBattle() {
       perfect = false; combo2 = 0; drawCombo();
       hint('시간이 다 됐어! 괜찮아, 같이 찾아보자. 빛나는 카드를 골라 봐.', 'gaji', 5000);
       tries = Math.max(tries, 3); hiliteGood();
+    };
+    /* 맞히면 가지가 그 카드가 왜 주장을 무너뜨리는지 설명한다. 아래 단추로 같은 주장의 다른 정답 카드 설명도 볼 수 있다.
+       다 읽고 대사 창을 눌러야 다음 주장으로 넘어간다. (그동안 제한 시간은 멈춰 있다) */
+    const explainWhy = async (claim, id) => {
+      const why = BATTLE_WHY[claim.id] || {};
+      const ids = [id, ...claim.good.filter(x => x !== id)];
+      const glowCard = cid => hand.querySelectorAll('.card').forEach(ce => ce.classList.toggle('whyon', ce.dataset.id === cid));
+      const p = say('gaji:yay', why[id] || claim.reply);
+      if (ids.length > 1) {
+        const box = await waitFor(() => document.querySelector('#dialog .dlg'));
+        const txt = box.querySelector('.txt');
+        const row = el('div', { class: 'why-chips' }, el('div', { class: 'why-lab', text: '💡 이 카드들로도 반박할 수 있어. 눌러 보면 까닭이 나와!' }));
+        ids.forEach((cid, i) => {
+          const chip = onTap(el('button', { class: 'why-chip' + (i ? '' : ' on'), text: (i ? '' : '✓ ') + CARD[cid].name }), () => {
+            Sound.sfx('tap'); row.querySelectorAll('.why-chip').forEach(c => c.classList.toggle('on', c === chip));
+            txt.textContent = ''; txt.append(gtext(why[cid] || '')); glowCard(cid);
+          });
+          row.append(chip);
+        });
+        box.append(row);
+      }
+      await p;
+      glowCard(null);
     };
     onTap(readBtn, () => { if (sel) openCard(CARD[sel], !hasCard(sel)); });
     onTap(hitBtn, async () => {
@@ -130,17 +166,25 @@ function cardBattle() {
         addScore(pts, 640, 260);
         bubble.textContent = '💬 ' + claim.reply;
         bubble.style.background = 'rgba(30,110,70,.92)'; bubble.style.borderColor = '#7fe0a8';
-        await sleep(3200);
+        await sleep(600);
+        await explainWhy(claim, id);
         bubble.style.background = ''; bubble.style.borderColor = '';
         busy = false; ci++; next();
       } else {
         tries++; perfect = false; combo2 = 0; drawCombo(); miss();
         bossImg.style.transform = 'scale(1.15)'; setTimeout(() => bossImg.style.transform = '', 250);
         root.classList.remove('shake'); void root.offsetWidth; root.classList.add('shake');
-        life--; drawHearts();
-        if (life <= 0) {
-          hint('안개에 휩싸였어! 잠깐 숨 고르고… 기억력을 되찾자!', 'wow', 3000);
-          addScore(-50, 640, 330); life = 3; setTimeout(drawHearts, 900);
+        if (life > 0) {
+          life--; drawHearts();
+          if (!life) {
+            busy = true; pause();
+            await say('gaji:wow', `앗, 하트를 모두 잃었어! 배틀은 끝까지 할 수 있어. 하지만 이제부터는 틀릴 때마다 점수가 ${NO_HEART_LOSS}점씩 깎여!`);
+            await say('gaji', '"🔍 카드 읽기"로 카드 내용을 꼼꼼히 확인한 다음 반박하자!');
+            resume(); busy = false;
+          }
+        } else {
+          addScore(-NO_HEART_LOSS, 340, 110);
+          hearts.classList.remove('shake'); void hearts.offsetWidth; hearts.classList.add('shake');
         }
         if (tries === 1) hint('그 증거로는 이 주장을 무너뜨리기 어려워. 주장의 어느 부분이 틀렸는지 다시 생각해 봐!', 'gaji', 5000);
         else if (tries === 2) hint(claim.hint, 'gaji', 7000);
@@ -151,6 +195,7 @@ function cardBattle() {
       cancelAnimationFrame(raf); DEV.solve = null; busy = true;
       readBtn.disabled = true; hitBtn.disabled = true; hand.innerHTML = '';
       if (perfect) giveBadge('debate');
+      if (life) { addScore(life * HEART_PTS, 120, 110); toast(`❤️ 남은 하트 ${life}개 보너스 +${life * HEART_PTS}점`, 3200); }
       bubble.textContent = '크아아… 근거 앞에서는… 버틸 수가… 없어…';
       bossImg.style.transition = 'opacity 2s, transform 2s'; bossImg.style.opacity = 0; bossImg.style.transform = 'scale(1.8)';
       Sound.sfx('clear');
@@ -172,15 +217,20 @@ const STAGE8 = [
       ['gaji', '결전 전에 작전 브리핑부터 하자. 지금 독도를 둘러싼 갈등이 어떤 모습인지 알아야 해.'],
     ]);
     await briefing();
+    /* 질문을 푸는 동안 브리핑을 다시 볼 수 있게 한다. (대사 창보다 위 겹에 둔다) */
+    const again = el('div', { style: 'position:absolute;right:20px;top:80px' }, onTap(el('button', { class: 'btn small blue', text: '📋 브리핑 다시 보기' }), () => { Sound.sfx('tap'); briefing({ review: true }); }));
+    L.overlay.append(again);
     await whyQuestion({ key: 's8_brief', text: '"영유권 분쟁은 존재하지 않는다"는 말, 어떤 뜻일까?',
       options: [
         { t: '누군가 억지로 우겨도, 우리가 다스리는 분명한 우리 땅이라 다툴 거리가 아니라는 뜻', ok: true },
-        { t: '독도에 대해 아무도 아무 말도 하지 않는다는 뜻', re: '일본 정부는 계속 주장하고 있어. 그런데도 "분쟁이 없다"고 하는 까닭은 뭘까? 브리핑 ②를 떠올려 봐.' },
-        { t: '독도 문제를 모른 척하자는 뜻', re: '우리 정부는 잘못된 주장에 분명하게 대응해. 그래도 "분쟁이 없다"고 하는 까닭은 뭘까?' },
+        { t: '독도에 대해 아무도 아무 말도 하지 않는다는 뜻', re: '일본 정부는 계속 주장하고 있어. 그런데도 "분쟁이 없다"고 하는 까닭은 뭘까? 오른쪽 위 📋 브리핑 다시 보기로 ②를 읽어 봐.' },
+        { t: '독도 문제를 모른 척하자는 뜻', re: '우리 정부는 잘못된 주장에 분명하게 대응해. 그래도 "분쟁이 없다"고 하는 까닭은 뭘까? 📋 브리핑 다시 보기를 눌러 봐.' },
       ] });
+    again.remove();
     await talk([
       ['gaji', '좋아. 이제 안개가 일본 정부의 주장 일곱 가지를 쏟아 낼 거야.'],
       ['gaji', '우리가 모은 증거 카드 중에서 그 주장을 무너뜨릴 카드를 골라 반박하자! 못 모은 카드는 흐린 "빌린 증거"로 나와서 점수가 절반이야.'],
+      ['gaji', `하트는 ${MAX_LIFE}개야. 틀리면 하나씩 줄고, 다시 채워지지 않아. 끝까지 남은 하트는 하나에 ${HEART_PTS}점씩 보너스가 돼!`],
     ]);
   },
   async () => {

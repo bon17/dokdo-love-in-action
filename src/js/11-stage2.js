@@ -62,7 +62,13 @@ function lionGame() {
     const startRoar = () => {
       phase = 2; note.textContent = '2단계: "항복하지 않으면 이 맹수를 풀어 놓겠다!"\n어흥 버튼을 빠르게 눌러 우산국을 겁주자!';
       roar.style.display = ''; gaugeWrap.style.display = '';
-      const decay = () => { if (phase !== 2) return; fear = Math.max(0, fear - 0.25); gauge.style.width = fear + '%'; raf = requestAnimationFrame(decay); };
+      /* 게이지는 화면 주사율과 상관없이 1초에 15씩 줄어든다. */
+      let prevT = 0;
+      const decay = now => {
+        if (phase !== 2) return;
+        const dt = prevT ? Math.min(0.05, (now - prevT) / 1000) : 0; prevT = now;
+        fear = Math.max(0, fear - 15 * dt); gauge.style.width = fear + '%'; raf = requestAnimationFrame(decay);
+      };
       raf = requestAnimationFrame(decay);
     };
     roar.addEventListener('pointerdown', e => {
@@ -177,22 +183,31 @@ const STAGE2 = [
     setBg('bg-stage2'); fogFx(0.7); Sound.play('mystery'); placeSeal(2);
     await say('fog', '크크크… 조선은 울릉도에서 사람들을 모두 데려가 섬을 텅 비워 뒀지. 섬을 버린 거야!');
     await say('gaji', '정말 그럴까? 서고 구석에 임금의 명령을 적은 기록이 있어. 읽어 보자.');
-    await showDoc({ title: '조선 조정의 기록', era: '조선 전기 ~ 1694년',
-      lines: ['왜구가 섬 백성을 노략질하니,\n섬 사람들을 육지로 데려와 보호하라. (쇄환)', '섬을 비워 두더라도 내버려 두지 말고,\n관리를 보내 섬을 살피고 오게 하라.', '1694년부터는 관리를 정기적으로 보내\n울릉도와 그 둘레를 살피도록 하라. (수토)'] });
+    const SUTO_DOC = { title: '조선 조정의 기록', era: '조선 전기 ~ 1694년',
+      lines: ['왜구가 섬 백성을 노략질하니,\n섬 사람들을 육지로 데려와 보호하라. (쇄환)', '섬을 비워 두더라도 내버려 두지 말고,\n관리를 보내 섬을 살피고 오게 하라.', '1694년부터는 관리를 정기적으로 보내\n울릉도와 그 둘레를 살피도록 하라. (수토)'] };
+    await showDoc(SUTO_DOC);
     await getCard('suto');
+    /* 반박 카드마다 그 기록의 핵심 한 줄을 보여 주고, 원문도 다시 읽을 수 있게 한다. */
+    const REC = {
+      sejong: { id: 'sejong', ico: '📘', t: '『세종실록』\n「지리지」', sum: '우산·무릉 두 섬은 날씨가 맑으면 서로 바라볼 수 있다', doc: BOOKS2.sejong },
+      yeoji: { id: 'yeoji', ico: '📗', t: '『신증동국여지승람』', sum: '우산도·울릉도 두 섬이 울진현 정동쪽 바다에 있다', doc: BOOKS2.yeoji },
+      jang: { id: 'jang', ico: '🔭', t: '장한상\n『울릉도사적』', sum: '관리 장한상이 울릉도를 조사하다 동남쪽 바다의 작은 섬을 봤다', doc: BOOKS2.jang },
+      munheon: { id: 'munheon', ico: '📜', t: '『동국문헌비고』', sum: '우산은 일본이 말하는 송도(마쓰시마)다', doc: BOOKS2.munheon },
+      suto: { id: 'suto', ico: '⛵', t: '조정의 수토 명령', sum: '섬을 비워 두더라도 관리를 정기적으로 보내 살피게 하라', doc: SUTO_DOC },
+    };
     const bookItems = [
-      { id: 'sejong', ico: '📘', t: '『세종실록』\n「지리지」', why: '두 섬을 알았다는 기록이지만, 섬을 계속 돌봤는지는 알 수 없어.' },
-      { id: 'yeoji', ico: '📗', t: '『신증동국여지승람』', why: '두 섬이 실려 있지만, 섬을 계속 돌봤는지는 알 수 없어.' },
-      { id: 'jang', ico: '🔭', t: '장한상\n『울릉도사적』' },
-      { id: 'munheon', ico: '📜', t: '『동국문헌비고』', why: '우산도가 어느 섬인지 알려 주지만, 섬을 계속 돌봤는지는 알 수 없어.' },
-      { id: 'suto', ico: '⛵', t: '조정의 수토 명령' },
+      { ...REC.sejong, why: '두 섬을 알았다는 기록이지만, 섬을 계속 돌봤는지는 알 수 없어.' },
+      { ...REC.yeoji, why: '두 섬이 실려 있지만, 섬을 계속 돌봤는지는 알 수 없어.' },
+      REC.jang,
+      { ...REC.munheon, why: '우산도가 어느 섬인지 알려 주지만, 섬을 계속 돌봤는지는 알 수 없어.' },
+      REC.suto,
     ];
     await pickItem({ claim: '조선은 섬을 비워 두고 버렸다!', prompt: '안개의 말을 반박할 기록을 골라 던져!', items: bookItems, correct: ['jang', 'suto'], key: 's2_fog1',
       hintText: '섬을 버렸다면 관리를 보내 조사할 까닭도 없었겠지?\n관리가 섬을 살피러 간 기록을 찾아봐.', reveal: '조정이 관리를 보내 섬을 살핀 기록!\n섬을 버린 게 아니었어.', doneMsg: '관리를 보내 섬을 살핀 기록이 안개의 말을 무너뜨렸어!' });
     Sound.sfx('hit');
     await say('fog', '으윽… 흥, 그래도 조선 사람들은 울릉도 너머의 작은 섬은 몰랐을걸!');
     await pickItem({ claim: '조선 사람들은 독도를 몰랐다!', prompt: '이번엔 어떤 기록으로 반박할까?', key: 's2_fog2',
-      items: [{ id: 'suto', ico: '⛵', t: '조정의 수토 명령', why: '섬을 돌봤다는 기록이지만, 작은 섬을 알았다는 말은 없어.' }, { id: 'sejong', ico: '📘', t: '『세종실록』\n「지리지」' }, { id: 'jang', ico: '🔭', t: '장한상\n『울릉도사적』' }, { id: 'munheon', ico: '📜', t: '『동국문헌비고』' }, { id: 'lion', ico: '🦁', t: '나무 사자', why: '나무 사자는 우산국을 설득한 도구지, 기록이 아니야.' }],
+      items: [{ ...REC.suto, why: '섬을 돌봤다는 기록이지만, 작은 섬을 알았다는 말은 없어.' }, REC.sejong, REC.jang, REC.munheon, { id: 'lion', ico: '🦁', t: '나무 사자', sum: '이사부가 우산국 사람들을 겁주려고 배에 실은 나무 사자', why: '나무 사자는 우산국을 설득한 도구지, 기록이 아니야.' }],
       correct: ['sejong', 'jang', 'munheon'],
       hintText: '울릉도 말고 또 하나의 섬을 적어 둔 기록을 찾아봐.', reveal: '울릉도에서 보이는 또 하나의 섬을 적은 기록들이 있었지!', doneMsg: '조선의 기록에는 울릉도 너머의 섬도 적혀 있었어!' });
     Sound.sfx('hit'); fogFx(0.2);

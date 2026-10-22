@@ -1,128 +1,144 @@
 /* ===== 6단계: 연표 러시 ===== */
 
-/* 독도 둘레를 도는 길 위의 16개 사건 (빨강: 일본 측 기록, 파랑: 우리와 연합국 측 기록) */
-const TIMELINE = [
-  { y: '512', t: '우산국 복속', c: 'b', r: 2, d: '신라 이사부가 우산국을 신라에 복속시킴 (삼국 시대)' },
-  { y: '1454', t: '『세종실록』 「지리지」', c: 'b', r: 2, d: '조선 세종 때의 기록: 날씨가 맑으면 두 섬이 보인다' },
-  { y: '1625', t: '다케시마(울릉도) 도해면허', c: 'r', r: 1, d: '일본 어부들이 울릉도로 건너갈 수 있게 허락함' },
-  { y: '1693', t: '안용복 일본 납치', c: 'b', r: 1, d: '울릉도에서 고기를 잡다 일본 어부들과 마주침' },
-  { y: '1694', t: '울릉도 수토제도 시행 결정', c: 'b', r: 1, d: '안용복 사건 이듬해, 조선이 관리를 정기적으로 보내기로 함' },
-  { y: '1695', t: '돗토리번 답변', c: 'r', r: 1, d: '막부의 질문에 "두 섬 모두 우리 땅이 아니다"라고 답함' },
-  { y: '1696.1', t: '다케시마(울릉도) 도해금지령', c: 'r', r: 1, d: '돗토리번의 답을 받은 막부가 울릉도 도해를 금지함' },
-  { y: '1696.5', t: '안용복 일본 도해', c: 'b', r: 1, d: '금지령이 내려진 그해 봄, 안용복이 다시 건너가 담판함' },
-  { y: '1770', t: '『동국문헌비고』 「여지고」', c: 'b', r: 2, d: '조선 영조 때의 책: 우산은 일본이 말하는 송도' },
-  { y: '1870', t: '『조선국교제시말내탐서』', n: '『조선국교제시말\n내탐서』', c: 'r', r: 2, d: '메이지 정부 초기, 외무성이 조선을 조사한 보고서' },
-  { y: '1877', t: '태정관지령', c: 'r', r: 2, d: '조사 뒤 최고 기관의 결론: "울릉도 외 1도는 일본과 관계없다"' },
-  { y: '1900', t: '칙령 제41호 반포', c: 'b', r: 3, d: '대한제국이 법령으로 울도군이 석도를 다스리게 함' },
-  { y: '1905', t: '시마네현 고시 제40호', c: 'r', r: 3, d: '러일전쟁 중, 대한제국 몰래 편입을 시도함' },
-  { y: '1906', t: '심흥택 보고서 · 지령 제3호', c: 'b', r: 3, d: '편입 소식을 들은 대한제국이 "근거 없다"고 밝힘' },
-  { y: '1946', t: 'SCAPIN 제677호 · 제1033호', c: 'b', r: 3, d: '전쟁이 끝난 뒤 연합국이 일본의 범위에서 독도를 뺌' },
-  { y: '1951', t: '샌프란시스코 강화조약', c: 'b', r: 3, d: '제2차 세계대전을 마무리한 조약' },
+/* 광복 이후의 기록: 위쪽 시간 줄의 반짝이는 점을 차례로 누르면 그 기록이 그림 카드로 펼쳐지고, 그 자리에서 증거를 얻는다.
+   카드에는 쉬운 핵심 한 줄을 크게 두고, 그 아래에 자세한 설명을 함께 보여 준다. */
+const POSTWAR = [
+  { when: '1946년 1월', card: 'scapin677', ico: '🗺️', name: 'SCAPIN 제677호', key: '연합국이 일본이 다스리는 범위에서 독도를 뺐다.',
+    more: '전쟁에서 진 일본을 점령한 연합국 최고사령관 총사령부가 지시를 내렸다. 일본이 통치·행정권을 행사할 수 있는 범위에서 울릉도, 독도(리앙쿠르암), 제주도를 뺀다. (다만 최종적인 영토 결정은 아니라는 단서가 붙어 있다.)' },
+  { when: '1946년 6월', card: 'scapin1033', ico: '🚫', name: 'SCAPIN 제1033호', key: '일본 배와 사람은 독도 12해리 안으로 들어올 수 없게 했다.',
+    more: '연합국 총사령부는 일본 어선이 고기를 잡을 수 있는 구역을 정했다. 일본 배와 사람은 독도 12해리 안으로 들어가거나 독도에 닿을 수 없다.' },
+  { when: '1947년 8월', card: 'alpine', ico: '🏔️', name: '조선산악회 학술조사', key: '우리 학술조사대가 독도에 건너가 자연과 지리를 조사했다.',
+    more: '조선산악회가 문교부의 후원을 받아 울릉도·독도 학술조사대를 꾸렸다. 조사대는 독도에 건너가 섬의 자연과 지리를 조사했다.' },
+  { when: '1951년 9월', card: 'sf', ico: '📜', name: '샌프란시스코 강화조약', key: '일본이 "제주도, 거문도, 울릉도를 포함한 한국"을 포기했다. 섬은 대표적인 것만 적었다.',
+    more: '제2차 세계대전을 마무리한 샌프란시스코 강화조약. 일본은 "제주도, 거문도, 울릉도를 포함한 한국"에 대한 모든 권리를 포기했다. 3,000개가 넘는 우리 섬 가운데 대표적인 섬만 적었다.' },
+  { when: '1952년 1월', card: 'peace', ico: '🌊', name: '평화선', key: '대통령 선언으로 바다에 주권의 선을 긋고, 독도를 그 안쪽에 넣었다.',
+    more: '대한민국 정부는 「인접 해양에 대한 주권에 관한 대통령 선언」을 발표하고 바다 위에 주권의 선을 그었다. 사람들은 이 선을 "평화선"이라 불렀다. 독도는 그 안쪽에 있다.' },
+  { when: '1953년 4월', card: 'volunteer', ico: '🛡️', name: '독도의용수비대', key: '울릉도 주민들이 스스로 모여 1956년까지 독도를 지켰다.',
+    more: '일본 사람들이 독도에 와서 자기네 표지를 세우는 일이 생기자, 울릉도 주민 홍순칠 등이 스스로 독도의용수비대를 만들었다. 이들은 1956년 경찰에게 임무를 넘길 때까지 독도를 지켰다.' },
 ];
-const ROUND_INFO = {
-  1: { name: '1라운드: 17세기, 울릉도를 둘러싼 담판', tip: '첫 칸(1625년 도해면허)은 채워 뒀어. "이 일 때문에 저 일이 생겼다"를 떠올리며 나머지 순서를 추리해 봐.', given: [2] },
-  2: { name: '2라운드: 옛 기록에서 메이지 정부까지', tip: '삼국 시대 → 조선 전기(세종) → 조선 후기(영조) → 일본 메이지 정부의 조사 → 결론 순서야.' },
-  3: { name: '3라운드: 대한제국에서 광복 이후까지', tip: '법령 → 편입 시도 → 그에 대한 대응 → 전쟁 후 연합국의 지시 → 조약 순서로 생각해 봐.' },
-};
+function postwarRecords() {
+  return new Promise(resolve => {
+    const root = el('div', { style: 'position:absolute;inset:64px 0 0 0;background:rgba(6,20,37,.72)' });
+    L.scene.append(root);
+    HINT.pos = 'center';
+    const N = POSTWAR.length;
+    const strip = el('div', { class: 'pw-strip' });
+    strip.append(el('div', { class: 'pw-line' }), el('div', { class: 'pw-start', text: '1945년 8월\n광복' }));
+    const pts = POSTWAR.map((r, i) => {
+      const pt = el('div', { class: 'pw-pt', style: `left:${300 + i * 172}px` }, el('div', { class: 'pw-dot', text: '?' }), el('div', { class: 'pw-when', text: r.when }));
+      onTap(pt, () => tap(i)); strip.append(pt); return pt;
+    });
+    const card = el('div', { class: 'paper pw-card' }, el('div', { class: 'pw-empty', text: '👆 위쪽 시간 줄의 반짝이는 점을 눌러 봐!\n1946년부터 차례대로 기록이 떠올라.' }));
+    const endBox = el('div', { class: 'pw-end' });
+    const title = el('div', { class: 'mg-title', style: 'top:8px' });
+    root.append(title, strip, card, endBox);
+    const show = (i, fresh) => {
+      const r = POSTWAR[i];
+      card.innerHTML = '';
+      card.append(el('div', { class: 'pw-ico', text: r.ico }),
+        el('div', { class: 'pw-body' },
+          el('div', { class: 'pw-date', text: '📅 ' + r.when }),
+          el('div', { class: 'pw-name', text: r.name }),
+          el('div', { class: 'pw-key' }, gtext(r.key)),
+          el('div', { class: 'pw-more' }, gtext(r.more))),
+        el('div', { class: 'stampfx', style: 'position:absolute;right:26px;top:22px' + (fresh ? '' : ';animation:none;opacity:.85;transform:rotate(-14deg)'), html: '증거<br>확보' }));
+      if (fresh) { card.classList.remove('popin'); void card.offsetWidth; card.classList.add('popin'); }
+    };
+    let next = 0, readyAt = 0;
+    const update = () => {
+      title.textContent = ko(`🌊 반짝이는 점을 눌러 기록을 붙잡아! (${next} / ${N})`);
+      pts.forEach((p, i) => p.classList.toggle('next', i === next));
+    };
+    const tap = i => {
+      if (i < next) { Sound.sfx('tap'); return show(i, false); }
+      if (i > next) { hint('1946년부터 차례대로! 반짝이는 점을 눌러 봐.', 'gaji', 3000); return; }
+      if (performance.now() < readyAt) return;
+      readyAt = performance.now() + 900;
+      const r = POSTWAR[i];
+      pts[i].classList.add('got'); pts[i].querySelector('.pw-dot').textContent = r.ico;
+      collectCard(r.card); show(i, true); clearHint();
+      next++; update();
+      if (next < N) return;
+      DEV.solve = null;
+      doneBar(endBox, { msg: '광복 이후의 기록 6개를 모두 붙잡았어! 증거는 📖 도감에서 다시 볼 수 있어.' }).then(() => { HINT.pos = 'left'; root.remove(); resolve(); });
+    };
+    update();
+    DEV.solve = () => { while (next < N) { readyAt = 0; tap(next); } };
+  });
+}
 
-/* 연표 러시: 라운드마다 빈칸이 바뀐다. 연도는 알맞게 놓았을 때 드러난다. */
-function timelineRush() {
-  return new Promise(async resolve => {
+/* 연표 한 바퀴: 독도 둘레 길 위의 칸을 ①번부터 차례로 눌러 불을 밝힌다. 틀릴 일은 없고, 칸마다 무슨 일이 있었는지 읽게 한다. */
+function timelineWalk() {
+  return new Promise(resolve => {
     const root = el('div', { style: 'position:absolute;inset:64px 0 0 0;background:rgba(6,20,37,.82)' });
     L.scene.append(root);
     HINT.pos = 'center';
-    const title = el('div', { class: 'mg-title', style: 'top:8px' });
-    const timer = el('div', { style: 'position:absolute;right:20px;top:12px;font:22px var(--ui);background:rgba(8,26,48,.9);padding:6px 14px;border-radius:10px' });
-    const tip = el('div', { style: 'position:absolute;left:150px;right:150px;top:68px;text-align:center;font:17px/1.4 var(--body);color:#ffe2b8;text-wrap:balance' });
+    const N = TIMELINE.length;
+    const title = el('div', { class: 'mg-title', style: 'top:8px', text: '🗺️ 독도 1,400여 년 연표 한 바퀴' });
+    const tip = el('div', { style: 'position:absolute;left:150px;right:150px;top:68px;text-align:center;font:18px/1.4 var(--body);color:#ffe2b8;text-wrap:balance', text: '반짝이는 칸을 눌러 불을 밝혀 봐! ①번부터 번호 순서대로 한 바퀴 돌아.' });
     const board = el('div', { style: 'position:absolute;left:0;top:124px;width:1280px;height:366px' });
-    const tray = el('div', { style: 'position:absolute;left:20px;right:20px;bottom:8px;height:160px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;align-content:center' });
-    root.append(title, timer, tip, board, tray);
-    // 독도를 가운데 둔 둥근 네모 길 위에 16칸을 놓는다. (왼쪽 아래에서 시작해 시계 방향)
-    const cx = 640, cy = 185;
-    const pos = [[80, 250], [80, 140], ...[0, 1, 2, 3, 4, 5].map(k => [240 + k * 160, 40]), [1200, 140], [1200, 250], ...[0, 1, 2, 3, 4, 5].map(k => [1040 - k * 160, 330])].map(([x, y]) => ({ x, y }));
+    const info = el('div', { class: 'tl-info' });
+    root.append(title, tip, board, info);
+    // 독도를 가운데 둔 둥근 네모 길 위에 칸을 놓는다. (왼쪽 아래에서 시작해 시계 방향: 왼쪽 2칸, 위 7칸, 오른쪽 2칸, 아래 7칸)
+    const cx = 640, cy = 185, STEP = 137;
+    const row = [0, 1, 2, 3, 4, 5, 6].map(k => 229 + k * STEP);
+    const pos = [[80, 250], [80, 140], ...row.map(x => [x, 40]), [1200, 140], [1200, 250], ...row.slice().reverse().map(x => [x, 330])].map(([x, y]) => ({ x, y }));
     board.innerHTML = `<svg width="1280" height="380" style="position:absolute;left:0;top:0"><rect x="80" y="40" width="1120" height="290" rx="90" fill="none" stroke="#8fa7c0" stroke-width="4" stroke-dasharray="10 8"/><path d="M80 290 l-10 18 l20 0 z" fill="#8fa7c0"/></svg>`;
     board.append(el('div', { style: `position:absolute;left:${cx - 60}px;top:${cy - 40}px;width:120px;text-align:center`, html: dokdoSvg(120, 76) + '<div style="font:20px RIDIBatang;color:#ffe08a">독도</div>' }));
     board.append(el('div', { style: `position:absolute;left:${cx - 170}px;top:${cy + 58}px;width:340px;text-align:center;font:15px var(--ui);color:#bcd3ea`, html: '<span style="color:#ff8a8a">●</span> 일본 측 기록 &nbsp; <span style="color:#7fb0ff">●</span> 우리·연합국 측 기록' }));
-    board.append(el('div', { class: 'tl-how', text: '아래 사건 카드를 눌러 고른 뒤,\n번호 순서에 맞는 ? 칸을 눌러 봐!' }));
-    // 길을 따라 도는 방향 화살표 (칸과 칸 사이)
     for (let i = 0; i < pos.length - 1; i++) {
       const a = pos[i], b = pos[i + 1];
       if (a.x !== b.x && a.y !== b.y) continue;
       const ang = Math.atan2(b.y - a.y, b.x - a.x) * 180 / Math.PI;
-      const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
-      board.append(el('div', { class: 'tl-arrow', style: `left:${mx - 11}px;top:${my - 11}px;transform:rotate(${ang}deg)`, text: '➤' }));
+      board.append(el('div', { class: 'tl-arrow', style: `left:${(a.x + b.x) / 2 - 11}px;top:${(a.y + b.y) / 2 - 11}px;transform:rotate(${ang}deg)`, text: '➤' }));
     }
     board.append(el('div', { class: 'tl-end start', style: `left:${pos[0].x - 60}px;top:${pos[0].y + 34}px`, text: '▲ 시작' }),
-      el('div', { class: 'tl-end', style: `left:${pos[15].x - 70 - 126}px;top:${pos[15].y - 12}px`, text: '■ 끝' }));
+      el('div', { class: 'tl-end', style: `left:${pos[N - 1].x - 64 - 126}px;top:${pos[N - 1].y - 12}px`, text: '■ 끝' }));
     const nodes = TIMELINE.map((e, i) => {
-      const n = el('div', { class: 'slot', style: `position:absolute;left:${pos[i].x - 70}px;top:${pos[i].y - 32}px;width:140px;min-height:64px;padding:4px 6px;font:14px/1.25 var(--ui)` });
-      n.dataset.i = i; board.append(n);
-      board.append(el('div', { class: 'tl-num', style: `left:${pos[i].x - 82}px;top:${pos[i].y - 44}px`, text: i + 1 }));
+      const n = el('div', { class: 'slot tl-node', style: `left:${pos[i].x - 64}px;top:${pos[i].y - 32}px` }, el('div', { style: 'font:24px RIDIBatang;color:#8fa7c0', text: '?' }));
+      board.append(n, el('div', { class: 'tl-num', style: `left:${pos[i].x - 76}px;top:${pos[i].y - 44}px`, text: i + 1 }));
+      onTap(n, () => tap(i));
       return n;
     });
-    const showDone = i => {
-      const e = TIMELINE[i], n = nodes[i];
-      n.className = 'slot filled';
-      n.style.background = e.c === 'r' ? 'rgba(224,72,72,.55)' : 'rgba(47,111,222,.55)';
-      n.style.borderColor = e.c === 'r' ? '#ff8a8a' : '#7fb0ff';
-      n.innerHTML = `<div style="font:17px RIDIBatang;color:#ffe08a">${e.y}</div><div style="font:14px/1.2 RIDIBatang;white-space:pre-line">${e.n || e.t}</div>`;
+    const showInfo = i => {
+      const e = TIMELINE[i];
+      info.innerHTML = '';
+      info.append(el('div', { class: 'tl-era', text: tlEra(i) }),
+        el('div', { style: 'display:flex;align-items:baseline;gap:14px;justify-content:center' },
+          el('span', { style: `font:28px RIDIBatang;color:${e.c === 'r' ? '#ff9a9a' : '#9cc4ff'}`, text: tlYear(e) }),
+          el('span', { style: 'font:26px var(--ui)' }, gtext(e.t))),
+        el('div', { style: 'font:20px/1.5 var(--body);color:#dfe9f5;margin-top:2px' }, gtext(e.d)),
+        el('div', { style: 'font:16px var(--ui);color:#8fa7c0;margin-top:2px', text: `📖 ${e.s}단계 「${STAGE_NAMES[e.s]}」에서 본 기록` }));
     };
-    let total = 0;
-    for (const r of [1, 2, 3]) {
-      title.textContent = `⏱️ ${ROUND_INFO[r].name}`;
-      tip.textContent = ko(ROUND_INFO[r].tip);
-      const given = ROUND_INFO[r].given || [];
-      given.forEach(i => { showDone(i); nodes[i].classList.add('given'); });
-      const idxs = TIMELINE.map((e, i) => i).filter(i => TIMELINE[i].r === r && !given.includes(i));
-      idxs.forEach((i, k) => { nodes[i].className = 'slot'; nodes[i].style.borderColor = '#ffd166'; nodes[i].innerHTML = `<div style="font:26px RIDIBatang;color:#ffd166">?</div>`; });
-      tray.innerHTML = '';
-      let sel = null, left = idxs.length, tries = 0;
-      const t0 = performance.now();
-      const tick = setInterval(() => { timer.textContent = `⏱️ ${Math.floor((performance.now() - t0) / 1000)}초`; }, 250);
-      await new Promise(done => {
-        const chips = shuffle(idxs).map(i => {
-          const e = TIMELINE[i];
-          const c = el('div', { class: 'tile', style: 'width:290px;min-height:70px;flex-direction:column;font:19px var(--ui);padding:5px 12px' },
-            el('div', {}, gtext(e.t)), el('div', { style: 'font:14px/1.3 var(--body);color:#6a553f;margin-top:2px' }, gtext(e.d)));
-          c.dataset.i = i;
-          const put = n => {
-            const ni = +n.dataset.i;
-            if (!idxs.includes(ni) || n.classList.contains('filled') || c.classList.contains('done')) return;
-            if (ni === i) {
-              showDone(i); c.classList.add('done'); c.classList.remove('sel'); sel = null; Sound.sfx('good');
-              award('s6_line', 1, 30); left--;
-              if (!left) { clearInterval(tick); DEV.solve = null; setTimeout(done, 600); }
-            } else {
-              tries++; n.classList.remove('shake'); void n.offsetWidth; n.classList.add('shake');
-              const before = TIMELINE[ni];
-              if (wrongFeedback(tries, `"${e.t}"이(가) 일어나려면 먼저 무슨 일이 있어야 했을까? 카드 아래 설명에 원인과 결과의 단서가 있어.`)) {
-                hint('같이 놓아 보자!', 'gaji', 3000); showDone(i); c.classList.add('done'); left--; tries = 0;
-                if (!left) { clearInterval(tick); DEV.solve = null; setTimeout(done, 600); }
-              }
-            }
-          };
-          dragItem(c, {
-            onTap: () => { if (c.classList.contains('done')) return; Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = c; c.classList.add('sel'); },
-            onDrop: under => { const n = under.find(x => nodes.includes(x)); if (n) put(n); },
-          });
-          c._put = put;
-          tray.append(c); return c;
-        });
-        nodes.forEach(n => { n.onclick = e => { e.stopPropagation(); if (sel) sel._put(n); }; });
-        DEV.solve = () => chips.forEach(c => { if (!c.classList.contains('done')) c._put(nodes[+c.dataset.i]); });
-      });
-      const secs = (performance.now() - t0) / 1000;
-      if (secs < 40) { addScore(30, 640, 300); toast(`⚡ 빠른 추리! 보너스 +30`); }
-      total += secs;
-      await sleep(400);
-    }
-    title.textContent = '🎉 연표 완성! 독도를 둘러싼 1,400여 년의 흐름';
-    tip.textContent = ko('1번부터 번호를 따라 천천히 한 바퀴 읽어 봐. 빨간 칸은 일본 측 기록, 파란 칸은 우리와 연합국 측 기록이야.');
-    board.querySelector('.tl-how').remove();
-    tray.innerHTML = '';
-    HINT.pos = 'left'; clearHint();
-    tray.append(onTap(el('button', { class: 'btn', text: '다 읽었어!' }), () => { root.remove(); resolve(total); }));
-    DEV.solve = () => { root.remove(); resolve(total); };
+    const light = i => {
+      const e = TIMELINE[i], n = nodes[i];
+      n.className = 'slot filled tl-node';
+      n.style.background = e.c === 'r' ? '#7a3036' : '#24497f';
+      n.style.borderColor = e.c === 'r' ? '#ff8a8a' : '#7fb0ff';
+      n.innerHTML = `<div style="font:16px RIDIBatang;color:#ffe08a">${esc(tlYear(e))}</div><div style="font:13.5px/1.2 RIDIBatang;white-space:pre-line">${esc(e.n || e.t)}</div>`;
+    };
+    let next = 0, readyAt = 0, over = false;
+    const glowNext = () => { if (next < N) nodes[next].classList.add('hi'); };
+    const tap = i => {
+      if (i < next) { Sound.sfx('tap'); showInfo(i); return; }
+      if (over) return;
+      if (i > next) { hint(`①번부터 차례대로! 지금은 ${next + 1}번 칸이 반짝이고 있어.`, 'gaji', 3000); return; }
+      if (performance.now() < readyAt) return;
+      readyAt = performance.now() + 700;
+      nodes[i].classList.remove('hi'); light(i); showInfo(i); Sound.sfx('good'); clearHint();
+      next++;
+      if (next < N) return glowNext();
+      over = true; DEV.solve = null; S.tlDone = true; save();
+      title.textContent = '🎉 연표 완성! 독도를 둘러싼 1,400여 년의 흐름';
+      tip.textContent = ko('칸을 누르면 그 기록을 다시 볼 수 있어. 빨간 칸은 일본 측 기록, 파란 칸은 우리와 연합국 측 기록이야.');
+      HINT.pos = 'left';
+      const endBox = el('div', { style: 'position:absolute;left:0;right:0;top:192px;display:flex;justify-content:center;z-index:3' });
+      root.append(endBox);
+      doneBar(endBox, { btn: '다 읽었어! ▶' }).then(() => { root.remove(); resolve(); });
+    };
+    info.append(el('div', { style: 'font:20px var(--ui);color:#cfe6ff;margin-top:26px', text: '👆 ①번 칸(왼쪽 아래)부터 눌러 봐!' }));
+    glowNext();
+    DEV.solve = () => { while (next < N) { readyAt = 0; tap(next); } };
   });
 }
 
@@ -132,46 +148,35 @@ const STAGE6 = [
     await timeJump('1945년 · 광복', '광복 이후의 동해');
     await talk([
       ['narr', '1945년 8월, 광복. 우산호는 거센 시간의 물살을 타고 광복 이후의 동해로 달려간다.'],
-      ['gaji', '광복 뒤 독도에는 어떤 일들이 있었을까? 시간의 물살에 떠밀려 오는 기록들을 붙잡자!'],
+      ['gaji', '광복 뒤 독도에는 어떤 일들이 있었을까? 시간 줄의 반짝이는 점을 눌러 기록을 하나씩 붙잡자!'],
     ]);
-    const panels = [
-      ['1946년 1월', '전쟁에서 진 일본을 점령한 연합국 최고사령관 총사령부가 지시를 내렸다. 일본이 통치·행정권을 행사할 수 있는 범위에서 울릉도, 독도(리앙쿠르암), 제주도를 뺀다. (다만 최종적인 영토 결정은 아니라는 단서가 붙어 있다.)', 'scapin677'],
-      ['1946년 6월', '연합국 총사령부는 일본 어선이 고기를 잡을 수 있는 구역을 정했다. 일본 배와 사람은 독도 12해리 안으로 들어가거나 독도에 닿을 수 없다.', 'scapin1033'],
-      ['1947년 8월', '조선산악회가 문교부의 후원을 받아 울릉도·독도 학술조사대를 꾸렸다. 조사대는 독도에 건너가 섬의 자연과 지리를 조사했다.', 'alpine'],
-      ['1951년 9월', '제2차 세계대전을 마무리한 샌프란시스코 강화조약. 일본은 "제주도, 거문도, 울릉도를 포함한 한국"에 대한 모든 권리를 포기했다. 3,000개가 넘는 우리 섬 가운데 대표적인 섬만 적었다.', 'sf'],
-      ['1952년 1월', '대한민국 정부는 「인접 해양에 대한 주권에 관한 대통령 선언」을 발표하고 바다 위에 주권의 선을 그었다. 사람들은 이 선을 "평화선"이라 불렀다. 독도는 그 안쪽에 있다.', 'peace'],
-      ['1953년 4월', '일본 사람들이 독도에 와서 자기네 표지를 세우는 일이 생기자, 울릉도 주민 홍순칠 등이 스스로 독도의용수비대를 만들었다. 이들은 1956년 경찰에게 임무를 넘길 때까지 독도를 지켰다.', 'volunteer'],
-    ];
-    for (const [when, text, card] of panels) {
-      await say('narr', `[${when}] ${text}`);
-      await getCard(card);
-    }
+    await postwarRecords();
     await say('gaji', '저기 언덕 위에 서 있는 사람들이 바로 독도의용수비대야. 섬을 지키겠다고 스스로 모인 울릉도 사람들이지.');
   },
   async () => {
     setBg('bg-stage6'); fogFx(0); Sound.play('rush'); placeSeal(6);
-    await say('gaji', '방금 붙잡은 기록들을 기억하고 있어? 카드를 뒤집어 짝을 맞춰 보자!');
-    await memoryGame({ title: '🃏 기억력 짝 맞추기', key: 's6_memory', pairs: [
-      ['SCAPIN 제677호', '일본의 통치·행정 범위에서 독도를 뺀 지시'],
-      ['SCAPIN 제1033호', '일본 배가 독도 12해리 안에 못 오게 한 지시'],
-      ['조선산악회', '광복 뒤 울릉도·독도 학술조사'],
-      ['샌프란시스코 강화조약', '대표적인 섬만 적은 전쟁 마무리 조약'],
-      ['평화선', '대통령 선언으로 그은 바다 주권의 선'],
-      ['독도의용수비대', '울릉도 주민들이 스스로 만든 수비대'],
+    await say('gaji', '방금 붙잡은 기록들을 정리해 보자! 위에 나오는 설명에 맞는 기록을 아래에서 골라 줘.');
+    await matchGame({ title: '🧩 기록 맞추기', key: 's6_match', items: [
+      { when: '1946년 1월', name: 'SCAPIN 제677호', d: '일본의 통치·행정 범위에서 독도를 뺀 지시', h: '연합국 총사령부의 지시는 두 개야. 먼저(1월) 나온 지시는 번호가 더 작아.' },
+      { when: '1946년 6월', name: 'SCAPIN 제1033호', d: '일본 배가 독도 12해리 안에 못 오게 한 지시', h: '연합국 총사령부의 두 지시 가운데 나중(6월)에 나온 지시는 번호가 더 커.' },
+      { when: '1947년 8월', name: '조선산악회', d: '광복 뒤 울릉도·독도 학술조사', h: '산을 잘 아는 사람들의 모임이 조사대를 꾸렸어.' },
+      { when: '1951년 9월', name: '샌프란시스코 강화조약', d: '대표적인 섬만 적은, 전쟁을 마무리한 조약', h: '전쟁을 마무리하는 약속을 "조약"이라고 해. 이름에 "조약"이 들어간 기록을 찾아봐.' },
+      { when: '1952년 1월', name: '평화선', d: '대통령 선언으로 그은 바다 주권의 선', h: '바다 위에 그은 "선"이야. 이름에 "선"이 들어간 기록을 찾아봐.' },
+      { when: '1953년 4월', name: '독도의용수비대', d: '울릉도 주민들이 스스로 만든 수비대', h: '섬을 지키는 사람들의 모임을 "수비대"라고 해.' },
     ] });
     await talk([
-      ['gaji:wow', '좋아! 이번엔 독도의 1,400여 년 역사를 한 바퀴 이어 볼 차례야.'],
+      ['gaji:wow', '좋아! 이번엔 독도의 1,400여 년 역사를 한 바퀴 돌아볼 차례야.'],
       ['gaji', '이 연표는 꼭!! 기억해 두는 게 좋을 거야. 지금까지 모은 증거가 한 줄로 이어지거든.'],
-      ['gaji', '칸마다 번호가 있어. ①번에서 시작해서 화살표를 따라 번호 순서대로 한 바퀴 돌아. 연도를 외울 필요는 없어. "이 일 때문에 저 일이 생겼다"를 생각하면 순서가 보여!'],
+      ['gaji', '①번 칸부터 반짝이는 칸을 차례로 눌러 불을 밝혀 봐. 칸마다 무슨 일이 있었는지 아래에 나와. 연표는 📖 도감에서도 언제든 다시 볼 수 있어!'],
     ]);
-    await timelineRush();
+    await timelineWalk();
   },
   async () => {
     setBg('bg-stage6'); fogFx(0.3); Sound.play('rush'); placeSeal(6);
     await talk([
       ['fog', '크크크! 연표 따위! 내 거짓말 풍선을 받아라!'],
       ['gaji', '안개가 풍선에 거짓 주장을 실어 날려 보내고 있어! 거짓은 터뜨리고, 사실은 날려 보내!'],
-      ['gaji', '풍선마다 같은 문장이 두 번씩 지나가. 처음에 헷갈렸다면 두 번째에 바로잡아 봐!'],
+      ['gaji', '풍선은 천천히 올라가니까 문장을 끝까지 읽고 골라. 틀린 문장은 마지막에 한 번 더 날아와!'],
     ]);
     clearScene();
     await balloonGame({ key: 's6_balloon', items: [
@@ -181,7 +186,7 @@ const STAGE6 = [
       { t: '1905년의 독도는 주인 없는 섬이었다', ok: false },
       { t: '대한제국은 독도를 다스린 적이 없다', ok: false },
       { t: 'SCAPIN 제677호는 독도를 일본의 범위에 넣었다', ok: false },
-      { t: '조약에 이름이 없는 섬은 모두 일본 땅이다', ok: false },
+      { t: '샌프란시스코 강화조약에 이름이 없는 섬은 모두 일본 땅이다', ok: false },
       { t: '독도의용수비대는 일본이 만든 조직이다', ok: false },
       { t: '돗토리번은 두 섬 모두 자기 땅이 아니라고 답했다', ok: true },
       { t: '태정관은 울릉도 외 1도가 일본과 관계없다고 했다', ok: true },

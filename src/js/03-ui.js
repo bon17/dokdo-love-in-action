@@ -166,6 +166,8 @@ function say(who, text) {
     const adv = e => {
       if (e) e.stopPropagation();
       if (over) return;
+      /* 가이드 투어가 떠 있는 동안에는 밝힌 곳 둘레를 눌러도 대사가 넘어가지 않게 한다. */
+      if (APP.querySelector('.tour')) return;
       if (!tw.done) { tw.finish(); arm(); return; }
       arm();
       if (performance.now() < readyAt) return;
@@ -240,6 +242,69 @@ function hint(text, mood = 'gaji', ms = 7000) {
 }
 function clearHint() { clearTimeout(hintTimer); document.querySelectorAll('.hint, .hint-inline').forEach(h => h.remove()); }
 function hintHost(node) { HINT.host = node; return node; }
+/* 가이드 투어: 한 곳만 밝히고 나머지는 어둡게 덮어 그곳을 눌러 보게 한다.
+   같은 기기에서 처음 한 번만 보여 준다(PREF.tour). 건너뛰기는 두지 않는다. */
+const tourSeen = key => !!(PREF.tour && PREF.tour[key]);
+function tourDone(key) { PREF.tour = Object.assign({}, PREF.tour, { [key]: true }); savePref(); }
+const waitFor = (fn, ms = 80) => new Promise(res => { const t = () => { const v = fn(); if (v) res(v); else setTimeout(t, ms); }; t(); });
+const tapOn = node => new Promise(res => node.addEventListener('click', () => res(), { once: true, capture: true }));
+function stageRect(node, pad) {
+  const r = node.getBoundingClientRect(), a = APP.getBoundingClientRect();
+  return { x: (r.left - a.left) / SCALE - pad, y: (r.top - a.top) / SCALE - pad, w: r.width / SCALE + pad * 2, h: r.height / SCALE + pad * 2 };
+}
+/* target 둘레만 밝히고 가지 말풍선(text)을 띄운다. until(약속)이 끝나면 걷는다. 화면이 바뀌어도 따라간다. */
+function spotlight(target, { text, until, ring = true, pad = 8 }) {
+  return new Promise(resolve => {
+    const layer = el('div', { class: 'tour' });
+    const tip = el('div', { class: 'tour-tip' }, el('img', { src: img('gaji-default'), alt: '' }), el('div', { class: 'b', text }));
+    layer.append(tip);
+    APP.append(layer);
+    /* 어둡게 덮는 판만 다시 그리고, 테두리와 말풍선은 한 번만 넣어 자리만 옮긴다. (다시 넣으면 빛나는 효과가 처음부터 되풀이되어 깜빡인다) */
+    let ringEl = null;
+    const draw = () => {
+      const node = typeof target === 'function' ? target() : target;
+      if (!node || !node.isConnected) return;
+      const r = stageRect(node, pad);
+      layer.querySelectorAll('.tour-dim').forEach(e => e.remove());
+      const dim = (x, y, w, h) => { if (w > 0 && h > 0) layer.insertBefore(el('div', { class: 'tour-dim', style: `left:${x}px;top:${y}px;width:${w}px;height:${h}px` }), tip); };
+      dim(0, 0, W, r.y); dim(0, r.y + r.h, W, H - r.y - r.h); dim(0, r.y, r.x, r.h); dim(r.x + r.w, r.y, W - r.x - r.w, r.h);
+      if (ring) {
+        if (!ringEl) layer.insertBefore(ringEl = el('div', { class: 'tour-ring' }), tip);
+        Object.assign(ringEl.style, { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' });
+      }
+      const tw = tip.offsetWidth, th = tip.offsetHeight;
+      /* 화면 아래쪽(대사 창 등)에 있는 곳은 말풍선을 위에, 위쪽에 있는 곳은 아래에 띄운다. */
+      const below = r.y + r.h / 2 < H / 2;
+      let top = below ? r.y + r.h + 14 : r.y - th - 14;
+      if (top < 70 || top + th > H - 8) top = H - th - 12;
+      tip.style.left = clamp(r.x + r.w / 2 - tw / 2, 12, W - tw - 12) + 'px';
+      tip.style.top = top + 'px';
+    };
+    draw();
+    const iv = setInterval(draw, 250);
+    Promise.resolve(until).then(() => { clearInterval(iv); layer.remove(); resolve(); });
+  });
+}
+/* 대사 한 줄을 보여 주면서, 글자가 다 나오면 during()을 한다. during이 끝나야 대사를 넘길 수 있다. */
+async function sayWith(who, text, during) {
+  const p = say(who, text);
+  if (during) {
+    /* 글자가 다 나오고, 학생이 그사이 연 도감·메뉴 창도 닫힌 뒤에 시작한다. (창 아래에 가려진 곳을 밝히면 누를 수 없다) */
+    await waitFor(() => { const box = document.querySelector('#dialog .dlg'); return box && !L.overlay.querySelector('.modal') && ![...box.querySelectorAll('.twh')].some(e => e.textContent); }, 40);
+    await during();
+  }
+  await p;
+}
+/* 📖 도감 단추를 눌러 열어 보게 하고, 도감 안에서 할 일(inside)을 마친 뒤 닫게 한다. */
+async function tourBook(inside) {
+  const btn = document.querySelector('#hud .hud-btn.book');
+  if (!btn) return;
+  await spotlight(btn, { text: '👆 위쪽의 📖 도감을 눌러 봐!', until: tapOn(btn) });
+  await waitFor(() => document.querySelector('.bookpanel'));
+  await inside();
+}
+const bookBox = () => { const b = document.querySelector('.bookpanel'); return b && b.closest('.box'); };
+
 /* 퍼즐을 다 풀면 바로 닫지 않고, 완성된 모습을 보여 준 뒤 "계속"을 눌러 넘어간다. */
 function doneBar(container, { msg, btn = '계속 ▶' } = {}) {
   return new Promise(res => {
@@ -456,6 +521,16 @@ function getCard(id) {
     DEV.solve = () => { m.close(); resolve(); };
   });
 }
+/* 창을 띄우지 않고 그 자리에서 증거를 얻는다. (장면 안에 이미 기록을 보여 줄 때) 새로 얻었으면 true */
+function collectCard(id) {
+  const c = CARD[id];
+  if (!c || S.cards[id]) return false;
+  S.cards[id] = true; S.cardOrder.push(id);
+  Sound.sfx('card'); setTimeout(() => Sound.sfx('stamp'), 350);
+  addScore(RARITY[c.rar].pts, 640, 140);
+  HUD.update(); save();
+  return true;
+}
 function openCard(c, borrowed) {
   const big = cardEl(c, { borrowed });
   big.classList.add('bigview');
@@ -508,24 +583,23 @@ function placeSeal(stage) {
   L.hidden.append(s);
 }
 
-/* 증거 보드: 단계에서 새로 모은 카드를 세 가지 근거로 나눈다.
+/* 증거 보드: 단계에서 새로 모은 카드를 세 가지 근거 칸으로 정리해 보여 준다.
+   카드에 이미 근거 이름이 적혀 있으므로 학생이 하나씩 옮기지 않고, 카드가 차례로 제 칸에 날아 들어간다.
    앞 단계에서 넣은 카드도 칸에 계속 보이고(연하게), 새로 넣은 카드는 맨 위에 쌓인다. */
 function evidenceBoard(stage) {
-  return new Promise(resolve => {
+  return new Promise(async resolve => {
     const ids = CARDS.filter(c => c.st === stage && S.cards[c.id] && !S.boarded[c.id]).map(c => c.id);
     if (!ids.length) return resolve();
     const root = el('div', { class: 'panel', style: 'width:1200px;height:660px;padding:16px 22px;position:relative;display:flex;flex-direction:column' });
-    root.append(el('div', { style: 'font:30px var(--ui);text-align:center', text: '증거 보드: 새로 찾은 증거를 분류해 봐!' }),
-      el('div', { style: 'font:19px var(--body);text-align:center;color:#bcd3ea;margin:6px 0 10px', text: '카드를 누른 다음, 알맞은 근거 칸을 눌러 줘.' }));
+    root.append(el('div', { style: 'font:30px var(--ui);text-align:center', text: '증거 보드: 새로 찾은 증거를 근거별로 정리해!' }),
+      el('div', { style: 'font:19px var(--body);text-align:center;color:#bcd3ea;margin:6px 0 10px', text: '카드에 적힌 근거를 보고 알맞은 칸에 넣어 둘게. 칸마다 어떤 증거가 모였는지 살펴봐.' }));
     const tray = el('div', { style: 'display:flex;gap:12px;justify-content:center;min-height:196px;flex-wrap:wrap' });
-    const slot = el('div', { class: 'hintslot', style: 'min-height:0' });
     const bins = el('div', { style: 'display:flex;gap:16px;margin-top:10px;flex:1;min-height:0' });
-    root.append(tray, slot, bins);
+    root.append(tray, bins);
     const m = modal(root, { closable: false });
-    hintHost(slot);
-    let sel = null, left = ids.length;
-    const tries = {};
+    let skip = false;
     const chip = (c, fresh) => el('div', { class: 'binchip' + (fresh ? ' fresh' : ''), text: c.name });
+    const binOf = {};
     for (const k of ['hist', 'geo', 'law']) {
       const list = el('div', { class: 'binlist' });
       for (const oid of S.cardOrder.slice().reverse()) if (S.boarded[oid] === k) list.append(chip(CARD[oid], false));
@@ -535,33 +609,30 @@ function evidenceBoard(stage) {
         el('div', { style: 'font:16px var(--body);color:#dfe9f5;margin:6px 0 8px' }, gtext(CAT[k].desc)), list);
       const setCount = () => { count.textContent = ` · ${list.children.length}장`; };
       setCount();
+      binOf[k] = { b, list, setCount };
       bins.append(b);
-      onTap(b, () => {
-        if (!left) return;
-        if (!sel) { hint('먼저 위에서 카드를 하나 골라 줘!'); return; }
-        const c = CARD[sel.dataset.id];
-        const ok = k === c.cat || (c.alt || []).includes(k);
-        if (ok) {
-          Sound.sfx('good'); clearHint();
-          addScore(tries[c.id] ? BOARD_PTS / 2 : BOARD_PTS, 640, 300);
-          S.boarded[c.id] = k;
-          sel.remove();
-          list.prepend(chip(c, true)); list.scrollTop = 0; setCount();
-          sel = null; left--;
-          if (!left) { DEV.solve = null; HINT.host = null; doneBar(root, { msg: '모든 증거를 분류했어! 칸마다 모인 증거를 살펴봐.' }).then(() => { m.close(); save(); resolve(); }); }
-        } else {
-          tries[c.id] = (tries[c.id] || 0) + 1; S.boardMiss++;
-          Sound.sfx('bad'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
-          hint(`"${c.name}"은(는) ${c.cat === 'geo' ? '위치나 자연' : c.cat === 'hist' ? '옛 기록이나 사건' : '법령, 조약, 지금 실제로 다스리는 모습'}에 대한 증거 같지 않아? 카드 내용을 다시 읽어 봐.`);
-        }
-      });
     }
-    for (const id of ids) {
-      const c = cardEl(CARD[id], { mini: true }); c.dataset.id = id; c.style.cursor = 'pointer';
-      onTap(c, () => { Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = c; c.classList.add('sel'); });
-      tray.append(c);
+    const cardEls = ids.map(id => { const c = cardEl(CARD[id], { mini: true }); tray.append(c); return c; });
+    DEV.solve = () => { skip = true; };
+    await sleep(700);
+    for (const [i, id] of ids.entries()) {
+      const c = CARD[id], ce = cardEls[i], bin = binOf[c.cat];
+      if (!skip) {
+        const a = ce.getBoundingClientRect(), t = bin.list.getBoundingClientRect();
+        ce.style.transition = 'transform .45s ease-in, opacity .45s ease-in';
+        ce.style.transform = `translate(${(t.left + t.width / 2 - a.left - a.width / 2) / SCALE}px,${(t.top + 20 - a.top - a.height / 2) / SCALE}px) scale(.35)`;
+        ce.style.opacity = '.2';
+        await sleep(450);
+      }
+      ce.style.visibility = 'hidden';
+      S.boarded[id] = c.cat;
+      bin.list.prepend(chip(c, true)); bin.list.scrollTop = 0; bin.setCount();
+      if (!skip) { Sound.sfx('good'); await sleep(150); }
     }
-    DEV.solve = () => { for (const id of ids) S.boarded[id] = CARD[id].cat; HINT.host = null; m.close(); resolve(); };
+    tray.remove();
+    save();
+    await doneBar(root, { msg: '새 증거를 근거별로 정리했어! 칸마다 모인 증거를 살펴봐.' });
+    m.close(); resolve();
   });
 }
 
@@ -613,39 +684,80 @@ async function stageClear(stage) {
   await m.done;
 }
 
+/* 도감에서 마지막으로 본 단계·시대·쪽을 기억한다. (도감을 다시 열면 이어서 본다) */
+const BOOKVIEW = { st: null, era: null, cho: null, wordPg: 0, cluePg: 0 };
+/* 한 쪽에 per개씩 보여 주고 ◀ ▶로 넘긴다. 쪽 번호는 BOOKVIEW[key]에 둔다. */
+function bookPager(items, per, key, rerender, draw, cls = '') {
+  const pages = Math.max(1, Math.ceil(items.length / per));
+  const pg = BOOKVIEW[key] = clamp(BOOKVIEW[key] || 0, 0, pages - 1);
+  const wrap = el('div');
+  const list = el('div', { class: cls });
+  items.slice(pg * per, pg * per + per).forEach(it => list.append(draw(it)));
+  wrap.append(list);
+  if (pages > 1) wrap.append(el('div', { class: 'pager' },
+    onTap(el('button', { class: 'btn small gray', text: '◀ 이전', disabled: pg === 0 }), () => { Sound.sfx('tap'); BOOKVIEW[key] = pg - 1; rerender(); }),
+    el('span', { text: `${pg + 1} / ${pages}` }),
+    onTap(el('button', { class: 'btn small gray', text: '다음 ▶', disabled: pg === pages - 1 }), () => { Sound.sfx('tap'); BOOKVIEW[key] = pg + 1; rerender(); })));
+  return wrap;
+}
 /* 증거 도감 */
 function openBook(tab = 'cards') {
+  BOOKVIEW.st = null; BOOKVIEW.era = null;
   const root = el('div', { class: 'bookpanel panel' });
   const tabs = el('div', { class: 'tabs' });
   const body = el('div', { class: 'body' });
   root.append(el('div', { style: 'font:30px var(--ui);margin-bottom:8px', text: '📖 증거 도감' }), tabs, body);
   const m = modal(root);
-  const TABS = [['cards', '증거 카드'], ['clues', '노래 단서 수첩'], ['names', '이름 도감'], ['words', '낱말 풀이'], ['badges', '업적 배지']];
+  const TABS = [['cards', '증거 카드'], ['timeline', '연표'], ['clues', '노래 단서 수첩'], ['names', '이름 도감'], ['words', '낱말 풀이'], ['badges', '업적 배지']];
   const render = t => {
     tabs.innerHTML = ''; body.innerHTML = '';
     for (const [k, n] of TABS) tabs.append(onTap(el('button', { class: 'tab' + (k === t ? ' on' : ''), text: n }), () => { Sound.sfx('tap'); render(k); }));
     if (t === 'cards') {
+      /* 한 번에 한 단계의 카드만 보여 줘서 스크롤 없이 한 화면에 들어가게 한다. 처음에는 지금 단계를 연다. */
       const n = Object.keys(S.cards).length;
-      body.append(el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin-bottom:10px', text: `모은 증거 ${n} / ${CARDS.length}장 · 카드를 누르면 크게 볼 수 있어요.` }));
+      if (BOOKVIEW.st == null) BOOKVIEW.st = clamp(S.stage || 1, 1, 7);
+      body.append(el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin-bottom:4px', text: `모은 증거 ${n} / ${CARDS.length}장 · 카드를 누르면 크게 볼 수 있어요.` }),
+        el('div', { style: 'font:19px var(--body);color:#f2c14e;margin-bottom:10px', text: '✨ 금빛으로 빛나는 카드는 전설 증거예요. (얻으면 80점) 아직 못 얻은 카드도 빛이 보여요. 꼭 찾아보세요!' }));
+      const chips = el('div', { class: 'bchips' });
       for (let st = 1; st <= 7; st++) {
-        body.append(el('div', { style: 'font:22px var(--ui);margin:10px 0 8px;color:#ffd9a8', text: `${st}단계 · ${STAGE_NAMES[st]}` }));
-        const g = el('div', { class: 'grid' });
-        for (const c of CARDS.filter(x => x.st === st)) {
-          const own = S.cards[c.id];
-          const ce = cardEl(c, { mini: true, locked: !own });
-          if (own) onTap(ce, () => { Sound.sfx('tap'); openCard(c); });
-          g.append(ce);
-        }
-        body.append(g);
+        const all = CARDS.filter(x => x.st === st), got = all.filter(x => S.cards[x.id]).length;
+        chips.append(onTap(el('button', { class: 'bchip' + (st === BOOKVIEW.st ? ' on' : ''), text: `${st}단계 ${got}/${all.length}` }), () => { Sound.sfx('tap'); BOOKVIEW.st = st; render('cards'); }));
+      }
+      const st = BOOKVIEW.st;
+      body.append(chips, el('div', { style: 'font:22px var(--ui);margin:10px 0 8px;color:#ffd9a8', text: `${st}단계 · ${STAGE_NAMES[st]}` }));
+      const g = el('div', { class: 'grid' });
+      for (const c of CARDS.filter(x => x.st === st)) {
+        const own = S.cards[c.id];
+        const ce = cardEl(c, { mini: true, locked: !own });
+        if (own) onTap(ce, () => { Sound.sfx('tap'); openCard(c); });
+        g.append(ce);
+      }
+      body.append(g);
+    } else if (t === 'timeline') {
+      /* 시대마다 나눠 보여 준다. 처음에는 가장 최근에 열린 시대를 연다. */
+      const eras = TIMELINE.map((e, i) => e.era ? i : -1).filter(i => i >= 0);
+      const isOpen = e => S.finished || S.tlDone || S.stage > e.s;
+      if (BOOKVIEW.era == null) { const last = TIMELINE.map(isOpen).lastIndexOf(true); BOOKVIEW.era = Math.max(0, eras.filter(i => i <= last).length - 1); }
+      body.append(el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin-bottom:10px', text: '독도를 둘러싼 일을 시간 순서대로 모았어요. 빨간 점은 일본 측 기록, 파란 점은 우리와 연합국 측 기록이에요.' }));
+      const chips = el('div', { class: 'bchips' });
+      eras.forEach((from, k) => chips.append(onTap(el('button', { class: 'bchip' + (k === BOOKVIEW.era ? ' on' : ''), text: `${k + 1}. ${TIMELINE[from].era}` }), () => { Sound.sfx('tap'); BOOKVIEW.era = k; render('timeline'); })));
+      body.append(chips);
+      const from = eras[BOOKVIEW.era], to = eras[BOOKVIEW.era + 1] ?? TIMELINE.length;
+      for (const e of TIMELINE.slice(from, to)) {
+        const open = isOpen(e);
+        body.append(el('div', { class: 'tlrow' + (open ? '' : ' lock') },
+          el('div', { class: 'ty', style: `color:${e.c === 'r' ? '#ff9a9a' : '#9cc4ff'}`, text: '● ' + tlYear(e) }),
+          el('div', {}, el('div', { class: 'tt', text: open ? e.t : '???' }), el('div', { class: 'td', text: open ? e.d : `${e.s}단계에서 열려요` }))));
       }
     } else if (t === 'clues') {
+      /* 두 줄로 놓고, 한 쪽에 6개씩 보여 준다. */
       body.append(el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin-bottom:10px', text: '우산호 라디오에서 모은 「독도는 우리 땅」 속 단서예요. 증거를 찾으면 하나씩 풀려요.' }));
-      CLUES.forEach((c, i) => {
+      body.append(bookPager(CLUES.map((c, i) => [c, i]), 6, 'cluePg', () => render('clues'), ([c, i]) => {
         const s = S.clues[c.id];
-        body.append(el('div', { class: 'clue' + (s === 'solved' ? ' solved' : '') }, el('div', { class: 'n', text: s === 'solved' ? '✓' : i + 1 }),
+        return el('div', { class: 'clue' + (s === 'solved' ? ' solved' : '') }, el('div', { class: 'n', text: s === 'solved' ? '✓' : i + 1 }),
           el('div', {}, el('div', { class: 't1', text: s ? `♪ ${c.radio}` : '♪ 아직 수신하지 못한 단서' }),
-            el('div', { class: 't2', text: s === 'solved' ? c.solved : s ? `${c.st}단계에서 풀 수 있을 것 같아. (${c.topic})` : '' }))));
-      });
+            el('div', { class: 't2', text: s === 'solved' ? c.solved : s ? `${c.st}단계에서 풀 수 있을 것 같아. (${c.topic})` : '' })));
+      }, 'cluegrid'));
     } else if (t === 'names') {
       body.append(el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin-bottom:10px', text: '같은 섬도 시대와 나라에 따라 이름이 달랐어요. 이름이 헷갈리면 여기를 보세요.' }));
       const tb = el('table', { class: 'names' }, el('tr', {}, el('th', { text: '누가 · 언제' }), el('th', { text: '울릉도를 부른 이름' }), el('th', { text: '독도를 부른 이름' })));
@@ -655,13 +767,19 @@ function openBook(tab = 'cards') {
       }
       body.append(tb);
     } else if (t === 'words') {
+      /* 첫 소리(ㄱ, ㄴ, ㄷ…)로 나누고, 한 쪽에 6개씩 보여 준다. */
       body.append(el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin-bottom:10px', text: '게임 속 글에서 밑줄 친 낱말을 가나다순으로 모았어요. 글 속의 밑줄 낱말을 누르면 그 자리에서도 볼 수 있어요.' }));
-      const wl = el('div', { class: 'wordlist' });
-      for (const k of Object.keys(GLOSS).sort((a, b) => a.localeCompare(b, 'ko'))) {
+      const CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+      const choOf = k => { const c = k.charCodeAt(0) - 0xac00; return c < 0 || c > 11171 ? 'A~Z' : CHO[Math.floor(c / 588)].replace('ㄲ', 'ㄱ').replace('ㄸ', 'ㄷ').replace('ㅃ', 'ㅂ').replace('ㅆ', 'ㅅ').replace('ㅉ', 'ㅈ'); };
+      const words = Object.keys(GLOSS).sort((a, b) => a.localeCompare(b, 'ko'));
+      const groups = [...new Set(words.map(choOf))];
+      if (!groups.includes(BOOKVIEW.cho)) BOOKVIEW.cho = groups[0];
+      const chips = el('div', { class: 'bchips' });
+      for (const g of groups) chips.append(onTap(el('button', { class: 'bchip' + (g === BOOKVIEW.cho ? ' on' : ''), text: g }), () => { Sound.sfx('tap'); BOOKVIEW.cho = g; BOOKVIEW.wordPg = 0; render('words'); }));
+      body.append(chips, bookPager(words.filter(k => choOf(k) === BOOKVIEW.cho), 6, 'wordPg', () => render('words'), k => {
         const g = GLOSS[k];
-        wl.append(el('div', { class: 'wrow' }, el('div', { class: 'ww', text: k + (g.h ? ` (${g.h})` : '') }), el('div', { class: 'wd', text: g.d })));
-      }
-      body.append(wl);
+        return el('div', { class: 'wrow' }, el('div', { class: 'ww', text: k + (g.h ? ` (${g.h})` : '') }), el('div', { class: 'wd', text: g.d }));
+      }, 'wordlist'));
     } else {
       body.append(el('div', {}, ...BADGES.map(b => el('div', { class: 'badge' + (S.badges[b.id] ? '' : ' off'), style: 'font-size:20px;padding:10px 16px' }, `${b.ico} ${b.name}`, el('span', { style: 'font:16px var(--body);color:#cfe0f0;margin-left:6px', text: b.desc })))));
       body.append(el('div', { style: 'margin-top:18px;font:20px var(--body);color:#dfe9f5', text: `숨은 강치 ${Object.keys(S.seals).length} / 8마리 · 최고 콤보 ${S.maxCombo}` }));
@@ -684,7 +802,7 @@ function openMenu() {
   box.append(onTap(el('button', { class: 'btn gray', text: '⛶ 전체 화면' }), () => { toggleFullscreen(); m.close(); }));
   box.append(onTap(el('button', { class: 'btn gray', text: '처음 화면으로 (새로 시작)' }), async () => {
     m.close();
-    if (await confirmBox('지금까지의 진행을 지우고 처음부터 새로 시작할까요?\n(다른 친구가 이 태블릿을 쓸 때 눌러요)')) { store.del(KEY.save); location.reload(); }
+    if (await confirmBox('지금까지의 진행을 지우고 처음부터 새로 시작할까요?\n(다른 친구가 이 기기를 쓸 때 눌러요)')) { store.del(KEY.save); location.reload(); }
   }));
 }
 function confirmBox(text, yes = '네', no = '아니요') {

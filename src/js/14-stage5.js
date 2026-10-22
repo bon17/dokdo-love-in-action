@@ -2,16 +2,17 @@
 SPK.shimaneOff = { name: '시마네현 관리', img: 'char-shimane', ini: '관', color: 'gray' };
 SPK.minister = { name: '의정부 참정대신', img: 'char-minister', ini: '참', color: 'blue' };
 
-/* 모순 찾기: 주장 속 표현과 부딪히는 증거를 붉은 실로 잇는다. */
+/* 모순 찾기: 주장 속 표현과 부딪히는 증거를 붉은 실로 잇는다.
+   첫 번째 수첩은 가지가 같이 이어 보이고, 나머지는 학생이 잇는다. 틀린 횟수는 수첩마다 따로 센다. */
 function contradictionGame() {
-  return new Promise(resolve => {
+  return new Promise(async resolve => {
     const root = el('div', { style: 'position:absolute;inset:64px 0 0 0;background:rgba(40,28,18,.72)' });
     L.scene.append(root);
     root.append(el('div', { class: 'mg-title', style: 'top:12px;white-space:nowrap', text: '🧵 취재 수첩을 고른 뒤, 부딪히는 주장의 표현을 눌러 붉은 실로 이어!' }));
     const poster = el('div', { class: 'paper', style: 'position:absolute;left:40px;top:80px;width:470px;padding:22px 26px;font:21px/1.8 var(--old)' });
     poster.append(el('div', { style: 'font:700 26px/1.4 var(--old);text-align:center;margin-bottom:8px;white-space:pre-line', text: '시마네현 고시 제40호\n(1905년 2월 22일)' }),
       el('div', {}, gtext('북위 37도 9분 30초, 동경 131도 55분, 오키섬에서 서북쪽으로 85해리 떨어진 섬을 "다케시마"라 부르고, 이제부터 본현 소속 오키도사의 소관으로 정한다.')),
-      el('div', { style: 'margin-top:14px;padding-top:10px;border-top:2px dashed #b89a66;font:20px var(--ui);color:#5a2d18', text: '안개의 주장:' }));
+      el('div', { style: 'margin-top:14px;padding-top:10px;border-top:2px dashed #b89a66;font:20px var(--ui);color:#5a2d18', text: '② 안개의 주장: 수첩과 부딪히는 표현을 눌러' }));
     const slot = el('div', { class: 'hintslot' });
     const claims = [
       { id: 'A', t: '"독도는 주인 없는 섬이었다"' },
@@ -28,14 +29,21 @@ function contradictionGame() {
       { id: 4, ok: 'B', t: '⚔️ 1904~1905년 러일전쟁\n일본은 독도에 망루를 세워 군사적으로 쓰려 했다', why: '전쟁 중에, 군사적 필요로 서둘러 편입한 것이 "정당한 절차"일까?' },
       { id: 5, ok: 'B', t: '🤫 1905년 고시 방법\n현의 고시로 알렸고, 대한제국에는 알리지 않았다', why: '주인에게 알리지도 않고 가져간 것이 "정당한 절차"일까?' },
     ];
-    const col = el('div', { style: 'position:absolute;right:40px;top:76px;width:560px;display:flex;flex-direction:column;gap:12px' });
+    const col = el('div', { style: 'position:absolute;right:40px;top:70px;width:560px;display:flex;flex-direction:column;gap:12px' });
+    col.append(el('div', { style: 'font:20px var(--ui);color:#ffe2b8;margin-bottom:-4px', text: '① 📒 취재 수첩: 기록을 하나 골라' }));
     const svg = el('div', { style: 'position:absolute;inset:0;pointer-events:none' });
     root.append(svg, col, endBox);
     const noteEls = notes.map(n => {
       const e = el('div', { class: 'tile', style: 'justify-content:flex-start;text-align:left;white-space:pre-line;font:20px/1.45 var(--ui);background:#fdf6e3' }, el('span', {}, gtext(n.t)));
       e.dataset.id = n.id; col.append(e); return e;
     });
-    let sel = null, tries = 0, linked = 0;
+    let sel = null, linked = 0, ready = false;
+    const tries = {};
+    /* 한 수첩에서 3번 틀리면, 그 수첩과 부딪히는 주장을 반짝이게 해서 학생이 직접 누르게 한다. */
+    const glowFor = noteEl => {
+      const n = noteEl && notes.find(x => x.id === +noteEl.dataset.id);
+      claims.forEach(c => c.classList.toggle('hi', !!n && tries[n.id] >= 3 && c.dataset.id === n.ok));
+    };
     const lines = [];
     const drawLine = (a, b) => {
       const ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect(), r0 = root.getBoundingClientRect();
@@ -44,25 +52,78 @@ function contradictionGame() {
       lines.push(`<path d="M${x1} ${y1} C ${x1 - 120} ${y1}, ${x2 + 120} ${y2}, ${x2} ${y2}" stroke="#d63a2f" stroke-width="4" fill="none"/>`);
       svg.innerHTML = `<svg width="1280" height="656">${lines.join('')}</svg>`;
     };
+    const connect = (noteEl, claimEl) => {
+      noteEl.dataset.done = 1; noteEl.style.background = '#ffd6cf'; noteEl.classList.remove('sel', 'hi'); claimEl.classList.remove('hi'); sel = null;
+      Sound.sfx('hit'); drawLine(noteEl, claimEl); floatText('모순 발견!', 760, 300); linked++;
+    };
     const link = (noteEl, claimEl) => {
       const n = notes.find(x => x.id === +noteEl.dataset.id);
-      if (noteEl.dataset.done) return;
+      if (noteEl.dataset.done || !ready) return;
       if (n.ok === claimEl.dataset.id) {
-        noteEl.dataset.done = 1; noteEl.style.background = '#ffd6cf'; noteEl.classList.remove('sel'); sel = null;
-        Sound.sfx('hit'); drawLine(noteEl, claimEl); floatText('모순 발견!', 760, 300);
-        award('s5_links', 1, 60); linked++;
-        if (linked === notes.length) { DEV.solve = null; HINT.host = null; doneBar(endBox, { msg: '모순 다섯 개를 모두 찾았어!' }).then(() => { root.remove(); resolve(tries); }); }
+        connect(noteEl, claimEl);
+        award('s5_links', (tries[n.id] || 0) + 1, 60);
+        if (linked === notes.length) { DEV.solve = null; HINT.host = null; doneBar(endBox, { msg: '모순 다섯 개를 모두 찾았어!' }).then(() => { root.remove(); resolve(); }); }
       } else {
-        tries++; noteEl.classList.remove('shake'); void noteEl.offsetWidth; noteEl.classList.add('shake');
-        if (wrongFeedback(tries, n.why, n.why)) { tries = 0; link(noteEl, claims.find(c => c.dataset.id === n.ok)); }
+        tries[n.id] = (tries[n.id] || 0) + 1;
+        noteEl.classList.remove('shake'); void noteEl.offsetWidth; noteEl.classList.add('shake');
+        if (wrongFeedback(tries[n.id], n.why, n.why)) { glowFor(noteEl); hint('같이 찾아보자! 이 수첩은 반짝이는 주장과 부딪혀. 눌러 봐!', 'gaji', 60000); }
       }
     };
     noteEls.forEach(e => dragItem(e, {
-      onTap: () => { if (e.dataset.done) return; Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = e; e.classList.add('sel'); },
+      onTap: () => { if (e.dataset.done || !ready) return; Sound.sfx('tap'); if (sel) sel.classList.remove('sel'); sel = e; e.classList.add('sel'); glowFor(e); },
       onDrop: under => { const c = under.find(x => claims.includes(x)); if (c) link(e, c); },
     }));
-    claims.forEach(c => onTap(c, () => { if (linked === notes.length) return; if (sel) link(sel, c); else hint('먼저 오른쪽의 취재 수첩을 하나 골라 줘!', 'gaji', 3000); }));
+    claims.forEach(c => onTap(c, () => { if (linked === notes.length || !ready) return; if (sel) link(sel, c); else hint('먼저 오른쪽의 취재 수첩을 하나 골라 줘!', 'gaji', 3000); }));
+
+    // 첫 번째 수첩은 가지와 같이 잇는다.
+    const [n0, c0] = [noteEls[0], claims[0]];
+    await say('gaji', '처음 하나는 나랑 같이 이어 보자! 잘 봐.');
+    n0.classList.add('sel', 'hi');
+    await say('gaji', '① 먼저 오른쪽 취재 수첩에서 기록을 하나 골라. 1900년 칙령에는 울도군이 "석도"를 다스린다고 적혀 있지.');
+    c0.classList.add('hi');
+    await say('gaji', '② 그다음, 그 기록과 부딪히는 안개의 주장을 눌러. 대한제국이 이미 다스리던 섬인데 "주인 없는 섬"이라니, 말이 안 되잖아!');
+    connect(n0, c0);
+    await sleep(500);
+    await say('gaji:yay', '이렇게 붉은 실로 이어져! 남은 수첩 네 개는 네가 직접 이어 봐.');
+    ready = true;
     DEV.solve = () => noteEls.forEach(e => { if (!e.dataset.done) link(e, claims.find(c => c.dataset.id === notes.find(n => n.id === +e.dataset.id).ok)); });
+  });
+}
+
+/* 러일전쟁 연표: 세로 시간 선 위에 일을 차례로 놓고, 전쟁 기간을 붉은 선으로, 일과 일 사이의 시간을 "○개월 뒤"로 보여 준다. */
+function warTimeline() {
+  return new Promise(resolve => {
+    const items = [
+      { y: 1904, m: 2, ico: '⚔️', t: '러일전쟁 시작' },
+      { y: 1904, m: 2, ico: '📜', t: '한일의정서: 일본군이 대한제국 땅을 군사적으로 쓸 수 있게 함' },
+      { y: 1904, m: 9, ico: '🔭', t: '일본 군함이 독도에 망루(감시탑) 세울 곳을 조사' },
+      { y: 1905, m: 2, ico: '📌', t: '시마네현 고시 제40호' },
+      { y: 1905, m: 5, ico: '🌊', t: '동해에서 큰 해전이 벌어짐' },
+      { y: 1905, m: 8, ico: '🗼', t: '독도에 망루 완성' },
+      { y: 1905, m: 9, ico: '🕊️', t: '러일전쟁 끝' },
+    ];
+    const seen = new Set();
+    const box = el('div', { class: 'paper', style: 'width:1040px;padding:18px 34px 20px' });
+    box.append(el('div', { style: 'font:700 30px var(--old);text-align:center', text: '러일전쟁 연표' }),
+      el('div', { style: 'font:18px var(--body);color:#8a6a45;text-align:center;margin-bottom:10px', text: '신문사 벽에 붙은 메모 · 위에서 아래로 시간이 흘러요 · 붉은 선은 러일전쟁이 이어진 기간' }));
+    const list = el('div', { class: 'wt-list' });
+    let prev = null;
+    for (const it of items) {
+      const gap = prev ? (it.y - prev.y) * 12 + it.m - prev.m : 0;
+      if (gap >= 2) list.append(el('div', { class: 'wt-gap' }, el('span'), el('i'), el('em', { text: `↓ ${gap}개월 뒤` })));
+      const newYear = !prev || prev.y !== it.y;
+      list.append(el('div', { class: 'wt-row' },
+        el('div', { class: 'wt-when' }, newYear ? el('b', { text: it.y + '년' }) : null, el('span', { text: it.m + '월' })),
+        el('i', { class: 'wt-dot' }),
+        el('div', { class: 'wt-text' }, el('span', { class: 'wt-ico', text: it.ico }), gtext(it.t, seen))));
+      prev = it;
+    }
+    box.append(list,
+      el('div', { class: 'wt-note' }, gtext('일본 외무성 관리의 말: "지금이야말로 편입이 필요하다. 망루를 세우고 전선을 깔면 적의 군함을 감시하는 데 유리하다."', seen)));
+    const m = modal(box, { closable: false });
+    const done = () => { m.close(); resolve(); };
+    box.append(el('div', { style: 'text-align:center;margin-top:12px' }, onTap(el('button', { class: 'btn blue', text: '다 읽었어' }), () => { Sound.sfx('tap'); done(); })));
+    DEV.solve = done;
   });
 }
 
@@ -93,37 +154,52 @@ function dateCompare() {
   });
 }
 
-/* 대한제국이 빼앗긴 순서 속에서 독도 사건의 뜻을 찾는다. 연도 맞히기가 아니라, 카드에 적힌 "무엇을 빼앗겼는지"를 읽고 답한다. */
+/* 대한제국이 빼앗긴 순서 속에서 독도 사건의 뜻을 찾는다.
+   카드를 왼쪽부터 하나씩 띄우며 쉬운 말로 설명하고, 날짜만 비교하면 풀 수 있는 "먼저/나중" 질문을 거쳐
+   "독도는 어떤 땅일까?"를 생각하게 한다. 어려운 이름(한일의정서 등)은 카드 아래에 작게 둔다. */
 function lossOrder() {
   return new Promise(async resolve => {
     const w = el('div', { class: 'panel', style: 'width:1200px;padding:16px 24px 18px;text-align:center' });
     w.append(el('div', { style: 'font:28px var(--ui)', text: '📅 일본이 대한제국을 빼앗아 간 순서' }),
-      el('div', { style: 'font:18px var(--body);color:#bcd3ea;margin:2px 0 10px' }, gtext('왼쪽에서 오른쪽으로 시간이 흘러. 카드마다 무엇을 빼앗겼는지 읽어 봐. 밑줄 친 낱말을 누르면 뜻이 나와.')));
+      el('div', { style: 'font:18px var(--body);color:#bcd3ea;margin:2px 0 10px', text: '왼쪽에서 오른쪽으로 시간이 흘러. 카드가 하나씩 나타나.' }));
     const steps = [
-      { y: '1904년 2월', n: '한일의정서', ico: '🪖', d: '일본군이 대한제국 땅을\n전쟁에 마음대로 쓰게 됨' },
-      { y: '1905년 2월', n: '❓ 독도 사건', ico: '🏝️', d: '시마네현 고시로\n독도를 가져가려 함', dk: true },
-      { y: '1905년 11월', n: '을사늑약', ico: '✉️', d: '다른 나라와 외교할 권리\n(외교권)를 빼앗김' },
-      { y: '1910년 8월', n: '국권 피탈', ico: '⛓️', d: '나라를 완전히 빼앗김' },
+      { y: '1904년 2월', ico: '🪖', d: '일본군이 우리 땅을\n전쟁에 마음대로 씀', n: '한일의정서', say: '① 1904년 2월, 러일전쟁이 일어나자 일본군이 우리 땅을 전쟁에 마음대로 쓰게 됐어. 이 약속을 "한일의정서"라고 해.' },
+      { y: '1905년 2월', ico: '🏝️', d: '시마네현이 독도를\n가져가려 함', n: '❓ 독도 사건', dk: true, say: '② 1905년 2월, 그 전쟁 중에 시마네현이 고시를 내어 독도를 가져가려 했어. 아까 취재한 바로 그 일이야.' },
+      { y: '1905년 11월', ico: '✉️', d: '다른 나라와 외교할\n권리를 빼앗김', n: '을사늑약', say: '③ 1905년 11월, "을사늑약"으로 다른 나라와 약속하고 따질 수 있는 권리, 곧 외교권을 빼앗겼어.' },
+      { y: '1910년 8월', ico: '⛓️', d: '나라를 완전히\n빼앗김', n: '국권 피탈', say: '④ 1910년 8월, 결국 나라를 완전히 빼앗겼어. 이것을 "국권 피탈"이라고 해.' },
     ];
     const row = el('div', { class: 'loss-row' });
+    const cards = [];
     let dkCard;
     steps.forEach((st, i) => {
-      if (i) row.append(el('div', { class: 'loss-arrow', text: '▶' }));
-      const c = el('div', { class: 'loss-card' + (st.dk ? ' dk' : '') },
+      if (i) row.append(el('div', { class: 'loss-arrow', style: 'visibility:hidden', text: '▶' }));
+      const c = el('div', { class: 'loss-card' + (st.dk ? ' dk' : ''), style: 'visibility:hidden' },
         el('div', { class: 'ly', text: st.y }), el('div', { class: 'li', text: st.ico }),
-        el('div', { class: 'ln' }, gtext(st.n)), el('div', { class: 'ld', text: st.d }));
+        el('div', { class: 'ld', text: st.d }), el('div', { class: 'ln' }, gtext(st.n)));
       if (st.dk) dkCard = c;
-      row.append(c);
+      cards.push(c); row.append(c);
     });
     w.append(row, el('div', { class: 'loss-axis' }, el('span', { text: '먼저' }), el('i'), el('span', { text: '나중' })));
     const qbox = el('div');
     w.append(qbox);
     const m = modal(w, { closable: false });
-    await panelQuiz({ host: qbox, key: 's5_bar', base: 25, cols: 1, text: '1905년 2월 시마네현이 독도를 가져가려 했을 때, 대한제국은 어떤 상태였을까?',
+    /* 카드를 하나씩 보여 주며 설명한다. */
+    let skip = false;
+    DEV.solve = () => { skip = true; const b = qbox.querySelector('button'); if (b) b.click(); };
+    for (const [i, st] of steps.entries()) {
+      cards[i].style.visibility = ''; cards[i].classList.add('popin');
+      if (i) cards[i].previousElementSibling.style.visibility = '';
+      Sound.sfx('ping');
+      qbox.innerHTML = '';
+      qbox.append(el('div', { class: 'loss-say' }, gtext(st.say)));
+      if (skip) continue;
+      await new Promise(go => qbox.append(el('div', { style: 'margin-top:10px' }, onTap(el('button', { class: 'btn blue', text: i < steps.length - 1 ? '다음 카드 ▶' : '알겠어!' }), () => { Sound.sfx('tap'); go(); }))));
+    }
+    qbox.innerHTML = '';
+    await panelQuiz({ host: qbox, key: 's5_bar', base: 25, cols: 2, text: '독도 사건(1905년 2월)은 외교권을 빼앗긴 일(1905년 11월)보다 먼저일까, 나중일까?',
       options: [
-        { t: '외교권도 나라도 아직 빼앗기지 않았다. 다만 한일의정서로 일본군이 땅을 전쟁에 쓰고 있었다.', ok: true },
-        { t: '을사늑약으로 이미 외교권을 빼앗긴 뒤였다.', re: '"외교권을 빼앗김"이 적힌 카드를 찾아봐. 그 일은 독도 사건보다 앞일까, 뒤일까?' },
-        { t: '국권 피탈로 나라를 완전히 빼앗긴 뒤였다.', re: '"나라를 완전히 빼앗김" 카드는 맨 오른쪽, 가장 나중이야. 독도 사건은 그보다 앞이었어.' },
+        { t: '먼저', ok: true },
+        { t: '나중', re: '카드는 왼쪽에 있을수록 먼저야. 독도 카드는 외교권 카드보다 왼쪽에 있어. 날짜도 비교해 봐!' },
       ] });
     dkCard.classList.add('on');
     dkCard.querySelector('.ln').textContent = ko('독도 편입 시도');
@@ -188,9 +264,7 @@ const STAGE5 = [
           await getCard('niitaka');
         } },
         { x: 1060, y: 360, ico: '⚔️', label: '전쟁 연표', run: async () => {
-          await showDoc({ title: '러일전쟁 연표', era: '신문사 벽에 붙은 메모',
-            lines: ['1904년 2월  러일전쟁 시작', '1904년 2월  한일의정서:\n일본군이 대한제국 땅을 군사적으로 쓸 수 있게 함', '1904년 9월  일본 군함이 독도에 망루(감시탑) 세울 곳을 조사', '1905년 2월  시마네현 고시 제40호', '1905년 5월  동해에서 큰 해전이 벌어짐', '1905년 8월  독도에 망루 완성', '1905년 9월  러일전쟁 끝',
-              { t: '일본 외무성 관리의 말: "지금이야말로 편입이 필요하다.\n망루를 세우고 전선을 깔면 적의 군함을 감시하는 데 유리하다."', note: true }] });
+          await warTimeline();
           await say('gaji', '날짜를 잘 봐. 고시가 나온 건 언제였지? 그리고 일본은 독도를 어디에 쓰려고 했을까?');
         } },
       ],
@@ -252,7 +326,7 @@ const STAGE5 = [
     setBg('bg-stage5'); fogFx(0); Sound.play('mystery'); placeSeal(5);
     await talk([
       ['gaji:sad', '그런데 1905년은 우리 역사에서 어떤 때였을까? 그 무렵 일본은 대한제국을 조금씩 빼앗아 가고 있었어.'],
-      ['gaji', '한일의정서, 을사늑약, 국권 피탈… 이름이 어렵지? 카드마다 "무엇을 빼앗겼는지" 적어 뒀어. 그 뜻을 읽고 독도 사건이 어떤 의미인지 생각해 보자.'],
+      ['gaji', '이름은 어려워도 괜찮아. 카드마다 "무엇을 빼앗겼는지" 쉬운 말로 적어 뒀어. 하나씩 같이 보자.'],
     ]);
     await lossOrder();
     await talk([

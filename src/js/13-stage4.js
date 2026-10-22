@@ -10,15 +10,16 @@ function oneMoreIsland() {
     map.innerHTML = `<svg width="1000" height="420" viewBox="0 0 1000 420" style="position:absolute;left:0;top:0">
       <g stroke="#7a5a30" stroke-width="2" fill="none" opacity=".35"><path d="M40 380 Q300 360 520 300 T960 60"/><path d="M60 60 Q400 120 940 380"/></g>
       <text x="40" y="40" font-size="20" fill="#7a5a30" font-family="RIDIBatang">기죽도약도 (다시 그린 그림)</text></svg>`;
-    const isl = (x, y, w, h, name, sub, id) => {
+    /* 누르는 칸(w, h)은 이름까지 넉넉히 감싸고, 섬 그림의 크기(sw, sh)는 따로 정할 수 있다. */
+    const isl = (x, y, w, h, name, sub, id, sw = w * 0.8, sh = h * 0.55) => {
       const b = el('div', { style: `position:absolute;left:${x}px;top:${y}px;width:${w}px;height:${h}px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center` });
-      b.append(el('div', { style: `width:${w * 0.8}px;height:${h * 0.55}px;border-radius:45% 55% 50% 50%;background:#8a9a6a;border:3px solid #4a5a3a` }),
+      b.append(el('div', { style: `width:${sw}px;height:${sh}px;border-radius:45% 55% 50% 50%;background:#8a9a6a;border:3px solid #4a5a3a` }),
         el('div', { style: 'font:20px var(--old);color:#4a2d18;margin-top:6px;white-space:nowrap', text: name }),
         el('div', { style: 'font:15px var(--body);color:#7a5a30;white-space:nowrap', text: sub }));
       b.dataset.id = id; map.append(b); return b;
     };
     const a = isl(90, 60, 230, 200, '이소타케시마 (磯竹島)', '다케시마라고도 부름', 'take');
-    const b = isl(470, 150, 110, 110, '마쓰시마 (松島)', '', 'matsu');
+    const b = isl(425, 145, 200, 120, '마쓰시마 (松島)', '', 'matsu', 88, 60);
     const c = isl(780, 250, 170, 150, '오키 (隱岐)', '', 'oki');
     const slot = el('div', { class: 'hintslot' });
     root.append(map, slot);
@@ -141,8 +142,8 @@ const STAGE4 = [
       ['gaji:wow', '그럼 "석도"는? 신문에서 죽도와 함께 나온 섬은 우산도였어. 석도의 암호를 풀어 보자!'],
     ]);
     await placeTiles({
-      title: '🔐 암호 해독: "석도"는 어느 섬일까?', key: 's4_cipher', vertical: true,
-      prompt: '울릉도 사람들의 말: "저 독섬 가서 미역 좀 따 오드라고!"\n\n그 무렵 울릉도로 건너온 사람들 중에는 전라도 사람이 많았고,\n전라도 사투리로 "돌"을 "독"이라고 해.', doneMsg: '石島 → 돌섬 → 독섬 → 獨島\n석도는 바로 독도였어!',
+      title: '🔐 암호 해독: "석도"는 어느 섬일까?', key: 's4_cipher', slotW: 250,
+      prompt: '울릉도 사람들의 말: "저 독섬 가서 미역 좀 따 오드라고!"\n그 무렵 울릉도로 건너온 사람들 중에는 전라도 사람이 많았고,\n전라도 사투리로 "돌"을 "독"이라고 해.', doneMsg: '石島 → 돌섬 → 독섬 → 獨島\n석도는 바로 독도였어!',
       slots: [{ label: '칙령에 적힌 이름' }, { label: '한자의 뜻대로 읽으면 (石 = 돌)' }, { label: '울릉도 사람들의 사투리로 읽으면' }, { label: '그 소리를 다시 한자로 적으면' }],
       tiles: [{ t: '石島 (석도)', slot: 0 }, { t: '돌섬', slot: 1 }, { t: '독섬', slot: 2 }, { t: '獨島 (독도)', slot: 3 }],
       hintText: '石은 "돌 석"이야. 돌섬을 사투리로 부르면?\n그리고 그 소리를 한자로 적으면?',
