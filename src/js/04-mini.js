@@ -244,8 +244,9 @@ function pickItem({ claim, prompt, items, correct, hintText, reveal, key, base, 
       if (over) return; over = true;
       DEV.solve = null; award(key, Math.min(tries + 1, 4), base);
       if (node) node.style.outline = '5px solid #7fe0a8';
-      if (revealed) hint(reveal, 'gaji', 60000);
-      await doneBar(root, { msg: doneMsg });
+      /* 떠 있던 힌트 아래에 계속 단추가 붙으면 창이 화면 밖으로 넘친다. 힌트는 걷고, 정답을 알려 줄 때는 그 말을 마무리 글로 보여 준다. */
+      clearHint();
+      await doneBar(root, { msg: revealed ? reveal : doneMsg });
       HINT.host = null; clearHint(); m.close(); resolve(tries);
     };
     const nodes = {};

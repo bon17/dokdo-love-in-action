@@ -98,7 +98,7 @@ function teacherPanel() {
     }),
     el('a', { class: 'btn small', href: 'ranking.html', target: '_blank', rel: 'noopener', style: 'text-decoration:none', text: '🏆 랭킹 보드 열기' }),
     onTap(el('button', { class: 'btn small gray', text: '이 기기 기록 모두 지우기' }), async () => {
-      if (!await confirmBox('이 기기에 저장된 진행 상황과 최고 기록을 모두 지울까요?')) return;
+      if (!await confirmBox('이 기기에 저장된 진행 상황과 최고 기록을 모두 지울까요?\n(처음 한 번만 나오는 안내도 다시 나와요)')) return;
       for (const k of Object.values(KEY)) store.del(k);
       location.reload();
     })));

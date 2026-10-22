@@ -166,6 +166,8 @@ function say(who, text) {
     const adv = e => {
       if (e) e.stopPropagation();
       if (over) return;
+      /* 가이드 투어가 떠 있는 동안에는 밝힌 곳 둘레를 눌러도 대사가 넘어가지 않게 한다. */
+      if (APP.querySelector('.tour')) return;
       if (!tw.done) { tw.finish(); arm(); return; }
       arm();
       if (performance.now() < readyAt) return;
@@ -254,18 +256,22 @@ function stageRect(node, pad) {
 function spotlight(target, { text, until, ring = true, pad = 8 }) {
   return new Promise(resolve => {
     const layer = el('div', { class: 'tour' });
-    const tip = el('div', { class: 'tour-tip' }, el('img', { src: img('gaji-default'), alt: '' }), el('div', { class: 'b' }, gtext(text)));
+    const tip = el('div', { class: 'tour-tip' }, el('img', { src: img('gaji-default'), alt: '' }), el('div', { class: 'b', text }));
     layer.append(tip);
     APP.append(layer);
-    /* 어둡게 덮는 판과 테두리만 다시 그리고, 말풍선은 한 번만 넣어 자리만 옮긴다. (다시 넣으면 나타나는 효과가 되풀이되어 깜빡인다) */
+    /* 어둡게 덮는 판만 다시 그리고, 테두리와 말풍선은 한 번만 넣어 자리만 옮긴다. (다시 넣으면 빛나는 효과가 처음부터 되풀이되어 깜빡인다) */
+    let ringEl = null;
     const draw = () => {
       const node = typeof target === 'function' ? target() : target;
       if (!node || !node.isConnected) return;
       const r = stageRect(node, pad);
-      layer.querySelectorAll('.tour-dim,.tour-ring').forEach(e => e.remove());
+      layer.querySelectorAll('.tour-dim').forEach(e => e.remove());
       const dim = (x, y, w, h) => { if (w > 0 && h > 0) layer.insertBefore(el('div', { class: 'tour-dim', style: `left:${x}px;top:${y}px;width:${w}px;height:${h}px` }), tip); };
       dim(0, 0, W, r.y); dim(0, r.y + r.h, W, H - r.y - r.h); dim(0, r.y, r.x, r.h); dim(r.x + r.w, r.y, W - r.x - r.w, r.h);
-      if (ring) layer.insertBefore(el('div', { class: 'tour-ring', style: `left:${r.x}px;top:${r.y}px;width:${r.w}px;height:${r.h}px` }), tip);
+      if (ring) {
+        if (!ringEl) layer.insertBefore(ringEl = el('div', { class: 'tour-ring' }), tip);
+        Object.assign(ringEl.style, { left: r.x + 'px', top: r.y + 'px', width: r.w + 'px', height: r.h + 'px' });
+      }
       const tw = tip.offsetWidth, th = tip.offsetHeight;
       /* 화면 아래쪽(대사 창 등)에 있는 곳은 말풍선을 위에, 위쪽에 있는 곳은 아래에 띄운다. */
       const below = r.y + r.h / 2 < H / 2;
@@ -283,7 +289,8 @@ function spotlight(target, { text, until, ring = true, pad = 8 }) {
 async function sayWith(who, text, during) {
   const p = say(who, text);
   if (during) {
-    await waitFor(() => { const box = document.querySelector('#dialog .dlg'); return box && ![...box.querySelectorAll('.twh')].some(e => e.textContent); }, 40);
+    /* 글자가 다 나오고, 학생이 그사이 연 도감·메뉴 창도 닫힌 뒤에 시작한다. (창 아래에 가려진 곳을 밝히면 누를 수 없다) */
+    await waitFor(() => { const box = document.querySelector('#dialog .dlg'); return box && !L.overlay.querySelector('.modal') && ![...box.querySelectorAll('.twh')].some(e => e.textContent); }, 40);
     await during();
   }
   await p;
@@ -763,7 +770,7 @@ function openBook(tab = 'cards') {
       /* 첫 소리(ㄱ, ㄴ, ㄷ…)로 나누고, 한 쪽에 6개씩 보여 준다. */
       body.append(el('div', { style: 'font:19px var(--body);color:#bcd3ea;margin-bottom:10px', text: '게임 속 글에서 밑줄 친 낱말을 가나다순으로 모았어요. 글 속의 밑줄 낱말을 누르면 그 자리에서도 볼 수 있어요.' }));
       const CHO = 'ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
-      const choOf = k => { const c = k.charCodeAt(0) - 0xac00; return c < 0 || c > 11171 ? 'ㄱ' : CHO[Math.floor(c / 588)].replace('ㄲ', 'ㄱ').replace('ㄸ', 'ㄷ').replace('ㅃ', 'ㅂ').replace('ㅆ', 'ㅅ').replace('ㅉ', 'ㅈ'); };
+      const choOf = k => { const c = k.charCodeAt(0) - 0xac00; return c < 0 || c > 11171 ? 'A~Z' : CHO[Math.floor(c / 588)].replace('ㄲ', 'ㄱ').replace('ㄸ', 'ㄷ').replace('ㅃ', 'ㅂ').replace('ㅆ', 'ㅅ').replace('ㅉ', 'ㅈ'); };
       const words = Object.keys(GLOSS).sort((a, b) => a.localeCompare(b, 'ko'));
       const groups = [...new Set(words.map(choOf))];
       if (!groups.includes(BOOKVIEW.cho)) BOOKVIEW.cho = groups[0];

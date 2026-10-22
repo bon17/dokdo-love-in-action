@@ -27,7 +27,7 @@ html,body{margin:0;height:100%;background:var(--deep);overflow:hidden;touch-acti
 #bg .bgl.on{opacity:1}
 #fx{pointer-events:none;overflow:hidden}
 #scene{overflow:hidden}
-#hidden{pointer-events:none;z-index:10}
+#hidden{pointer-events:none;z-index:9}
 #hidden > *{pointer-events:auto}
 #hud{height:64px;bottom:auto;pointer-events:none;z-index:5}
 #hud > *{pointer-events:auto}
@@ -103,7 +103,7 @@ html,body{margin:0;height:100%;background:var(--deep);overflow:hidden;touch-acti
 .dlg .txt{white-space:pre-line;min-height:80px}
 .dlg .more{position:absolute;right:22px;bottom:12px;font-size:22px;color:#ff8a3d;animation:bob 1s infinite}
 .catcher{position:absolute;inset:64px 0 0 0}
-.choices{position:absolute;left:220px;right:40px;bottom:190px;display:flex;flex-direction:column;gap:12px;align-items:stretch}
+.choices{position:absolute;left:220px;right:72px;bottom:190px;display:flex;flex-direction:column;gap:12px;align-items:stretch}
 .choices.compact{gap:8px}
 .choices.compact .choice{font-size:21px;line-height:1.45;padding:9px 18px}
 .choices.tiny .choice{font-size:19px;line-height:1.35;padding:6px 16px}
@@ -388,7 +388,7 @@ mark.hl{background:linear-gradient(transparent 55%,rgba(255,214,90,.45) 55%);col
 .mrow .mw{display:inline-block;font:15px var(--ui);color:#7a4a22;background:#f1dcb0;border-radius:8px;padding:0 8px;margin-right:8px}
 .mrow .md{font:16px/1.4 var(--body);color:#5a4a3a}
 /* 도감: 연표 */
-.tlrow{display:flex;gap:16px;align-items:flex-start;background:rgba(255,255,255,.07);border-radius:12px;padding:8px 14px;margin:6px 0}
+.tlrow{display:flex;gap:16px;align-items:flex-start;background:rgba(255,255,255,.07);border-radius:12px;padding:6px 14px;margin:5px 0}
 .tlrow .ty{flex:none;width:130px;font:19px var(--ui)}
 .tlrow .tt{font:20px var(--ui)}
 .tlrow .td{font:17px/1.5 var(--body);color:#cfe0f0}
@@ -439,7 +439,7 @@ mark.hl{background:linear-gradient(transparent 55%,rgba(255,214,90,.45) 55%);col
 .card.whyon{outline:5px solid #3dd68c;outline-offset:3px}
 /* 도감: 단계·시대·첫 소리 단추와 쪽 넘기기 (스크롤 없이 한 화면) */
 .bchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
-.bchip{border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#dfe9f5;border-radius:12px;padding:4px 12px;font:17px var(--ui);cursor:pointer}
+.bchip{border:2px solid rgba(255,255,255,.25);background:rgba(255,255,255,.08);color:#dfe9f5;border-radius:12px;padding:4px 10px;font:16px var(--ui);cursor:pointer}
 .bchip.on{background:var(--orange);border-color:var(--orange);color:#fff}
 .pager{display:flex;gap:14px;align-items:center;justify-content:center;margin-top:10px;font:18px var(--ui);color:#bcd3ea}
 .pager .btn[disabled]{opacity:.35}
@@ -447,7 +447,6 @@ mark.hl{background:linear-gradient(transparent 55%,rgba(255,214,90,.45) 55%);col
 .cluegrid .clue{margin-bottom:0}
 /* 세 줄 정리에서 카드를 고르는 창: 카드가 20장이어도 스크롤 없이 한 화면에 */
 .grid.compact{gap:10px}
-.grid.compact .card.mini{width:128px;height:156px}
-.grid.compact .card.mini .ctop{height:50px;font-size:28px}
+.grid.compact .card.mini{zoom:.86}
 /* 2단계 안개 반박: 카드 오른쪽 위의 작은 "다시 읽기" 단추 */
 .reread{position:absolute;right:6px;top:6px;border:2px solid #2b7bd6;background:#e3f1ff;color:#1d4f8c;border-radius:10px;padding:1px 8px;font:14px var(--ui);cursor:pointer}
