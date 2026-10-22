@@ -5,7 +5,6 @@ const EXAMPLE_LINES = {
   geo: '독도는 일본 오키섬(약 157.5km)보다 울릉도(약 87.4km)에 훨씬 가깝고, 맑은 날이면 울릉도에서 맨눈으로 보이는 울릉도의 이웃 섬이다.',
   law: '대한제국은 1900년 칙령으로 독도를 다스렸고, 1905년 일본의 편입은 주인 있는 땅을 몰래 가져가려 한 것이라 효력이 없다. 지금도 대한민국이 독도를 실제로 다스리고 있다.',
 };
-const inCat = (c, k) => c.cat === k || (c.alt || []).includes(k);
 
 /* 학생이 모은 카드로 "독도가 우리 땅인 이유" 3줄을 먼저 완성하고, 그다음에 예시를 본다. */
 function explainBuilder() {
@@ -31,11 +30,12 @@ function explainBuilder() {
       exBtn.disabled = !S.expl.every(Boolean);
     };
     const pick = (k, i) => {
-      const own = CARDS.filter(c => inCat(c, k) && hasCard(c.id));
-      const list = own.length ? own : CARDS.filter(c => inCat(c, k));
+      /* 카드에 붙은 근거 이름표와 고르는 칸이 늘 같도록, 그 근거가 이름표인 카드만 보여 준다. */
+      const own = CARDS.filter(c => c.cat === k && hasCard(c.id));
+      const list = own.length ? own : CARDS.filter(c => c.cat === k);
       const p = el('div', { class: 'panel', style: 'width:1180px;max-height:640px;overflow:auto;padding:20px' });
       p.append(el('div', { style: 'font:26px var(--ui);margin-bottom:12px', text: `${CAT[k].name}: 어떤 증거로 설명할까?` }));
-      const g = el('div', { class: 'grid', style: 'justify-content:center' });
+      const g = el('div', { class: 'grid compact', style: 'justify-content:center' });
       p.append(g);
       const pm = modal(p);
       for (const c of list) {
@@ -62,7 +62,7 @@ function explainBuilder() {
     });
     refresh();
     DEV.solve = () => {
-      order.forEach((k, i) => { if (!S.expl[i]) S.expl[i] = (CARDS.find(c => inCat(c, k) && hasCard(c.id)) || CARDS.find(c => inCat(c, k))).id; });
+      order.forEach((k, i) => { if (!S.expl[i]) S.expl[i] = (CARDS.find(c => c.cat === k && hasCard(c.id)) || CARDS.find(c => c.cat === k)).id; });
       refresh(); exBtn.click();
     };
   });
@@ -139,7 +139,7 @@ async function showResult() {
   const rk = el('div', { class: 'rbox', style: 'flex:1;display:flex;flex-direction:column;min-height:0' });
   const tabs = el('div', { class: 'tabs', style: 'margin-bottom:6px' });
   const status = el('div', { style: 'font:16px var(--body);color:#8fa7c0;margin-bottom:6px' });
-  const list = el('div', { style: 'flex:1;overflow:auto' });
+  const list = el('div', { style: 'flex:1;min-height:0;overflow:hidden' });
   rk.append(el('div', { style: 'font:24px var(--ui);margin-bottom:6px', text: '🏆 실시간 랭킹' }), tabs, status, list);
   right.append(rk);
   const endMsg = el('div', { class: 'rbox' });
@@ -168,11 +168,17 @@ async function showResult() {
         el('div', { class: 'rk', text: i < 3 ? ['🥇', '🥈', '🥉'][i] : i + 1 }), el('div', { class: 'cl', text: `${r.g}학년 ${r.c}반` }), el('div', { class: 'nm', text: r.n }),
         el('div', { class: 'sc', text: fmtNum(r.s) + '점' }), el('div', { class: 'gr', text: r.r }), el('div', { class: 'tm', text: fmtTime(r.t) })));
     });
+    /* 스크롤 없이 칸에 들어가는 만큼만 보여 준다. 내 순위가 잘렸으면 맨 아래 줄을 내 순위로 바꾼다. */
     const mine = f.findIndex(r => r.id === myId);
-    if (mine >= 50) list.append(el('div', { class: 'rank-row me' }, el('div', { class: 'rk', text: mine + 1 }), el('div', { class: 'nm', text: '나' }), el('div', { class: 'sc', text: fmtNum(f[mine].s) + '점' })));
+    while (list.children.length > 1 && list.scrollHeight > list.clientHeight + 1) list.lastChild.remove();
+    if (mine >= list.children.length) {
+      list.lastChild.remove();
+      list.append(el('div', { class: 'rank-row me' }, el('div', { class: 'rk', text: mine + 1 }), el('div', { class: 'cl', text: `${f[mine].g}학년 ${f[mine].c}반` }), el('div', { class: 'nm', text: f[mine].n }),
+        el('div', { class: 'sc', text: fmtNum(f[mine].s) + '점' }), el('div', { class: 'gr', text: f[mine].r }), el('div', { class: 'tm', text: fmtTime(f[mine].t) })));
+    }
   };
   /* 순위는 1분 안팎마다 새로 받는다. 랭킹 서버(앱스 스크립트)는 동시에 30개까지만 실행되므로,
-     500명이 함께 결과 화면을 보아도 한도를 넘지 않게 태블릿마다 받는 때를 흩어 놓는다.
+     500명이 함께 결과 화면을 보아도 한도를 넘지 않게 기기마다 받는 때를 흩어 놓는다.
      화면이 꺼져 있으면 쉬고, 받지 못하면 2분, 4분 뒤로 늦춰 다시 시도한다. */
   const EVERY = 60000;
   let fails = 0, lastLoad = 0;

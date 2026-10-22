@@ -1,7 +1,7 @@
 # 독도 타임 패트롤: 사라진 기록을 찾아라
 
 기산중학교 독도 사랑 실천대회 3교시에 학생들이 플레이하는 독도 학습 게임입니다. (4교시는 퀴즈 대회)
-안드로이드 태블릿의 크롬에서 가로 화면으로, 약 40분 동안 플레이합니다.
+학생용 크롬북의 크롬 브라우저에서, 약 40분 동안 플레이합니다. 학생들은 GitHub Pages 게임 주소의 QR 코드를 찍어 들어옵니다.
 
 - 게임: <https://bon17.github.io/dokdo-love-in-action/>
 - 선생님용 랭킹 보드: <https://bon17.github.io/dokdo-love-in-action/ranking.html>

@@ -15,12 +15,26 @@ const STAGE0 = [
       ['fog', '크크크… 기록이 사라지면 사람들은 독도를 잊게 될 거야. 아무도 기억하지 못하게 해 주지!'],
     ]);
     fog.remove();
+    await say('gaji:wow', '늦었다! 망각의 안개가 벌써 여기까지 왔어!');
+    /* 가이드 투어 ①: 밑줄 낱말을 직접 눌러 뜻풀이를 보게 한다. (같은 기기에서 처음 한 번만) */
+    await sayWith('gaji', '앗, 방금 "망각"에 주황색 밑줄 보였어? 글 속에 밑줄이 그어진 낱말은 어려운 낱말이야. 누르면 뜻이 나와! 지금 이 "망각"을 눌러 봐.', tourSeen('gloss') ? null : async () => {
+      const word = [...document.querySelectorAll('#dialog .dlg .gl')].find(g => g.dataset.k === '망각');
+      if (!word) return;
+      await spotlight(word, { text: '👆 밑줄 친 "망각"을 눌러 봐!', until: tapOn(word), pad: 6 });
+      const pop = await waitFor(() => document.querySelector('.glpop'));
+      await spotlight(pop, { text: '이렇게 뜻이 나와! 다른 밑줄 낱말도 언제든 눌러 볼 수 있어.\n다 읽었으면 아무 곳이나 눌러 닫아 봐.', until: waitFor(() => !document.querySelector('.glpop')), ring: false });
+      tourDone('gloss');
+    });
     await talk([
-      ['gaji:wow', '늦었다! 망각의 안개가 벌써 여기까지 왔어!'],
-      ['gaji', '앗, 방금 "망각"에 주황색 밑줄 보였어? 글 속에 밑줄이 그어진 낱말은 어려운 낱말이야. 누르면 뜻이 나와! 지금 이 "망각"을 눌러 봐.'],
       ['gaji', '안녕, 나는 가지야. 옛날 독도 바다에 살던 강치들의 기억을 간직하고 있어. 울릉도 사람들은 강치를 "가지"라고도 불렀대.'],
       ['gaji', '너는 오늘부터 독도 타임 패트롤 대원이야! 시간여행 배 "우산호"를 타고 여러 시대로 가서, 사라진 독도의 증거를 되찾아 줘.'],
-      ['gaji', '증거를 찾을 때마다 위쪽의 흐린 독도 그림이 조금씩 선명해질 거야. 모은 증거는 📖 도감에서 언제든 다시 볼 수 있어.'],
+    ]);
+    /* 가이드 투어 ②: 📖 도감을 직접 열고 닫아 보게 한다. */
+    await sayWith('gaji', '증거를 찾을 때마다 위쪽의 흐린 독도 그림이 조금씩 선명해질 거야. 모은 증거는 📖 도감에서 언제든 다시 볼 수 있어.', tourSeen('book') ? null : async () => {
+      await tourBook(() => spotlight(bookBox, { text: '모은 증거 카드가 여기에 모여. 위쪽 탭에서 연표, 노래 단서, 낱말 풀이도 볼 수 있어.\n다 봤으면 오른쪽 위 ✕를 눌러 닫아 봐!', until: waitFor(() => !document.querySelector('.bookpanel')), ring: false, pad: 18 }));
+      tourDone('book');
+    });
+    await talk([
       ['gaji', '틀려도 괜찮아. 게임이 끝나지는 않아. 대신 꼼꼼히 읽고 생각할수록 점수가 올라가!'],
       ['gaji:yay', '아, 그리고 단계마다 내 친구 강치가 한 마리씩 숨어 있어. 화면 가장자리를 잘 살펴봐! 그럼, 출발!'],
     ]);
@@ -84,7 +98,7 @@ function teacherPanel() {
     }),
     el('a', { class: 'btn small', href: 'ranking.html', target: '_blank', rel: 'noopener', style: 'text-decoration:none', text: '🏆 랭킹 보드 열기' }),
     onTap(el('button', { class: 'btn small gray', text: '이 기기 기록 모두 지우기' }), async () => {
-      if (!await confirmBox('이 태블릿에 저장된 진행 상황과 최고 기록을 모두 지울까요?')) return;
+      if (!await confirmBox('이 기기에 저장된 진행 상황과 최고 기록을 모두 지울까요?')) return;
       for (const k of Object.values(KEY)) store.del(k);
       location.reload();
     })));
@@ -156,7 +170,7 @@ function titleScreen() {
     if (sv && !sv.finished) {
       const p = sv.player;
       btns.append(onTap(el('button', { class: 'btn', style: 'font-size:28px;min-height:70px', text: `▶ 이어하기 (${p.grade ? `${p.grade}학년 ${p.cls}반 ${p.name}` : p.name} · ${STAGE_NAMES[sv.stage] || ''})` }), () => go('continue')));
-      btns.append(onTap(el('button', { class: 'btn gray', text: '새로 시작' }), async () => { if (await confirmBox('다른 친구가 새로 시작할까요?\n이 태블릿에 저장된 진행 상황은 지워져요.')) go('new'); }));
+      btns.append(onTap(el('button', { class: 'btn gray', text: '새로 시작' }), async () => { if (await confirmBox('다른 친구가 새로 시작할까요?\n이 기기에 저장된 진행 상황은 지워져요.')) go('new'); }));
     } else if (sv && sv.finished) {
       btns.append(onTap(el('button', { class: 'btn', style: 'font-size:28px;min-height:70px', text: '🏆 결과 보기' }), () => go('result')));
       btns.append(onTap(el('button', { class: 'btn blue', text: '🔄 다시 도전' }), () => go('retry')));

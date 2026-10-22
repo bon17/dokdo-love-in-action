@@ -1,7 +1,7 @@
 /* ===== 6단계: 연표 러시 ===== */
 
 /* 광복 이후의 기록: 위쪽 시간 줄의 반짝이는 점을 차례로 누르면 그 기록이 그림 카드로 펼쳐지고, 그 자리에서 증거를 얻는다.
-   카드에는 쉬운 핵심 한 줄을 두고, 원래의 긴 설명은 "자세히 보기"로 연다. */
+   카드에는 쉬운 핵심 한 줄을 크게 두고, 그 아래에 자세한 설명을 함께 보여 준다. */
 const POSTWAR = [
   { when: '1946년 1월', card: 'scapin677', ico: '🗺️', name: 'SCAPIN 제677호', key: '연합국이 일본이 다스리는 범위에서 독도를 뺐다.',
     more: '전쟁에서 진 일본을 점령한 연합국 최고사령관 총사령부가 지시를 내렸다. 일본이 통치·행정권을 행사할 수 있는 범위에서 울릉도, 독도(리앙쿠르암), 제주도를 뺀다. (다만 최종적인 영토 결정은 아니라는 단서가 붙어 있다.)' },
@@ -35,16 +35,12 @@ function postwarRecords() {
     const show = (i, fresh) => {
       const r = POSTWAR[i];
       card.innerHTML = '';
-      const more = el('div', { class: 'pw-more', style: 'display:none' }, gtext(r.more));
-      const moreBtn = onTap(el('button', { class: 'btn small blue', style: 'font-size:17px;min-height:38px;padding:2px 16px', text: '📖 자세히 보기' }), () => {
-        Sound.sfx('tap'); const on = more.style.display === 'none'; more.style.display = on ? '' : 'none'; moreBtn.textContent = on ? '접기' : '📖 자세히 보기';
-      });
       card.append(el('div', { class: 'pw-ico', text: r.ico }),
         el('div', { class: 'pw-body' },
           el('div', { class: 'pw-date', text: '📅 ' + r.when }),
           el('div', { class: 'pw-name', text: r.name }),
           el('div', { class: 'pw-key' }, gtext(r.key)),
-          el('div', { style: 'margin-top:10px' }, moreBtn), more),
+          el('div', { class: 'pw-more' }, gtext(r.more))),
         el('div', { class: 'stampfx', style: 'position:absolute;right:26px;top:22px' + (fresh ? '' : ';animation:none;opacity:.85;transform:rotate(-14deg)'), html: '증거<br>확보' }));
       if (fresh) { card.classList.remove('popin'); void card.offsetWidth; card.classList.add('popin'); }
     };
@@ -190,7 +186,7 @@ const STAGE6 = [
       { t: '1905년의 독도는 주인 없는 섬이었다', ok: false },
       { t: '대한제국은 독도를 다스린 적이 없다', ok: false },
       { t: 'SCAPIN 제677호는 독도를 일본의 범위에 넣었다', ok: false },
-      { t: '조약에 이름이 없는 섬은 모두 일본 땅이다', ok: false },
+      { t: '샌프란시스코 강화조약에 이름이 없는 섬은 모두 일본 땅이다', ok: false },
       { t: '독도의용수비대는 일본이 만든 조직이다', ok: false },
       { t: '돗토리번은 두 섬 모두 자기 땅이 아니라고 답했다', ok: true },
       { t: '태정관은 울릉도 외 1도가 일본과 관계없다고 했다', ok: true },

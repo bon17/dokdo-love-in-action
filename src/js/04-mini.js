@@ -231,9 +231,9 @@ function pickItem({ claim, prompt, items, correct, hintText, reveal, key, base, 
   return new Promise(resolve => {
     const root = el('div', { class: 'panel', style: 'width:1160px;padding:22px;text-align:center' });
     if (claim) root.append(el('div', { style: 'display:flex;gap:14px;align-items:center;justify-content:center;margin-bottom:12px' },
-      el('img', { src: img('fog'), style: 'width:110px' }),
-      el('div', { style: 'font:28px/1.5 var(--ui);background:rgba(106,79,179,.5);padding:14px 22px;border-radius:18px;max-width:840px' }, gtext(`"${claim}"`))));
-    root.append(el('div', { class: 'msg', style: 'font-size:22px;margin-bottom:14px' }, gtext(prompt)));
+      el('img', { src: img('fog'), style: 'width:76px' }),
+      el('div', { style: 'font:26px/1.45 var(--ui);background:rgba(106,79,179,.5);padding:10px 20px;border-radius:18px;max-width:840px' }, gtext(`"${claim}"`))));
+    root.append(el('div', { class: 'msg', style: 'font-size:22px;margin-bottom:10px' }, gtext(prompt)));
     const row = el('div', { style: 'display:flex;gap:14px;justify-content:center;flex-wrap:wrap;max-width:1000px;margin:0 auto' });
     const slot = el('div', { class: 'hintslot' });
     root.append(row, slot);
@@ -250,10 +250,10 @@ function pickItem({ claim, prompt, items, correct, hintText, reveal, key, base, 
     };
     const nodes = {};
     items.forEach(it => {
-      const node = it.card ? cardEl(CARD[it.card], { mini: true }) : el('div', { class: 'tile', style: 'width:300px;min-height:118px;flex-direction:column;gap:4px;font-size:21px' },
+      const node = it.card ? cardEl(CARD[it.card], { mini: true }) : el('div', { class: 'tile', style: 'position:relative;width:300px;min-height:100px;flex-direction:column;gap:3px;font-size:21px;padding:10px 16px' },
         it.ico ? el('div', { style: 'font-size:30px;line-height:1', text: it.ico }) : null, el('div', { style: 'white-space:pre-line;line-height:1.4', text: it.t }),
         it.sum ? el('div', { style: 'font:16px/1.45 var(--body);color:#6a553f;margin-top:2px' }, gtext(it.sum)) : null,
-        it.doc ? onTap(el('button', { class: 'btn small blue', style: 'margin-top:4px;font-size:15px;min-height:34px;padding:2px 12px', text: '📖 다시 읽기' }), () => { if (!over) { Sound.sfx('tap'); showDoc({ ...it.doc, btn: '다 읽었어' }); } }) : null);
+        it.doc ? onTap(el('button', { class: 'reread', title: '다시 읽기', text: '📖 다시 읽기' }), () => { if (!over) { Sound.sfx('tap'); showDoc({ ...it.doc, btn: '다 읽었어' }); } }) : null);
       node.style.cursor = 'pointer';
       nodes[it.id] = node;
       onTap(node, () => {

@@ -17,11 +17,9 @@ function radioGame() {
     radio.append(screen, scale, knob);
     const counter = el('div', { style: 'font:22px var(--ui);margin:12px 0 6px;color:#ffd9a8' });
     const btns = el('div', { style: 'display:flex;gap:16px;justify-content:center;margin-top:8px' });
-    const replay = el('a', { class: 'btn blue small', href: SONG_URL, target: '_blank', rel: 'noopener', text: '▶ 노래 다시 듣기 (유튜브)', style: 'text-decoration:none' });
     const doneBtn = el('button', { class: 'btn', text: '단서 수신 완료!', disabled: true });
-    btns.append(replay, doneBtn);
-    root.append(radio, counter, btns,
-      el('div', { style: 'font:16px var(--body);color:#8fa7c0;margin-top:8px', text: '다시 듣기를 누르면 새 창에서 노래가 열려요. 이어폰이 없으니 소리를 작게 해 주세요.' }));
+    btns.append(doneBtn);
+    root.append(radio, counter, btns);
     const m = modal(root, { closable: false });
     const pos = CLUES.map((c, i) => 0.06 + i * (0.88 / (CLUES.length - 1)) + (i % 2 ? 0.012 : -0.01));
     const dots = pos.map((p, i) => { const d = el('div', { style: `position:absolute;left:${p * 100}%;top:58px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:#ffb347;box-shadow:0 0 10px #ffb347;animation:pulse 1.2s infinite` }); scale.append(d); return d; });
@@ -497,7 +495,15 @@ const STAGE1 = [
       ['gaji', '노래 속에 독도를 찾는 단서가 숨어 있을지도 몰라. 주파수를 맞춰 보자!'],
     ]);
     await radioGame();
-    await say('gaji', '단서 아홉 개를 수첩에 적어 뒀어. 진짜 증거를 찾으면 하나씩 풀릴 거야.\n수첩은 위쪽 📖 도감에서 언제든 볼 수 있어.');
+    /* 가이드 투어 ③: 도감을 열어 "노래 단서 수첩" 탭을 직접 눌러 보게 한다. (같은 기기에서 처음 한 번만) */
+    await sayWith('gaji', '단서 아홉 개를 수첩에 적어 뒀어. 진짜 증거를 찾으면 하나씩 풀릴 거야.\n수첩은 위쪽 📖 도감에서 언제든 볼 수 있어.', tourSeen('clues') ? null : async () => {
+      await tourBook(async () => {
+        const tab = await waitFor(() => [...document.querySelectorAll('.bookpanel .tab')].find(t => /노래 단서/.test(t.textContent)));
+        await spotlight(tab, { text: '👆 "노래 단서 수첩" 탭을 눌러 봐!', until: tapOn(tab), pad: 6 });
+        await spotlight(bookBox, { text: '라디오에서 받은 노래 단서가 여기 적혀 있어. 증거를 찾으면 하나씩 풀려!\n다 봤으면 오른쪽 위 ✕를 눌러 닫아 봐.', until: waitFor(() => !document.querySelector('.bookpanel')), ring: false, pad: 18 });
+      });
+      tourDone('clues');
+    });
   },
   async () => {
     setBg('bg-stage1'); fogFx(0.3); Sound.play('sail'); placeSeal(1);
