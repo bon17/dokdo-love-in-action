@@ -10,7 +10,7 @@
   /*__FONTFACE__*/
   :root { --gold:#f2c14e; --orange:#ff8a3d; --ui:'RIDIBatang','Noto Serif KR',serif; }
   html,body { margin:0; height:100%; overflow:hidden; background:#061425; color:#fff; font-family:var(--ui); }
-  #stage { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:0 0;
+  #stage { position:absolute; left:0; top:0; width:1920px; height:1080px; transform-origin:0 0; word-break:keep-all;
     background:radial-gradient(circle at 20% 10%,#1d5a8f 0%,#0b2545 45%,#061425 100%); }
   header { position:absolute; left:60px; right:60px; top:36px; display:flex; align-items:flex-end; gap:30px; }
   .school { font-size:34px; color:#ffd9a8; }
@@ -33,9 +33,10 @@
   @keyframes in { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
   aside { position:absolute; right:60px; top:300px; width:380px; text-align:center; }
   aside img { width:340px; height:340px; background:#fff; border-radius:24px; padding:14px; }
-  aside .u { font-size:24px; color:#cfe6ff; margin-top:12px; word-break:break-all; }
+  aside .u { font-size:24px; color:#cfe6ff; margin-top:12px; }
+  .nw { white-space:nowrap; }
   aside .t { font-size:30px; margin-bottom:14px; }
-  .box { background:rgba(255,255,255,.08); border-radius:22px; padding:22px; margin-top:26px; font-size:26px; line-height:1.6; color:#dfe9f5; }
+  .box { background:rgba(255,255,255,.08); border-radius:22px; padding:22px; margin-top:26px; font-size:26px; line-height:1.6; color:#dfe9f5; text-wrap:pretty; }
   footer { position:absolute; left:60px; right:60px; bottom:26px; font-size:24px; color:#8fa7c0; display:flex; justify-content:space-between; }
   .msg { grid-column:1 / span 2; grid-row:1 / span 10; display:flex; align-items:center; justify-content:center; text-align:center; font-size:36px; line-height:1.7; color:#dfe9f5; }
 </style>

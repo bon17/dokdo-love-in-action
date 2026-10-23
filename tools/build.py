@@ -180,7 +180,9 @@ def main():
     html = (SRC / "index.template.html").read_text(encoding="utf-8")
     board = (SRC / "ranking.template.html").read_text(encoding="utf-8")
     face, link = build_font(css + js + html + board)
-    board = board.replace("/*__QR__*/", qr).replace("/*__URL__*/", GAME_URL)
+    # QR 아래 주소는 https:// 를 빼고, 줄이 넘어가면 "/" 뒤에서만 끊기게 한다.
+    host, _, path = GAME_URL.removeprefix("https://").rstrip("/").partition("/")
+    board = board.replace("/*__QR__*/", qr).replace("/*__URL__*/", f'{host}/<wbr><span class="nw">{path}</span>')
     board = board.replace("/*__FONTFACE__*/", face).replace("<!--__FONTLINK__-->", link)
     (ROOT / "ranking.html").write_text(board, encoding="utf-8")
     images, sizes = build_images()
