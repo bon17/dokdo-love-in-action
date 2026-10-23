@@ -10,6 +10,43 @@
 <style>
 /*__CSS__*/
 </style>
+<script>
+/* 안전망: 다 불러온 뒤 8초가 지나도 게임 화면이 안 보이면 해결 방법과 오류 정보를 띄운다.
+   게임 코드가 돌지 못하는 오래된 브라우저에서도 돌도록 옛 문법(ES5)으로 쓴다. */
+(function () {
+  var errs = [];
+  window.addEventListener('error', function (e) { if (e && e.message) errs.push(e.message + (e.lineno ? ' @' + e.lineno : '')); });
+  window.addEventListener('unhandledrejection', function (e) { var r = e && e.reason; errs.push('Promise: ' + ((r && r.message) || r)); });
+  function shown() {
+    var app = document.getElementById('app'), r = app && app.getBoundingClientRect();
+    return !document.getElementById('boot') && r && r.width > 50 && r.height > 50;
+  }
+  function check() {
+    var box = document.getElementById('bootfail');
+    if (shown()) { if (box) box.parentNode.removeChild(box); return; }
+    if (box) return;
+    var app = document.getElementById('app');
+    box = document.createElement('div');
+    box.id = 'bootfail';
+    box.appendChild(document.createTextNode('😥'));
+    var t = document.createElement('b');
+    t.textContent = '게임 화면이 열리지 않았어요.';
+    box.appendChild(t);
+    box.appendChild(document.createTextNode('① 아래 단추를 눌러 다시 불러와 보세요.\n② 그래도 안 되면 크롬(Chrome) 앱을 열고 주소창에\nbon17.github.io/dokdo-love-in-action 을 직접 써 주세요.\n③ 계속 안 되면 이 화면을 선생님께 보여 주세요.'));
+    var btn = document.createElement('button');
+    btn.textContent = '🔄 다시 불러오기';
+    btn.onclick = function () { location.reload(); };
+    box.appendChild(document.createElement('br'));
+    box.appendChild(btn);
+    var info = document.createElement('small');
+    info.textContent = '화면 ' + window.innerWidth + 'x' + window.innerHeight + ' · ' + (document.getElementById('boot') ? '시작 전' : 'transform ' + (app && app.style.transform)) +
+      '\n' + (errs.length ? errs.slice(0, 3).join('\n') : '오류 없음') + '\n' + navigator.userAgent;
+    box.appendChild(info);
+    document.body.appendChild(box);
+  }
+  window.addEventListener('load', function () { setTimeout(function () { check(); setInterval(check, 1000); }, 8000); });
+})();
+</script>
 <script src="config.js"></script>
 </head>
 <body>

@@ -44,16 +44,33 @@ const fmtTime = sec => { sec = Math.max(0, Math.round(sec)); const m = Math.floo
 const fmtNum = n => Number(n || 0).toLocaleString('ko-KR');
 function onTap(node, fn) { node.addEventListener('click', e => { e.stopPropagation(); fn(e); }); return node; }
 
-/* 화면 맞춤: 1280x720 무대를 화면 크기에 맞게 늘이고 줄인다. */
+/* 화면 맞춤: 1280x720 무대를 화면 크기에 맞게 늘이고 줄인다.
+   QR 코드로 새 탭이 열릴 때 휴대폰·태블릿 브라우저가 화면 크기를 잠깐 0으로 알려 주고
+   크기가 정해진 뒤에도 resize를 보내지 않는 일이 있다. 그러면 무대가 0배로 줄어 빈 화면만 보이므로,
+   크기를 모르면 맞추지 않고 기다렸다가 다시 재고, 크기가 바뀌었는지 계속 살핀다. */
+let fitSize = '';
+function viewSize() {
+  const de = document.documentElement, vv = window.visualViewport;
+  return [window.innerWidth || de.clientWidth || (vv && vv.width) || 0, window.innerHeight || de.clientHeight || (vv && vv.height) || 0];
+}
 function fit() {
-  const iw = window.innerWidth, ih = window.innerHeight;
+  const [iw, ih] = viewSize();
+  if (iw < 50 || ih < 50) { fitSize = ''; requestAnimationFrame(fit); return; }
+  fitSize = iw + 'x' + ih;
   SCALE = Math.min(iw / W, ih / H);
   const x = (iw - W * SCALE) / 2, y = (ih - H * SCALE) / 2;
   APP.style.transform = `translate(${x}px,${y}px) scale(${SCALE})`;
-  document.getElementById('rotate').classList.toggle('on', ih > iw * 1.1 && !document.activeElement?.matches?.('input'));
+  const a = document.activeElement;
+  document.getElementById('rotate').classList.toggle('on', ih > iw * 1.1 && !(a && a.matches && a.matches('input')));
 }
+const refit = () => { const [iw, ih] = viewSize(); if (iw + 'x' + ih !== fitSize) fit(); };
 window.addEventListener('resize', fit);
 window.addEventListener('orientationchange', () => setTimeout(fit, 200));
+for (const t of ['load', 'pageshow', 'focus']) window.addEventListener(t, refit);
+document.addEventListener('visibilitychange', refit);
+if (window.visualViewport) window.visualViewport.addEventListener('resize', refit);
+if (window.ResizeObserver) new ResizeObserver(refit).observe(document.documentElement);
+setInterval(refit, 500);
 function toLocal(e) {
   const r = APP.getBoundingClientRect();
   return { x: (e.clientX - r.left) / SCALE, y: (e.clientY - r.top) / SCALE };

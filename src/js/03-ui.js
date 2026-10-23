@@ -742,7 +742,7 @@ function openBook(tab = 'cards') {
       const chips = el('div', { class: 'bchips' });
       eras.forEach((from, k) => chips.append(onTap(el('button', { class: 'bchip' + (k === BOOKVIEW.era ? ' on' : ''), text: `${k + 1}. ${TIMELINE[from].era}` }), () => { Sound.sfx('tap'); BOOKVIEW.era = k; render('timeline'); })));
       body.append(chips);
-      const from = eras[BOOKVIEW.era], to = eras[BOOKVIEW.era + 1] ?? TIMELINE.length;
+      const from = eras[BOOKVIEW.era], to = BOOKVIEW.era + 1 < eras.length ? eras[BOOKVIEW.era + 1] : TIMELINE.length;
       for (const e of TIMELINE.slice(from, to)) {
         const open = isOpen(e);
         body.append(el('div', { class: 'tlrow' + (open ? '' : ' lock') },

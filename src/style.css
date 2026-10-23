@@ -20,6 +20,12 @@ html,body{margin:0;height:100%;background:var(--deep);overflow:hidden;touch-acti
   background:var(--deep);color:#fff;font:22px var(--ui);z-index:98;text-align:center}
 #rotate div{font-size:64px}
 @media (orientation:portrait){ #rotate.on{display:flex} }
+/* 게임이 열리지 않을 때 나오는 안내 (오래된 브라우저에서도 보이게 옛 문법과 기본 글꼴로) */
+#bootfail{position:fixed;top:0;right:0;bottom:0;left:0;z-index:100;overflow:auto;padding:24px;background:#061425;color:#fff;
+  font:20px/1.6 sans-serif;text-align:center;white-space:pre-line}
+#bootfail b{display:block;font-size:26px;margin:10px 0}
+#bootfail button{margin:16px 0;padding:12px 32px;border:0;border-radius:12px;background:#ff8a3d;color:#fff;font:bold 22px sans-serif}
+#bootfail small{display:block;margin-top:10px;color:#8fa7c0;font-size:13px;line-height:1.4;word-break:break-all}
 
 /* layers */
 #bg,#fx,#scene,#hidden,#hud,#dialog,#overlay,#toast{position:absolute;inset:0}
