@@ -180,7 +180,7 @@ function titleScreen() {
       onTap(el('button', { class: 'hud-btn', text: '⛶', title: '전체 화면' }), toggleFullscreen),
       onTap(el('button', { class: 'hud-btn', text: PREF.muted ? '🔇' : '🔊' }), e => { Sound.init(); Sound.setMuted(!PREF.muted); e.target.textContent = PREF.muted ? '🔇' : '🔊'; }),
       onTap(el('button', { class: 'hud-btn book', text: '선생님' }), async () => {
-        const v = await inputBox('교사용 비밀번호를 입력하세요.');
+        const v = await inputBox('교사용 비밀번호를 입력하세요.' + (CFG.teacherHint ? `\n💡 힌트: ${CFG.teacherHint}` : ''));
         if (isTeacherCode(v)) teacherPanel(); else if (v != null) toast('비밀번호가 맞지 않아요.');
       }));
     wrap.append(corner);

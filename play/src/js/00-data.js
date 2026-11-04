@@ -2,7 +2,7 @@
 /* ===== 게임 데이터 =====
    증거 카드는 "내가 찾은 증거" 기록이다. 문항 정답표가 아니라 사건의 맥락과 의미를 담는다. */
 
-const CFG = Object.assign({ teacherCode: 'neis' }, window.DOKDO_CONFIG || {});
+const CFG = Object.assign({ teacherCode: 'neis', teacherHint: '영어로 나이스' }, window.DOKDO_CONFIG || {});
 
 const CAT = {
   hist: { name: '역사적 근거', short: '역사', desc: '옛 기록과 사건이 말해 주는 것' },
