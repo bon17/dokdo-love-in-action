@@ -8,6 +8,14 @@
 - 임장 선생님 가이드: <https://bon17.github.io/dokdo-love-in-action/guide.html>
 - (두 주소는 GitHub Pages를 켠 뒤에 열립니다.)
 
+## 다른 학교용 버전
+
+학교 이름, 4교시 퀴즈 안내, 실시간 랭킹을 뺀 버전입니다. 위 기산중 버전은 그대로 두고 `play/` 폴더에 따로 만들었습니다.
+
+- 게임: <https://bon17.github.io/dokdo-love-in-action/play/>
+- 선생님 가이드: <https://bon17.github.io/dokdo-love-in-action/play/guide.html>
+- 자세한 내용: [play/README.md](play/README.md)
+
 ## 문서
 
 - [선생님 안내서](docs/teacher-guide.md): GitHub Pages 켜기, 랭킹 설정, 수업 중 비밀번호, 기록 지우기
